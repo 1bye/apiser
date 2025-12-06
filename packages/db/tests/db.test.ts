@@ -17,8 +17,8 @@ const userModel = model({
   table,
 });
 
-console.log(userModel.findByIsVerified());
-
-db.select().from(table).where(eq(table.isVerified, "true"));
+// console.log();
+userModel.id(5).name("Alex").find();
+// db.select().from(table).where(eq(table.isVerified, "true"));
 
 // userModel.table.
