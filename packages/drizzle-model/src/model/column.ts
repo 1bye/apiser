@@ -14,6 +14,8 @@ export type ColumnFunctions<
   // find: (by: DrizzleDataType<TableColumn["dataType"]>) => void;
   find: () => Promise<DrizzleRawOutput<Table>[]>;
   findOne: () => Promise<DrizzleRawOutput<Table>>;
+  limit: (value: number) => ColumnFunctions<Table, TableColumn>;
+  offset: (value: number) => ColumnFunctions<Table, TableColumn>;
   // delete: () => void;
 };
 

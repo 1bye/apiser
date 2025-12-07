@@ -52,6 +52,9 @@ class Model<
     Record<keyof TableColumns, ColumnOption<DrizzleColumn<Table>>>
   > = {};
 
+  private limitValue?: number;
+  private offsetValue?: number;
+
   public table: Table;
   public columns: TableColumns;
   public db: any;
@@ -72,17 +75,38 @@ class Model<
   }
 
   public async find() {
-    const query = this.db.select().from(this.table);
+    let query = this.db.select().from(this.table);
+
+    if (typeof this.limitValue === "number") {
+      query = query.limit(this.limitValue);
+    }
+
+    if (typeof this.offsetValue === "number") {
+      query = query.offset(this.offsetValue);
+    }
 
     const resultRows = await query;
 
     this.conditions = {};
+    this.limitValue = undefined;
+    this.offsetValue = undefined;
 
     return resultRows as any;
   }
 
   public async findOne() {
-    const rows = await this.find();
+    let query = this.db.select().from(this.table).limit(1);
+
+    if (typeof this.offsetValue === "number") {
+      query = query.offset(this.offsetValue);
+    }
+
+    const rows = await query;
+
+    this.conditions = {};
+    this.limitValue = undefined;
+    this.offsetValue = undefined;
+
     return (rows as any[])[0];
   }
 
@@ -114,19 +138,67 @@ class Model<
           ? and(...(whereExpressions as any))
           : undefined;
 
-        const query = where
-          ? self.db.select().from(self.table).where(where)
-          : self.db.select().from(self.table);
+        let query = self.db.select().from(self.table);
+
+        if (where) {
+          query = query.where(where);
+        }
+
+        if (typeof self.limitValue === "number") {
+          query = query.limit(self.limitValue);
+        }
+
+        if (typeof self.offsetValue === "number") {
+          query = query.offset(self.offsetValue);
+        }
 
         const resultRows = await query;
 
         self.conditions = {};
-
+        self.limitValue = undefined;
+        self.offsetValue = undefined;
         return resultRows as any;
       },
       findOne: async () => {
-        const rows = await methods.find();
+        const whereExpressions = Object.entries(self.conditions)
+          .filter(([, option]) => option !== undefined)
+          .map(([columnKey, option]) => {
+            const column = self.columns[columnKey as keyof TableColumns] as any;
+            return buildColumnCondition(
+              column,
+              option as ColumnOption<DrizzleColumn<Table>>,
+            );
+          })
+          .filter((expr) => expr !== undefined);
+
+        const where = whereExpressions.length
+          ? and(...(whereExpressions as any))
+          : undefined;
+
+        let query = self.db.select().from(self.table).limit(1);
+
+        if (where) {
+          query = query.where(where);
+        }
+
+        if (typeof self.offsetValue === "number") {
+          query = query.offset(self.offsetValue);
+        }
+
+        const rows = await query;
+
+        self.conditions = {};
+        self.limitValue = undefined;
+        self.offsetValue = undefined;
         return (rows as any[])[0];
+      },
+      limit: (value: number) => {
+        self.limitValue = value;
+        return result;
+      },
+      offset: (value: number) => {
+        self.offsetValue = value;
+        return result;
       },
     };
 
