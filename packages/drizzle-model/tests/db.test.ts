@@ -13,12 +13,21 @@ const table = pgTable("user", {
 });
 
 const userModel = model({
-  name: "user",
   table,
 });
 
+// table.$inferInsert
+
 // console.log();
-userModel.id(5).name("Alex").find();
+userModel
+  .name({
+    or: ["Alex"],
+  })
+  // .or({
+  //   id: [{  }]
+  // })
+  .isVerified(true)
+  .find();
 // db.select().from(table).where(eq(table.isVerified, "true"));
 
 // userModel.table.

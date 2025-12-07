@@ -1,10 +1,13 @@
-import { type Table as DrizzleTable } from "drizzle-orm";
+import { type Table as DrizzleTable, type InferInsertModel } from "drizzle-orm";
 
 export type DrizzleColumns<Table extends DrizzleTable> = Table["_"]["columns"];
 export type DrizzleColumn<
   Table extends DrizzleTable,
   Columns extends DrizzleColumns<Table> = DrizzleColumns<Table>,
 > = Columns[keyof Columns];
+
+export type DrizzleRawOutput<Table extends DrizzleTable> =
+  InferInsertModel<Table>;
 
 export type DrizzleDataKind =
   | "string"

@@ -3,11 +3,14 @@ import {
   getTableName,
   getTableColumns,
 } from "drizzle-orm";
-import { type ModelColumnFunctions } from "./column";
-import type { DrizzleColumns } from "./types";
+import {
+  type ColumnFunctions,
+  type ColumnOption,
+  type ModelColumnFunctions,
+} from "./column";
+import type { DrizzleColumn, DrizzleColumns } from "./types";
 
 export interface ModelOptions<Table extends DrizzleTable> {
-  name: string;
   table: Table;
 }
 
@@ -17,6 +20,7 @@ export interface ModelOptions<Table extends DrizzleTable> {
 export type IModel<Table extends DrizzleTable> = {
   table: Table;
   columns: DrizzleColumns<Table>;
+  db: any;
 } & ModelColumnFunctions<
   Table,
   DrizzleColumns<Table>,
@@ -28,25 +32,22 @@ export function model<Table extends DrizzleTable>(
 ): IModel<Table> {
   const table = options.table;
 
-  return new Model(table) as IModel<Table>;
+  return new Model(table, options.db) as IModel<Table>;
 }
-
-export type ColumnQuery<T> = {
-  find: () => void;
-  update: (data: Partial<Record<string, any>>) => ColumnQuery<T>;
-  delete: () => ColumnQuery<T>;
-};
 
 class Model<
   Table extends DrizzleTable,
   TableColumns extends DrizzleColumns<Table>,
 > {
-  private conditions: Partial<Record<keyof TableColumns, any>> = {};
+  private conditions: Partial<
+    Record<keyof TableColumns, ColumnOption<DrizzleColumn<Table>>>
+  > = {};
 
   public table: Table;
   public columns: TableColumns;
+  public db: any;
 
-  constructor(table: Table) {
+  constructor(table: Table, db: any) {
     const columns = getTableColumns(table) as TableColumns;
 
     Object.keys(columns).forEach((colName) => {
@@ -56,38 +57,42 @@ class Model<
       });
     });
 
+    this.db = db;
     this.table = table;
     this.columns = columns;
   }
 
   private createColumnFunction<K extends keyof TableColumns>(col: K) {
     const self = this;
-    const fn = (value: TableColumns[K]["dataType"]) => {
+
+    // We need to declare result first so fn can reference it
+    let result: any;
+
+    const fn = (value: any) => {
       self.conditions[col] = value;
-      return proxy;
+      return result; // return the object with column getters, not just proxy
     };
 
-    const proxy: ColumnQuery<TableColumns[K]["dataType"]> = {
+    const methods: ColumnFunctions<Table, TableColumns[K]> = {
       find: () => {
         console.log("Finding with conditions:", self.conditions);
-        return proxy;
+        return result;
       },
-      update: (data) => {
-        console.log(
-          "Updating with conditions:",
-          self.conditions,
-          "data:",
-          data,
-        );
-        return proxy;
-      },
-      delete: () => {
-        console.log("Deleting with conditions:", self.conditions);
-        return proxy;
-      },
+      findOne: () => {},
     };
 
     // Merge function and methods
-    return Object.assign(fn, proxy);
+    result = Object.assign(fn, methods);
+
+    // Attach all column functions to the result so that nested calls like
+    // userModel.id(5).name("Alex").find() are supported.
+    Object.keys(self.columns).forEach((colName) => {
+      Object.defineProperty(result, colName, {
+        get: () => self.createColumnFunction(colName as keyof TableColumns),
+        enumerable: true,
+      });
+    });
+
+    return result;
   }
 }
