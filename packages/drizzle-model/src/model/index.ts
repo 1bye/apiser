@@ -2,6 +2,7 @@ import {
   type Table as DrizzleTable,
   getTableName,
   getTableColumns,
+  and,
 } from "drizzle-orm";
 import {
   type ColumnFunctions,
@@ -9,9 +10,11 @@ import {
   type ModelColumnFunctions,
 } from "./column";
 import type { DrizzleColumn, DrizzleColumns } from "./types";
+import { buildColumnCondition } from "./where";
 
 export interface ModelOptions<Table extends DrizzleTable> {
   table: Table;
+  db: any;
 }
 
 /*
@@ -74,11 +77,33 @@ class Model<
     };
 
     const methods: ColumnFunctions<Table, TableColumns[K]> = {
-      find: () => {
-        console.log("Finding with conditions:", self.conditions);
-        return result;
+      find: async () => {
+        const whereExpressions = Object.entries(self.conditions)
+          .filter(([, option]) => option !== undefined)
+          .map(([columnKey, option]) => {
+            const column = self.columns[columnKey as keyof TableColumns] as any;
+            return buildColumnCondition(column, option as ColumnOption<DrizzleColumn<Table>>);
+          })
+          .filter((expr) => expr !== undefined);
+
+        const where = whereExpressions.length
+          ? and(...(whereExpressions as any))
+          : undefined;
+
+        const query = where
+          ? self.db.select().from(self.table).where(where)
+          : self.db.select().from(self.table);
+
+        const resultRows = await query;
+
+        self.conditions = {};
+
+        return resultRows as any;
       },
-      findOne: () => {},
+      findOne: async () => {
+        const rows = await methods.find();
+        return (rows as any[])[0];
+      },
     };
 
     // Merge function and methods

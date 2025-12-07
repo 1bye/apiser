@@ -12,6 +12,9 @@
     "@repo/typescript-config": "*",
     "@types/bun": "latest",
     "@types/node": "^22.15.3",
+    "@types/pg": "^8.15.6",
+    "dotenv": "^17.2.3",
+    "drizzle-kit": "^0.31.8",
     "drizzle-orm": "^0.45.0",
     "eslint": "^9.39.1",
     "typescript": "5.9.2"
