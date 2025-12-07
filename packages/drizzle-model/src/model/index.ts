@@ -9,12 +9,17 @@ import {
   type ColumnOption,
   type ModelColumnFunctions,
 } from "./column";
-import type { DrizzleColumn, DrizzleColumns } from "./types";
+import type { DrizzleColumn, DrizzleColumns, DrizzleRawOutput } from "./types";
 import { buildColumnCondition } from "./where";
 
 export interface ModelOptions<Table extends DrizzleTable> {
   table: Table;
   db: any;
+}
+
+export interface ModelFunctions<Table extends DrizzleTable> {
+  find: () => Promise<DrizzleRawOutput<Table>[]>;
+  findOne: () => Promise<DrizzleRawOutput<Table>>;
 }
 
 /*
@@ -28,7 +33,8 @@ export type IModel<Table extends DrizzleTable> = {
   Table,
   DrizzleColumns<Table>,
   keyof DrizzleColumns<Table> & string
->;
+> &
+  ModelFunctions<Table>;
 
 export function model<Table extends DrizzleTable>(
   options: ModelOptions<Table>,
@@ -65,6 +71,21 @@ class Model<
     this.columns = columns;
   }
 
+  public async find() {
+    const query = this.db.select().from(this.table);
+
+    const resultRows = await query;
+
+    this.conditions = {};
+
+    return resultRows as any;
+  }
+
+  public async findOne() {
+    const rows = await this.find();
+    return (rows as any[])[0];
+  }
+
   private createColumnFunction<K extends keyof TableColumns>(col: K) {
     const self = this;
 
@@ -82,7 +103,10 @@ class Model<
           .filter(([, option]) => option !== undefined)
           .map(([columnKey, option]) => {
             const column = self.columns[columnKey as keyof TableColumns] as any;
-            return buildColumnCondition(column, option as ColumnOption<DrizzleColumn<Table>>);
+            return buildColumnCondition(
+              column,
+              option as ColumnOption<DrizzleColumn<Table>>,
+            );
           })
           .filter((expr) => expr !== undefined);
 

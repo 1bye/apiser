@@ -24,11 +24,7 @@ describe("Model Find Test", () => {
   });
 
   test(".find | no filters returns all users", async () => {
-    const raw = await userModel
-      .id({
-        gt: 0,
-      })
-      .find();
+    const raw = await userModel.find();
 
     expect(raw).toBeArray();
     expect(raw).toHaveLength(4);
