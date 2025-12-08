@@ -1,4 +1,8 @@
-import { type Table as DrizzleTable, type InferInsertModel } from "drizzle-orm";
+import {
+  type Table as DrizzleTable,
+  type InferInsertModel,
+  type InferSelectModel,
+} from "drizzle-orm";
 
 export type DrizzleColumns<Table extends DrizzleTable> = Table["_"]["columns"];
 export type DrizzleColumn<
@@ -7,7 +11,14 @@ export type DrizzleColumn<
 > = Columns[keyof Columns];
 
 export type DrizzleRawOutput<Table extends DrizzleTable> =
+  InferSelectModel<Table>;
+
+export type DrizzleInsertModel<Table extends DrizzleTable> =
   InferInsertModel<Table>;
+
+export type DrizzleInsertValues<Table extends DrizzleTable> =
+  | DrizzleInsertModel<Table>
+  | DrizzleInsertModel<Table>[];
 
 export type DrizzleDataKind =
   | "string"

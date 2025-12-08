@@ -1,30 +1,28 @@
+import type {
+  DrizzleColumns,
+  DrizzleInsertModel,
+  DrizzleRawOutput,
+} from "./types";
+import { type Table as DrizzleTable, getTableColumns } from "drizzle-orm";
+import { type ModelColumnFunctions, type BaseColumnFunctions } from "./column";
 import {
-  type Table as DrizzleTable,
-  getTableName,
-  getTableColumns,
-  and,
-} from "drizzle-orm";
-import {
-  type ColumnFunctions,
-  type ColumnOption,
-  type ModelColumnFunctions,
-} from "./column";
-import type { DrizzleColumn, DrizzleColumns, DrizzleRawOutput } from "./types";
-import { buildColumnCondition } from "./where";
+  type ModelQueryOptions,
+  type QueryCondition,
+  type QueryConditions,
+  ModelQuery,
+} from "./query";
+import { ModelFunctionResult } from "./promise";
 
 export interface ModelOptions<Table extends DrizzleTable> {
   table: Table;
   db: any;
 }
 
-export interface ModelFunctions<Table extends DrizzleTable> {
-  find: () => Promise<DrizzleRawOutput<Table>[]>;
-  findOne: () => Promise<DrizzleRawOutput<Table>>;
-}
+export type ModelFunctions<Table extends DrizzleTable> = {
+  limit: (limit: number) => IModel<Table>;
+  offset: (offset: number) => IModel<Table>;
+} & BaseColumnFunctions<Table>;
 
-/*
- * Model
- */
 export type IModel<Table extends DrizzleTable> = {
   table: Table;
   columns: DrizzleColumns<Table>;
@@ -36,35 +34,23 @@ export type IModel<Table extends DrizzleTable> = {
 > &
   ModelFunctions<Table>;
 
-export function model<Table extends DrizzleTable>(
-  options: ModelOptions<Table>,
-): IModel<Table> {
-  const table = options.table;
-
-  return new Model(table, options.db) as IModel<Table>;
-}
-
+/*
+ * Model
+ */
 class Model<
   Table extends DrizzleTable,
   TableColumns extends DrizzleColumns<Table>,
 > {
-  private conditions: Partial<
-    Record<keyof TableColumns, ColumnOption<DrizzleColumn<Table>>>
-  > = {};
-
-  private limitValue?: number;
-  private offsetValue?: number;
-
   public table: Table;
   public columns: TableColumns;
   public db: any;
 
-  constructor(table: Table, db: any) {
+  constructor({ db, table }: ModelOptions<Table>) {
     const columns = getTableColumns(table) as TableColumns;
 
     Object.keys(columns).forEach((colName) => {
       Object.defineProperty(this, colName, {
-        get: () => this.createColumnFunction(colName),
+        get: () => this.createColumnQuery(colName),
         enumerable: true,
       });
     });
@@ -74,146 +60,65 @@ class Model<
     this.columns = columns;
   }
 
+  private newQuery(
+    options?: Omit<
+      ModelQueryOptions<Table, TableColumns>,
+      "table" | "columns" | "db"
+    >,
+  ) {
+    return new ModelQuery({
+      columns: this.columns,
+      table: this.table,
+      db: this.db,
+      ...(options ?? {}),
+    });
+  }
+
+  public limit(limit: number) {
+    return this.newQuery({
+      limitValue: limit,
+    });
+  }
+
+  public offset(offset: number) {
+    return this.newQuery({
+      offsetValue: offset,
+    });
+  }
+
   public async find() {
-    let query = this.db.select().from(this.table);
-
-    if (typeof this.limitValue === "number") {
-      query = query.limit(this.limitValue);
-    }
-
-    if (typeof this.offsetValue === "number") {
-      query = query.offset(this.offsetValue);
-    }
-
-    const resultRows = await query;
-
-    this.conditions = {};
-    this.limitValue = undefined;
-    this.offsetValue = undefined;
-
-    return resultRows as any;
+    return (await this.db.select().from(this.table)) as any[];
   }
 
   public async findOne() {
-    let query = this.db.select().from(this.table).limit(1);
-
-    if (typeof this.offsetValue === "number") {
-      query = query.offset(this.offsetValue);
-    }
-
-    const rows = await query;
-
-    this.conditions = {};
-    this.limitValue = undefined;
-    this.offsetValue = undefined;
-
-    return (rows as any[])[0];
+    return (await this.db
+      .select()
+      .from(this.table)
+      .limit(1)
+      .then((result: any) => result[0])) as any;
   }
 
-  private createColumnFunction<K extends keyof TableColumns>(col: K) {
-    const self = this;
+  public insert(values: DrizzleInsertModel<Table>) {
+    const query = this.db.insert(this.table).values(values);
 
-    // We need to declare result first so fn can reference it
-    let result: any;
+    return new ModelFunctionResult<DrizzleRawOutput<Table>>(query);
+  }
 
-    const fn = (value: any) => {
-      self.conditions[col] = value;
-      return result; // return the object with column getters, not just proxy
-    };
+  private createColumnQuery<K extends keyof TableColumns>(col: K & string) {
+    return (value: QueryCondition<Table>) => {
+      const conditions: QueryConditions<Table> = {};
 
-    const methods: ColumnFunctions<Table, TableColumns[K]> = {
-      find: async () => {
-        const whereExpressions = Object.entries(self.conditions)
-          .filter(([, option]) => option !== undefined)
-          .map(([columnKey, option]) => {
-            const column = self.columns[columnKey as keyof TableColumns] as any;
-            return buildColumnCondition(
-              column,
-              option as ColumnOption<DrizzleColumn<Table>>,
-            );
-          })
-          .filter((expr) => expr !== undefined);
+      conditions[col] = value;
 
-        const where = whereExpressions.length
-          ? and(...(whereExpressions as any))
-          : undefined;
-
-        let query = self.db.select().from(self.table);
-
-        if (where) {
-          query = query.where(where);
-        }
-
-        if (typeof self.limitValue === "number") {
-          query = query.limit(self.limitValue);
-        }
-
-        if (typeof self.offsetValue === "number") {
-          query = query.offset(self.offsetValue);
-        }
-
-        const resultRows = await query;
-
-        self.conditions = {};
-        self.limitValue = undefined;
-        self.offsetValue = undefined;
-        return resultRows as any;
-      },
-      findOne: async () => {
-        const whereExpressions = Object.entries(self.conditions)
-          .filter(([, option]) => option !== undefined)
-          .map(([columnKey, option]) => {
-            const column = self.columns[columnKey as keyof TableColumns] as any;
-            return buildColumnCondition(
-              column,
-              option as ColumnOption<DrizzleColumn<Table>>,
-            );
-          })
-          .filter((expr) => expr !== undefined);
-
-        const where = whereExpressions.length
-          ? and(...(whereExpressions as any))
-          : undefined;
-
-        let query = self.db.select().from(self.table).limit(1);
-
-        if (where) {
-          query = query.where(where);
-        }
-
-        if (typeof self.offsetValue === "number") {
-          query = query.offset(self.offsetValue);
-        }
-
-        const rows = await query;
-
-        self.conditions = {};
-        self.limitValue = undefined;
-        self.offsetValue = undefined;
-        return (rows as any[])[0];
-      },
-      limit: (value: number) => {
-        self.limitValue = value;
-        return result;
-      },
-      offset: (value: number) => {
-        self.offsetValue = value;
-        return result;
-      },
-    };
-
-    // Merge function and methods
-    result = Object.assign(fn, methods);
-
-    // Attach all column functions to the result so that nested calls like
-    // userModel.id(5).name("Alex").find() are supported.
-    Object.keys(self.columns).forEach((colName) => {
-      Object.defineProperty(result, colName, {
-        get: () => self.createColumnFunction(colName as keyof TableColumns),
-        enumerable: true,
+      return this.newQuery({
+        conditions,
       });
-    });
-
-    return result;
+    };
   }
+}
+
+export function model<Table extends DrizzleTable>(
+  options: ModelOptions<Table>,
+): IModel<Table> {
+  return new Model(options) as unknown as IModel<Table>;
 }

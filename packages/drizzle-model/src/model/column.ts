@@ -4,20 +4,41 @@ import type {
   DrizzleColumns,
   DrizzleDataType,
   DrizzleTable,
+  DrizzleInsertModel,
+  DrizzleInsertValues,
 } from "./types";
-import { capitalize } from "./utils";
+import type { ModelFunctionResult } from "./promise";
+
+export type FindOneOptions = Omit<FindOptions, "overrideLimit">;
+export type FindOptions = {} & BaseColumnFunctionOptions;
+export type InsertOptions = {} & BaseColumnFunctionOptions;
+
+export type BaseColumnFunctionOptions = {
+  overrideLimit?: number;
+};
+
+export type BaseColumnFunctions<Table extends DrizzleTable> = {
+  find: (options?: FindOptions) => Promise<DrizzleRawOutput<Table>[]>;
+  findOne: (
+    options?: FindOneOptions,
+  ) => Promise<DrizzleRawOutput<Table> | null>;
+  insert: <
+    Values extends DrizzleInsertValues<Table> = DrizzleInsertValues<Table>,
+    Output extends DrizzleRawOutput<Table> = DrizzleRawOutput<Table>,
+  >(
+    values: Values,
+    options?: InsertOptions,
+  ) => ModelFunctionResult<Values extends any[] ? Output[] : Output, void>;
+};
 
 export type ColumnFunctions<
   Table extends DrizzleTable,
   TableColumn extends Column,
 > = {
-  // find: (by: DrizzleDataType<TableColumn["dataType"]>) => void;
-  find: () => Promise<DrizzleRawOutput<Table>[]>;
-  findOne: () => Promise<DrizzleRawOutput<Table>>;
   limit: (value: number) => ColumnFunctions<Table, TableColumn>;
   offset: (value: number) => ColumnFunctions<Table, TableColumn>;
   // delete: () => void;
-};
+} & BaseColumnFunctions<Table>;
 
 type ColumnOpsBase<T> = {
   equal?: T;

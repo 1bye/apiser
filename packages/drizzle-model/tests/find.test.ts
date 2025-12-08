@@ -2,7 +2,6 @@ import { model } from "../src/model";
 import { userTable } from "./schema";
 import { db } from "./db";
 import { test, describe, expect } from "bun:test";
-import { eq } from "drizzle-orm";
 
 const userModel = model({
   table: userTable,
@@ -177,5 +176,44 @@ describe("Model Find Test", () => {
       .find();
 
     expect((raw as any[]).map((u) => u.id).sort()).toEqual([1, 2]);
+  });
+
+  test("root .find | limit only", async () => {
+    const rows = await userModel.limit(2).find();
+
+    expect(rows).toBeArray();
+    expect(rows).toHaveLength(2);
+    expect((rows as any[]).map((u) => u.id).sort()).toEqual([1, 3]);
+  });
+
+  test("root .find | offset only", async () => {
+    const rows = await userModel.offset(1).find();
+
+    expect(rows).toBeArray();
+    expect((rows as any[]).map((u) => u.id).sort()).toEqual([2, 3, 5]);
+  });
+
+  test("root .find | limit and offset", async () => {
+    const rows = await userModel.offset(1).limit(2).find();
+
+    expect(rows).toBeArray();
+    expect(rows).toHaveLength(2);
+    expect((rows as any[]).map((u) => u.id).sort()).toEqual([2, 3]);
+  });
+
+  test("root .findOne | with offset", async () => {
+    const row = await userModel.offset(2).findOne();
+
+    expect(row).toBeDefined();
+    expect((row as any).id).toBe(3);
+  });
+
+  test("root .find | limit/offset are reset between calls", async () => {
+    const first = await userModel.offset(1).limit(1).find();
+    expect((first as any[]).map((u) => u.id)).toEqual([2]);
+
+    const second = await userModel.find();
+    expect(second).toHaveLength(4);
+    expect((second as any[]).map((u) => u.id).sort()).toEqual([1, 2, 3, 5]);
   });
 });
