@@ -14,16 +14,16 @@ import type { FindOneOptions } from "@/query/functions/find-one";
 import type { InsertOptions } from "@/query/functions/insert";
 
 export interface BaseColumnFunctions<
-  Tables extends DrizzleSchema,
   Table extends DrizzleTable,
+  Tables extends DrizzleSchema,
   Relation extends DrizzleRelations = DrizzleRelations,
 > {
   find: (
     options?: FindOptions,
-  ) => IFindResult<DrizzleRawOutput<Table>[], Tables, Relation>;
+  ) => IFindResult<Table, Tables, Relation, DrizzleRawOutput<Table>[]>;
   findOne: (
     options?: FindOneOptions,
-  ) => IFindResult<DrizzleRawOutput<Table> | null, Tables, Relation>;
+  ) => IFindResult<Table, Tables, Relation, DrizzleRawOutput<Table> | null>;
   insert: <
     Values extends DrizzleInsertValues<Table> = DrizzleInsertValues<Table>,
     Output extends DrizzleRawOutput<Table> = DrizzleRawOutput<Table>,
@@ -34,17 +34,17 @@ export interface BaseColumnFunctions<
 }
 
 export type ColumnFunctions<
-  Tables extends DrizzleSchema,
   Table extends DrizzleTable,
+  Tables extends DrizzleSchema,
   TableColumn extends Column,
   Relation extends DrizzleRelations = DrizzleRelations,
   RelationKeys extends string = string,
 > = {
-  limit: (value: number) => ColumnFunctions<Tables, Table, TableColumn>;
-  offset: (value: number) => ColumnFunctions<Tables, Table, TableColumn>;
+  limit: (value: number) => ColumnFunctions<Table, Tables, TableColumn>;
+  offset: (value: number) => ColumnFunctions<Table, Tables, TableColumn>;
   // with: (value: WithValue<Relation>) => ColumnFunctions<Table, TableColumn>;
   // delete: () => void;
-} & BaseColumnFunctions<Tables, Table, Relation>;
+} & BaseColumnFunctions<Table, Tables, Relation>;
 
 type ColumnOpsBase<T> = {
   equal?: T;
@@ -127,8 +127,8 @@ export type ColumnOptionFn<TableColumn extends Column, T> = (
 ) => T;
 
 export type ModelColumnFunctions<
-  Tables extends DrizzleSchema,
   Table extends DrizzleTable,
+  Tables extends DrizzleSchema,
   Columns extends DrizzleColumns<Table> = DrizzleColumns<Table>,
   ColumnKeys extends keyof Columns & string = keyof Columns & string,
   Relation extends RelationsBuilderConfigValue = RelationsBuilderConfigValue,
@@ -137,15 +137,15 @@ export type ModelColumnFunctions<
   [ColumnKey in ColumnKeys]: ColumnOptionFn<
     Columns[ColumnKey],
     ColumnFunctions<
-      Tables,
       Table,
+      Tables,
       Columns[ColumnKey],
       Relation extends undefined ? DrizzleRelations : Relation,
       RelationKeys
     > &
       ModelColumnFunctions<
-        Tables,
         Table,
+        Tables,
         Columns,
         Exclude<ColumnKeys, ColumnKey>
       >

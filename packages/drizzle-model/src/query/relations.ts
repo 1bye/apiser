@@ -13,9 +13,9 @@ export type SelectedRelations<
   Relations extends DrizzleRelations,
   Value extends WithValue<Relations>,
 > = {
-  [K in keyof Value as Value[K] extends true
-    ? K & string
-    : never]: RelationResult<Tables, Relations[K & string]>;
+  [Key in keyof Value as Value[Key] extends true
+    ? Key & string
+    : never]: RelationResult<Tables, Relations[Key & string]>;
 };
 
 export type RelationResult<

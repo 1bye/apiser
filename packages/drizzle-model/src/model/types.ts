@@ -19,7 +19,7 @@ export interface ModelOptions<Table extends DrizzleTable> {
 export interface ModelFunctions<
   TTables extends DrizzleSchema,
   TTable extends DrizzleTable,
-> extends BaseColumnFunctions<TTables, TTable> {
+> extends BaseColumnFunctions<TTable, TTables> {
   limit: (limit: number) => ModelQuery<TTable>;
   offset: (offset: number) => ModelQuery<TTable>;
 }
@@ -42,10 +42,11 @@ export type IModel<
   relations: TRelations;
   tableName: TTable["_"]["name"];
 } & ModelColumnFunctions<
-  /* Tables section */
-  TTables,
   /* Table section */
   TTable,
+  /* Tables section */
+  TTables,
+  /* Table columns section */
   DrizzleColumns<TTable>,
   keyof DrizzleColumns<TTable> & string,
   /* Relations section */

@@ -21,6 +21,11 @@ export type DrizzleColumn<
 export type DrizzleRawOutput<Table extends DrizzleTable> =
   InferSelectModel<Table>;
 
+export type DrizzleVariativeRawOutput<Table extends DrizzleTable> =
+  | DrizzleRawOutput<Table>
+  | DrizzleRawOutput<Table>[]
+  | null;
+
 export type DrizzleInsertModel<Table extends DrizzleTable> =
   InferInsertModel<Table>;
 

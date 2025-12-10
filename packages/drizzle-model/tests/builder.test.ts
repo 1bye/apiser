@@ -9,8 +9,21 @@ const model = modelBuilder({
   relations,
 });
 
-model(schema.user, {});
+const userModel = model("user", {});
 
-const raw = await model("user", {}).age(123).findOne().with({
+const testRaw1 = await userModel.age(123).findOne().with({
   posts: true,
 });
+
+const testRaw2 = await userModel
+  .age(123)
+  .findOne()
+  .select({
+    age: true,
+    email: true,
+  })
+  .with({
+    posts: true,
+  });
+
+// testRaw2.
