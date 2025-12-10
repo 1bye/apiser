@@ -1,38 +1,29 @@
-import type { Column, RelationsBuilderConfigValue, Schema } from "drizzle-orm";
+import type { Column, RelationsBuilderConfigValue } from "drizzle-orm";
 import type {
   DrizzleRawOutput,
   DrizzleColumns,
   DrizzleColumnTypeToType,
   DrizzleTable,
-  DrizzleInsertModel,
   DrizzleInsertValues,
   DrizzleRelations,
-} from "./types";
-import type { IFindResult, ModelFunctionResult } from "./promise";
-
-export type FindOneOptions = Omit<FindOptions, "overrideLimit">;
-export type FindOptions = {} & BaseColumnFunctionOptions;
-export type InsertOptions = {} & BaseColumnFunctionOptions;
-
-export type BaseColumnFunctionOptions = {
-  overrideLimit?: number;
-};
-
-export type WithValue<Relation extends DrizzleRelations = DrizzleRelations> = {
-  [Key in keyof Relation]?: boolean;
-};
+  DrizzleSchema,
+} from "@/types";
+import type { ModelFunctionResult } from "@/promise";
+import type { FindOptions, IFindResult } from "@/query/functions/find";
+import type { FindOneOptions } from "@/query/functions/find-one";
+import type { InsertOptions } from "@/query/functions/insert";
 
 export interface BaseColumnFunctions<
-  Tables extends Schema,
+  Tables extends DrizzleSchema,
   Table extends DrizzleTable,
   Relation extends DrizzleRelations = DrizzleRelations,
 > {
   find: (
     options?: FindOptions,
-  ) => IFindResult<DrizzleRawOutput<Table>[], Relation>;
+  ) => IFindResult<DrizzleRawOutput<Table>[], Tables, Relation>;
   findOne: (
     options?: FindOneOptions,
-  ) => IFindResult<DrizzleRawOutput<Table> | null, Relation>;
+  ) => IFindResult<DrizzleRawOutput<Table> | null, Tables, Relation>;
   insert: <
     Values extends DrizzleInsertValues<Table> = DrizzleInsertValues<Table>,
     Output extends DrizzleRawOutput<Table> = DrizzleRawOutput<Table>,
@@ -43,7 +34,7 @@ export interface BaseColumnFunctions<
 }
 
 export type ColumnFunctions<
-  Tables extends Schema,
+  Tables extends DrizzleSchema,
   Table extends DrizzleTable,
   TableColumn extends Column,
   Relation extends DrizzleRelations = DrizzleRelations,
@@ -136,7 +127,7 @@ export type ColumnOptionFn<TableColumn extends Column, T> = (
 ) => T;
 
 export type ModelColumnFunctions<
-  Tables extends Schema,
+  Tables extends DrizzleSchema,
   Table extends DrizzleTable,
   Columns extends DrizzleColumns<Table> = DrizzleColumns<Table>,
   ColumnKeys extends keyof Columns & string = keyof Columns & string,

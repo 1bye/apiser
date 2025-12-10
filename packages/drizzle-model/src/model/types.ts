@@ -1,90 +1,79 @@
-import {
-  type ColumnDataConstraint,
-  type ColumnDataType,
-  type ColumnType,
-  type ColumnTypeData,
-  type Table as DrizzleTable,
-  type InferInsertModel,
-  type InferSelectModel,
-  type RelationsBuilderConfigValue,
-  type RelationsRecord,
+import type { BaseColumnFunctions, ModelColumnFunctions } from "@/column";
+import type { ModelQuery } from "@/query";
+import type {
+  DrizzleColumns,
+  DrizzleSchema,
+  DrizzleTable,
+  IsDrizzleTable,
+} from "@/types";
+import type {
+  ExtractTablesWithRelations,
+  RelationsBuilderConfig,
 } from "drizzle-orm";
 
-export type DrizzleColumns<Table extends DrizzleTable> = Table["_"]["columns"];
-export type DrizzleColumn<
-  Table extends DrizzleTable,
-  Columns extends DrizzleColumns<Table> = DrizzleColumns<Table>,
-> = Columns[keyof Columns];
+export interface ModelOptions<Table extends DrizzleTable> {
+  table: Table;
+  db: any;
+}
 
-export type DrizzleRawOutput<Table extends DrizzleTable> =
-  InferSelectModel<Table>;
+export interface ModelFunctions<
+  TTables extends DrizzleSchema,
+  TTable extends DrizzleTable,
+> extends BaseColumnFunctions<TTables, TTable> {
+  limit: (limit: number) => ModelQuery<TTable>;
+  offset: (offset: number) => ModelQuery<TTable>;
+}
 
-export type DrizzleInsertModel<Table extends DrizzleTable> =
-  InferInsertModel<Table>;
+/**
+ * Base Model object
+ */
+export type IModel<
+  TTable extends DrizzleTable,
+  TDb extends any,
+  TRelations extends ExtractTablesWithRelations<TConfig, TTables>,
+  TSchema extends Record<string, DrizzleTable> = Record<string, DrizzleTable>,
+  TTables extends DrizzleSchema = ExtractTablesFromSchema<TSchema>,
+  TConfig extends RelationsBuilderConfig<TTables> =
+    RelationsBuilderConfig<TTables>,
+> = {
+  table: TTable;
+  columns: DrizzleColumns<TTable>;
+  db: TDb;
+  relations: TRelations;
+  tableName: TTable["_"]["name"];
+} & ModelColumnFunctions<
+  /* Tables section */
+  TTables,
+  /* Table section */
+  TTable,
+  DrizzleColumns<TTable>,
+  keyof DrizzleColumns<TTable> & string,
+  /* Relations section */
+  TRelations[TTable["_"]["name"]]["relations"],
+  keyof TTables & string
+> &
+  ModelFunctions<TTables, TTable>;
 
-export type DrizzleInsertValues<Table extends DrizzleTable> =
-  | DrizzleInsertModel<Table>
-  | DrizzleInsertModel<Table>[];
-
-export type ParseColumnType<T extends ColumnType> =
-  // Case 1: "number int32" (type + constraint)
-  T extends `${infer TType extends ColumnDataType} ${infer TConstraint extends ColumnDataConstraint}`
-    ? ColumnTypeData<TType, TConstraint>
-    : // Case 2: "string" | "number" | "array" | ...
-      T extends `${infer TType extends ColumnDataType}`
-      ? ColumnTypeData<TType, undefined>
-      : // Should never happen, but keeps TS satisfied
-        never;
-
-export type ColumnTypeToDrizzleKind<T extends ColumnTypeData> =
-  T["type"] extends "string"
-    ? "string"
-    : T["type"] extends "number"
-      ? "number"
-      : T["type"] extends "boolean"
-        ? "boolean"
-        : T["type"] extends "array"
-          ? "array"
-          : T["type"] extends "object"
-            ? "json"
-            : T["type"] extends "bigint"
-              ? "bigint"
-              : T["type"] extends "custom"
-                ? "custom"
-                : never;
-
-export type DrizzleColumnTypeToType<T extends ColumnType> = DrizzleDataType<
-  ColumnTypeToDrizzleKind<ParseColumnType<T>>
->;
-
-export type DrizzleDataKindMap = {
-  string: string;
-  number: number;
-  boolean: boolean;
-  array: unknown[];
-  json: Record<string, unknown>;
-  date: Date;
-  bigint: bigint;
-  custom: unknown;
-  buffer: ArrayBuffer;
-
-  // the following could be real domain types, but default to string/date
-  dateDuration: string;
-  duration: string;
-  relDuration: string;
-  localTime: string;
-  localDate: string;
-  localDateTime: string;
+export type ModelBuilderOptions<
+  TDb extends any,
+  TRelations extends ExtractTablesWithRelations<TConfig, TTables>,
+  TSchema extends Record<string, DrizzleTable> = Record<string, DrizzleTable>,
+  TTables extends DrizzleSchema = ExtractTablesFromSchema<TSchema>,
+  TConfig extends RelationsBuilderConfig<TTables> =
+    RelationsBuilderConfig<TTables>,
+> = {
+  relations: TRelations;
+  schema: TSchema;
+  db: TDb;
 };
 
-export type DrizzleDataType<K extends keyof DrizzleDataKindMap> =
-  DrizzleDataKindMap[K];
+export type ModelBulilderModelOptions<TDb extends any> = {
+  db?: TDb | any;
+};
+// & Omit<ModelOptions<any>, "table" | "db">;
 
-export type NonUndefined<T> = T extends undefined ? never : T;
-
-// export type DrizzleRelations = NonUndefined<RelationsBuilderConfigValue>;
-export type DrizzleRelations = RelationsRecord;
-
-export type IsDrizzleTable<T> = T extends DrizzleTable ? T : never;
-
-export type { DrizzleTable };
+export type ExtractTablesFromSchema<TSchema extends Record<string, unknown>> = {
+  [K in keyof TSchema as IsDrizzleTable<TSchema[K]> extends never
+    ? never
+    : K]: IsDrizzleTable<TSchema[K]>;
+};

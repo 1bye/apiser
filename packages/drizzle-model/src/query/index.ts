@@ -1,21 +1,18 @@
 import { and, SQL } from "drizzle-orm";
-import type {
-  BaseColumnFunctionOptions,
-  ColumnFunctions,
-  ColumnOption,
-  FindOneOptions,
-  FindOptions,
-  InsertOptions,
-} from "./column";
+import type { ColumnFunctions, ColumnOption } from "../column";
 import type {
   DrizzleColumn,
   DrizzleColumns,
   DrizzleInsertValues,
   DrizzleRawOutput,
   DrizzleTable,
-} from "./types";
-import { buildColumnCondition } from "./where";
-import { ModelFunctionResult } from "./promise";
+} from "../types";
+import { buildColumnCondition } from "../where";
+import { ModelFunctionResult } from "../promise";
+import type { BaseColumnFunctionOptions } from "./functions/base";
+import type { FindOptions } from "./functions/find";
+import type { FindOneOptions } from "./functions/find-one";
+import type { InsertOptions } from "./functions/insert";
 
 export type ModelQueryOptions<
   Table extends DrizzleTable,

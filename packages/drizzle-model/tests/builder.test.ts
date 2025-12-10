@@ -1,4 +1,4 @@
-import { modelBuilder } from "../src/model";
+import { modelBuilder } from "../src";
 import * as schema from "./schema";
 import { db } from "./db";
 import { relations } from "./relations";
@@ -14,5 +14,3 @@ model(schema.user, {});
 const raw = await model("user", {}).age(123).findOne().with({
   posts: true,
 });
-
-raw.posts.targetTableName;

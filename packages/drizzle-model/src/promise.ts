@@ -1,33 +1,3 @@
-import type { AnyRelation } from "drizzle-orm";
-import type { WithValue } from "./column";
-import type {
-  DrizzleRawOutput,
-  DrizzleRelations,
-  IsDrizzleTable,
-} from "./types";
-
-type SelectedRelations<R extends DrizzleRelations, W extends WithValue<R>> = {
-  [K in keyof W as W[K] extends true ? K & string : never]: RelationResult<
-    R[K & string]
-  >;
-};
-
-type RelationResult<Relation extends AnyRelation> =
-  Relation["relationType"] extends "many" ? Relation : {};
-// ? IsDrizzleTable<Relation["sourceTable"]> extends never
-//   ? never
-//   : DrizzleRawOutput<IsDrizzleTable<Relation["targetTable"]>>
-// : {};
-
-export interface IFindResult<
-  Result,
-  Relation extends DrizzleRelations,
-> extends Promise<Result> {
-  with<W extends WithValue<Relation>>(
-    value: W,
-  ): Promise<Result & SelectedRelations<Relation, W>>;
-}
-
 export interface IModelFunctionResult<R, T> extends Promise<T> {
   return(): Promise<R>;
 }

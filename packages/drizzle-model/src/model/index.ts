@@ -1,79 +1,40 @@
 import type {
   DrizzleColumns,
-  DrizzleInsertModel,
   DrizzleInsertValues,
   DrizzleRawOutput,
-  IsDrizzleTable,
-} from "./types";
+} from "../types";
 import {
   type Table as DrizzleTable,
   type ExtractTablesWithRelations,
-  // type ExtractTablesFromSchema,
   getTableColumns,
   type RelationsBuilderConfig,
   type Schema,
 } from "drizzle-orm";
 import {
-  type ModelColumnFunctions,
-  type BaseColumnFunctions,
-  type InsertOptions,
-} from "./column";
-import {
   type ModelQueryOptions,
   type QueryCondition,
   type QueryConditions,
   ModelQuery,
-} from "./query";
-import { ModelFunctionResult } from "./promise";
-
-export interface ModelOptions<Table extends DrizzleTable> {
-  table: Table;
-  db: any;
-}
-
-export interface ModelFunctions<
-  Table extends DrizzleTable,
-> extends BaseColumnFunctions<Table> {
-  limit: (limit: number) => ModelQuery<Table>;
-  offset: (offset: number) => ModelQuery<Table>;
-}
-
-// export type Relations = ExtractTablesWithRelations
-
-export type IModel<
-  TTable extends DrizzleTable,
-  TDb extends any,
-  TRelations extends ExtractTablesWithRelations<TConfig, TTables>,
-  TSchema extends Record<string, DrizzleTable> = Record<string, DrizzleTable>,
-  TTables extends Schema = ExtractTablesFromSchema<TSchema>,
-  TConfig extends RelationsBuilderConfig<TTables> =
-    RelationsBuilderConfig<TTables>,
-> = {
-  table: TTable;
-  columns: DrizzleColumns<TTable>;
-  db: TDb;
-  relations: TRelations;
-  tableName: TTable["_"]["name"];
-} & ModelColumnFunctions<
-  /* Tables section */
-  TTables,
-  /* Table section */
-  TTable,
-  DrizzleColumns<TTable>,
-  keyof DrizzleColumns<TTable> & string,
-  /* Relations section */
-  TRelations[TTable["_"]["name"]]["relations"],
-  keyof TTables & string
-> &
-  ModelFunctions<TTable>;
+} from "../query";
+import { ModelFunctionResult } from "@/promise";
+import type { InsertOptions } from "@/query/functions/insert";
+import type {
+  ModelBuilderOptions,
+  ModelBulilderModelOptions,
+  ModelFunctions,
+  ModelOptions,
+  ExtractTablesFromSchema,
+  IModel,
+} from "./types";
 
 /*
  * Model
  */
 class Model<
+  Tables extends Schema,
   Table extends DrizzleTable,
   TableColumns extends DrizzleColumns<Table>,
-> implements ModelFunctions<Table> {
+> implements ModelFunctions<Tables, Table> {
   public table: Table;
   public columns: TableColumns;
   public db: any;
@@ -164,30 +125,6 @@ class Model<
 // ): IModel<Table> {
 //   return new Model(options) as unknown as IModel<Table>;
 // }
-
-export type ModelBuilderOptions<
-  TDb extends any,
-  TRelations extends ExtractTablesWithRelations<TConfig, TTables>,
-  TSchema extends Record<string, DrizzleTable> = Record<string, DrizzleTable>,
-  TTables extends Schema = ExtractTablesFromSchema<TSchema>,
-  TConfig extends RelationsBuilderConfig<TTables> =
-    RelationsBuilderConfig<TTables>,
-> = {
-  relations: TRelations;
-  schema: TSchema;
-  db: TDb;
-};
-
-export type ModelBulilderModelOptions<TDb extends any> = {
-  db?: TDb | any;
-};
-// & Omit<ModelOptions<any>, "table" | "db">;
-
-export type ExtractTablesFromSchema<TSchema extends Record<string, unknown>> = {
-  [K in keyof TSchema as IsDrizzleTable<TSchema[K]> extends never
-    ? never
-    : K]: IsDrizzleTable<TSchema[K]>;
-};
 
 export function modelBuilder<
   TDb extends any,
