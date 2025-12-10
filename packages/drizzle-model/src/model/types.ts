@@ -1,7 +1,13 @@
 import {
+  type ColumnDataConstraint,
+  type ColumnDataType,
+  type ColumnType,
+  type ColumnTypeData,
   type Table as DrizzleTable,
   type InferInsertModel,
   type InferSelectModel,
+  type RelationsBuilderConfigValue,
+  type RelationsRecord,
 } from "drizzle-orm";
 
 export type DrizzleColumns<Table extends DrizzleTable> = Table["_"]["columns"];
@@ -20,22 +26,36 @@ export type DrizzleInsertValues<Table extends DrizzleTable> =
   | DrizzleInsertModel<Table>
   | DrizzleInsertModel<Table>[];
 
-export type DrizzleDataKind =
-  | "string"
-  | "number"
-  | "boolean"
-  | "array"
-  | "json"
-  | "date"
-  | "bigint"
-  | "custom"
-  | "buffer"
-  | "dateDuration"
-  | "duration"
-  | "relDuration"
-  | "localTime"
-  | "localDate"
-  | "localDateTime";
+export type ParseColumnType<T extends ColumnType> =
+  // Case 1: "number int32" (type + constraint)
+  T extends `${infer TType extends ColumnDataType} ${infer TConstraint extends ColumnDataConstraint}`
+    ? ColumnTypeData<TType, TConstraint>
+    : // Case 2: "string" | "number" | "array" | ...
+      T extends `${infer TType extends ColumnDataType}`
+      ? ColumnTypeData<TType, undefined>
+      : // Should never happen, but keeps TS satisfied
+        never;
+
+export type ColumnTypeToDrizzleKind<T extends ColumnTypeData> =
+  T["type"] extends "string"
+    ? "string"
+    : T["type"] extends "number"
+      ? "number"
+      : T["type"] extends "boolean"
+        ? "boolean"
+        : T["type"] extends "array"
+          ? "array"
+          : T["type"] extends "object"
+            ? "json"
+            : T["type"] extends "bigint"
+              ? "bigint"
+              : T["type"] extends "custom"
+                ? "custom"
+                : never;
+
+export type DrizzleColumnTypeToType<T extends ColumnType> = DrizzleDataType<
+  ColumnTypeToDrizzleKind<ParseColumnType<T>>
+>;
 
 export type DrizzleDataKindMap = {
   string: string;
@@ -59,5 +79,12 @@ export type DrizzleDataKindMap = {
 
 export type DrizzleDataType<K extends keyof DrizzleDataKindMap> =
   DrizzleDataKindMap[K];
+
+export type NonUndefined<T> = T extends undefined ? never : T;
+
+// export type DrizzleRelations = NonUndefined<RelationsBuilderConfigValue>;
+export type DrizzleRelations = RelationsRecord;
+
+export type IsDrizzleTable<T> = T extends DrizzleTable ? T : never;
 
 export type { DrizzleTable };

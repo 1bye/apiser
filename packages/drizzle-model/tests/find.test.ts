@@ -1,10 +1,10 @@
 import { model } from "../src/model";
-import { userTable } from "./schema";
+import { user } from "./schema";
 import { db } from "./db";
 import { test, describe, expect } from "bun:test";
 
 const userModel = model({
-  table: userTable,
+  table: user,
   db,
 });
 

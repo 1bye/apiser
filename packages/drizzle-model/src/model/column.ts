@@ -1,13 +1,14 @@
-import type { Column } from "drizzle-orm";
+import type { Column, RelationsBuilderConfigValue, Schema } from "drizzle-orm";
 import type {
   DrizzleRawOutput,
   DrizzleColumns,
-  DrizzleDataType,
+  DrizzleColumnTypeToType,
   DrizzleTable,
   DrizzleInsertModel,
   DrizzleInsertValues,
+  DrizzleRelations,
 } from "./types";
-import type { ModelFunctionResult } from "./promise";
+import type { IFindResult, ModelFunctionResult } from "./promise";
 
 export type FindOneOptions = Omit<FindOptions, "overrideLimit">;
 export type FindOptions = {} & BaseColumnFunctionOptions;
@@ -17,11 +18,21 @@ export type BaseColumnFunctionOptions = {
   overrideLimit?: number;
 };
 
-export type BaseColumnFunctions<Table extends DrizzleTable> = {
-  find: (options?: FindOptions) => Promise<DrizzleRawOutput<Table>[]>;
+export type WithValue<Relation extends DrizzleRelations = DrizzleRelations> = {
+  [Key in keyof Relation]?: boolean;
+};
+
+export interface BaseColumnFunctions<
+  Tables extends Schema,
+  Table extends DrizzleTable,
+  Relation extends DrizzleRelations = DrizzleRelations,
+> {
+  find: (
+    options?: FindOptions,
+  ) => IFindResult<DrizzleRawOutput<Table>[], Relation>;
   findOne: (
     options?: FindOneOptions,
-  ) => Promise<DrizzleRawOutput<Table> | null>;
+  ) => IFindResult<DrizzleRawOutput<Table> | null, Relation>;
   insert: <
     Values extends DrizzleInsertValues<Table> = DrizzleInsertValues<Table>,
     Output extends DrizzleRawOutput<Table> = DrizzleRawOutput<Table>,
@@ -29,16 +40,20 @@ export type BaseColumnFunctions<Table extends DrizzleTable> = {
     values: Values,
     options?: InsertOptions,
   ) => ModelFunctionResult<Values extends any[] ? Output[] : Output, void>;
-};
+}
 
 export type ColumnFunctions<
+  Tables extends Schema,
   Table extends DrizzleTable,
   TableColumn extends Column,
+  Relation extends DrizzleRelations = DrizzleRelations,
+  RelationKeys extends string = string,
 > = {
-  limit: (value: number) => ColumnFunctions<Table, TableColumn>;
-  offset: (value: number) => ColumnFunctions<Table, TableColumn>;
+  limit: (value: number) => ColumnFunctions<Tables, Table, TableColumn>;
+  offset: (value: number) => ColumnFunctions<Tables, Table, TableColumn>;
+  // with: (value: WithValue<Relation>) => ColumnFunctions<Table, TableColumn>;
   // delete: () => void;
-} & BaseColumnFunctions<Table>;
+} & BaseColumnFunctions<Tables, Table, Relation>;
 
 type ColumnOpsBase<T> = {
   equal?: T;
@@ -105,7 +120,7 @@ type SpecificOps<T> = T extends number
           ? JsonOps<T[number]>
           : {};
 
-export type ColumnDType<TableColumn extends Column> = DrizzleDataType<
+export type ColumnDType<TableColumn extends Column> = DrizzleColumnTypeToType<
   TableColumn["dataType"]
 >;
 
@@ -121,13 +136,27 @@ export type ColumnOptionFn<TableColumn extends Column, T> = (
 ) => T;
 
 export type ModelColumnFunctions<
+  Tables extends Schema,
   Table extends DrizzleTable,
   Columns extends DrizzleColumns<Table> = DrizzleColumns<Table>,
   ColumnKeys extends keyof Columns & string = keyof Columns & string,
+  Relation extends RelationsBuilderConfigValue = RelationsBuilderConfigValue,
+  RelationKeys extends string = string,
 > = {
   [ColumnKey in ColumnKeys]: ColumnOptionFn<
     Columns[ColumnKey],
-    ColumnFunctions<Table, Columns[ColumnKey]> &
-      ModelColumnFunctions<Table, Columns, Exclude<ColumnKeys, ColumnKey>>
+    ColumnFunctions<
+      Tables,
+      Table,
+      Columns[ColumnKey],
+      Relation extends undefined ? DrizzleRelations : Relation,
+      RelationKeys
+    > &
+      ModelColumnFunctions<
+        Tables,
+        Table,
+        Columns,
+        Exclude<ColumnKeys, ColumnKey>
+      >
   >;
 };
