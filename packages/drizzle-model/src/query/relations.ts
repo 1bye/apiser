@@ -11,7 +11,7 @@ import type { WithValue } from "./functions/with";
 export type SelectedRelations<
   Tables extends DrizzleSchema,
   Relations extends DrizzleRelations,
-  Value extends WithValue<Relations>,
+  Value extends WithValue<Tables, Relations>,
 > = {
   [Key in keyof Value as Value[Key] extends true
     ? Key & string

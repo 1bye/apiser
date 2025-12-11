@@ -131,23 +131,17 @@ export type ModelColumnFunctions<
   Tables extends DrizzleSchema,
   Columns extends DrizzleColumns<Table> = DrizzleColumns<Table>,
   ColumnKeys extends keyof Columns & string = keyof Columns & string,
-  Relation extends RelationsBuilderConfigValue = RelationsBuilderConfigValue,
-  RelationKeys extends string = string,
+  Relation extends DrizzleRelations = DrizzleRelations,
 > = {
   [ColumnKey in ColumnKeys]: ColumnOptionFn<
     Columns[ColumnKey],
-    ColumnFunctions<
-      Table,
-      Tables,
-      Columns[ColumnKey],
-      Relation extends undefined ? DrizzleRelations : Relation,
-      RelationKeys
-    > &
+    ColumnFunctions<Table, Tables, Columns[ColumnKey], Relation> &
       ModelColumnFunctions<
         Table,
         Tables,
         Columns,
-        Exclude<ColumnKeys, ColumnKey>
+        Exclude<ColumnKeys, ColumnKey>,
+        Relation
       >
   >;
 };

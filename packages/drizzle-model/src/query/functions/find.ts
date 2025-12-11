@@ -16,14 +16,19 @@ export interface IFindResult<
   Tables extends DrizzleSchema,
   Relation extends DrizzleRelations,
   Result extends DrizzleVariativeRawOutput<Table> | any,
+  WithResultValue extends WithValue<Tables, Relation> = WithValue<
+    Tables,
+    Relation
+  >,
 > extends Promise<Result> {
-  with<Value extends WithValue<Relation>>(
+  with<Value extends WithValue<Tables, Relation>>(
     value: Value,
   ): IFindResult<
     Table,
     Tables,
     Relation,
-    SelectedRelations<Tables, Relation, Value> & Result
+    SelectedRelations<Tables, Relation, Value> & Result,
+    Value
   >;
 
   select<Value extends SelectValue<Table> = SelectValue<Table>>(
@@ -33,7 +38,9 @@ export interface IFindResult<
         Table,
         Tables,
         Relation,
-        ResolveSelectedValues<Table, Value, Result>
+        ResolveSelectedValues<Table, Value, Result> &
+          SelectedRelations<Tables, Relation, WithResultValue>,
+        WithResultValue
       >
     : never;
 }

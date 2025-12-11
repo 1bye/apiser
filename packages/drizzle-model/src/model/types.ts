@@ -2,6 +2,7 @@ import type { BaseColumnFunctions, ModelColumnFunctions } from "@/column";
 import type { ModelQuery } from "@/query";
 import type {
   DrizzleColumns,
+  DrizzleRelations,
   DrizzleSchema,
   DrizzleTable,
   IsDrizzleTable,
@@ -50,8 +51,9 @@ export type IModel<
   DrizzleColumns<TTable>,
   keyof DrizzleColumns<TTable> & string,
   /* Relations section */
-  TRelations[TTable["_"]["name"]]["relations"],
-  keyof TTables & string
+  TRelations[TTable["_"]["name"]]["relations"] extends undefined
+    ? DrizzleRelations
+    : TRelations[TTable["_"]["name"]]["relations"]
 > &
   ModelFunctions<TTables, TTable>;
 
