@@ -1,46 +1,71 @@
 import type {
-  DrizzleRelations,
-  DrizzleSchema,
-  DrizzleTable,
-  DrizzleVariativeRawOutput,
+	DrizzleRelations,
+	DrizzleSchema,
+	DrizzleTable,
+	DrizzleVariativeRawOutput,
 } from "@/types";
 import type { BaseColumnFunctionOptions } from "./base";
 import type { WithValue } from "./with";
 import type { SelectedRelations } from "../relations";
-import type { ResolveSelectedValues, SelectValue } from "./select";
+import type {
+	ResolveSelectedRelations,
+	ResolveSelectedValues,
+	SelectValue,
+	SelectValueWithRelations,
+} from "./select";
 
 export type FindOptions = {} & BaseColumnFunctionOptions;
 
 export interface IFindResult<
-  Table extends DrizzleTable,
-  Tables extends DrizzleSchema,
-  Relation extends DrizzleRelations,
-  Result extends DrizzleVariativeRawOutput<Table> | any,
-  WithResultValue extends WithValue<Tables, Relation> = WithValue<
-    Tables,
-    Relation
-  >,
+	Table extends DrizzleTable,
+	Tables extends DrizzleSchema,
+	Relation extends DrizzleRelations,
+	Result extends DrizzleVariativeRawOutput<Table> | any,
+	WithResultValue extends WithValue<Tables, Relation> | null = null,
 > extends Promise<Result> {
-  with<Value extends WithValue<Tables, Relation>>(
-    value: Value,
-  ): IFindResult<
-    Table,
-    Tables,
-    Relation,
-    SelectedRelations<Tables, Relation, Value> & Result,
-    Value
-  >;
+	with<Value extends WithValue<Tables, Relation>>(
+		value: Value,
+	): IFindResult<
+		/** Tables */
+		Table,
+		Tables,
+		Relation,
+		/** Result */
+		SelectedRelations<Tables, Relation, Value> & Result,
+		/** Saves */
+		Value
+	>;
 
-  select<Value extends SelectValue<Table> = SelectValue<Table>>(
-    value: Value,
-  ): Result extends DrizzleVariativeRawOutput<Table>
-    ? IFindResult<
-        Table,
-        Tables,
-        Relation,
-        ResolveSelectedValues<Table, Value, Result> &
-          SelectedRelations<Tables, Relation, WithResultValue>,
-        WithResultValue
-      >
-    : never;
+	select<
+		SelValue extends SelectValue<Table> = SelectValue<Table>,
+		RelationsValue extends Pick<
+			SelectValueWithRelations<Tables, Relation>,
+			keyof WithResultValue & string
+		> = Pick<
+			SelectValueWithRelations<Tables, Relation>,
+			keyof WithResultValue & string
+		>,
+		Value extends SelValue & RelationsValue = SelValue & RelationsValue,
+	>(
+		value: Value,
+	): Result extends DrizzleVariativeRawOutput<Table>
+		? IFindResult<
+				/** Tables */
+				Table,
+				Tables,
+				Relation,
+				/** Result */
+				WithResultValue extends null
+					? ResolveSelectedValues<Table, Value, Result>
+					: ResolveSelectedRelations<
+							Tables,
+							Relation,
+							Exclude<WithResultValue, null>,
+							Value
+						> &
+							ResolveSelectedValues<Table, Value, Result>,
+				/** Saves */
+				WithResultValue
+			>
+		: never;
 }

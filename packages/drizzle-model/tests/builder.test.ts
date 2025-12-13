@@ -4,33 +4,34 @@ import { db } from "./db";
 import { relations } from "./relations";
 
 const model = modelBuilder({
-  schema,
-  db,
-  relations,
+	schema,
+	db,
+	relations,
 });
 
 const userModel = model("user", {});
 const postsModel = model("userPosts", {});
 
 const testRaw1 = await userModel
-  .age(123)
-  .findOne()
-  .with({
-    // Fix is relations in here are from userModel not from posts
-    posts: postsModel.id(123),
-  });
+	.age(123)
+	.findOne()
+	.with({
+		// Fix is relations in here are from userModel not from posts
+		posts: postsModel.id(123),
+	});
 
-testRaw1;
+testRaw1.posts;
 
 const testRaw2 = await userModel
-  .age(123)
-  .findOne()
-  .with({
-    posts: true,
-  })
-  .select({
-    age: true,
-    email: true,
-  });
-
-testRaw2.posts;
+	.age(123)
+	.findOne()
+	.with({
+		posts: true,
+	})
+	.select({
+		age: true,
+		email: true,
+		posts: {
+			featured: true,
+		},
+	});
