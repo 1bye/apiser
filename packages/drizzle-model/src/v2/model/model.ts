@@ -1,8 +1,4 @@
-import type {
-	DrizzleColumnTypeToType,
-	DrizzleRawOutput,
-	IsDrizzleTable,
-} from "@/types";
+import type { DrizzleColumnTypeToType } from "@/types";
 import type {
 	FindTargetTableInRelationalConfig,
 	RelationsRecord,
@@ -10,6 +6,7 @@ import type {
 	TablesRelationalConfig,
 } from "drizzle-orm/relations";
 import type { TableColumn, TableColumns, TableOutput } from "./table";
+import type { ResolveRelationSelection } from "./relation";
 
 export type WithMethodValue<
 	TSchema extends TablesRelationalConfig,
@@ -23,47 +20,6 @@ export type WithMethodValue<
 		  >;
 };
 
-// export type RelationTargetTableName<
-// 	Key extends string,
-// 	TRelations extends TableRelationalConfig,
-// > = TRelations["relations"][Key]["targetTableName"];
-
-export type WithTypeOutput<
-	Key extends string,
-	TSchema extends TablesRelationalConfig,
-	TTable extends TableRelationalConfig,
-> = DrizzleRawOutput<
-	IsDrizzleTable<TSchema[TTable["relations"][Key]["targetTableName"]]["table"]>
->;
-
-export type TransformIntoRelationType<
-	RelationType extends "many" | "one",
-	T,
-> = RelationType extends "many" ? T[] : T;
-
-export type WithMethodResolvedResult<
-	TValue extends Record<string, any>,
-	TSchema extends TablesRelationalConfig,
-	TTable extends TableRelationalConfig,
-> = {
-	[Key in keyof TValue as TValue[Key] extends true | object
-		? Key & string
-		: never]: TValue[Key] extends Record<string, any>
-		? TransformIntoRelationType<
-				TTable["relations"][Key & string]["relationType"],
-				WithMethodResolvedResult<
-					TValue[Key],
-					TSchema,
-					TSchema[TTable["relations"][Key & string]["targetTableName"]]
-				> &
-					WithTypeOutput<Key & string, TSchema, TTable>
-			>
-		: TransformIntoRelationType<
-				TTable["relations"][Key & string]["relationType"],
-				WithTypeOutput<Key & string, TSchema, TTable>
-			>;
-};
-
 export interface ModelResult<
 	TResult extends Record<string, any>,
 	TSchema extends TablesRelationalConfig,
@@ -72,7 +28,7 @@ export interface ModelResult<
 	with<TValue extends WithMethodValue<TSchema, TTable["relations"]>>(
 		value: TValue,
 	): ModelResult<
-		WithMethodResolvedResult<TValue, TSchema, TTable> & TResult,
+		ResolveRelationSelection<TValue, TSchema, TTable> & TResult,
 		TSchema,
 		TTable
 	>;
