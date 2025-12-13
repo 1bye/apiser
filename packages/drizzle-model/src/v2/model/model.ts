@@ -8,6 +8,14 @@ import type {
 import type { TableColumn, TableColumns, TableOutput } from "./table";
 import type { ResolveRelationSelection } from "./relation";
 
+/**
+ * Recursive type structure for defining nested relation selections in the .with() method.
+ *
+ * It maps relation keys to either a boolean (for simple inclusion) or a nested selection object.
+ *
+ * @typeParam TSchema - Full relational schema
+ * @typeParam TRelations - Record of relations for the current level
+ */
 export type WithMethodValue<
 	TSchema extends TablesRelationalConfig,
 	TRelations extends RelationsRecord,
@@ -20,6 +28,16 @@ export type WithMethodValue<
 		  >;
 };
 
+/**
+ * Represents the result of a model operation (like findMany or findFirst).
+ *
+ * It extends Promise to be awaitable, returning the result data.
+ * It also exposes a `.with()` method for chaining relation loading.
+ *
+ * @typeParam TResult - The type of the data returned (e.g. Row[])
+ * @typeParam TSchema - Full relational schema
+ * @typeParam TTable - Relational configuration for the current table
+ */
 export interface ModelResult<
 	TResult extends Record<string, any>,
 	TSchema extends TablesRelationalConfig,
@@ -34,6 +52,12 @@ export interface ModelResult<
 	>;
 }
 
+/**
+ * Interface defining standard query methods available on a model.
+ *
+ * @typeParam TSchema - Full relational schema
+ * @typeParam TTable - Relational configuration for the current table
+ */
 export type ModelMethods<
 	TSchema extends TablesRelationalConfig,
 	TTable extends TableRelationalConfig,

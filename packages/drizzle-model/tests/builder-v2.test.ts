@@ -19,7 +19,7 @@ const testRaw = await userModel
 			comments: true,
 		},
 	});
-// testRaw.posts[0]?.comments[0].
+// testRaw.posts
 // const postsModel = model("userPosts", {});
 // const commentsModel = model("postComments", {});
 
