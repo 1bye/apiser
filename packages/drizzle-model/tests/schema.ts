@@ -24,3 +24,16 @@ export const userPosts = pgTable("user_posts", {
 		.notNull()
 		.references(() => user.id, { onDelete: "cascade" }),
 });
+
+export const postComments = pgTable("user_post_comments", {
+	id: integer().primaryKey().generatedAlwaysAsIdentity(),
+	content: text("content"),
+
+	// Foreign Keys
+	authorId: integer("author_id")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
+	postId: integer("post_id")
+		.notNull()
+		.references(() => userPosts.id, { onDelete: "cascade" }),
+});

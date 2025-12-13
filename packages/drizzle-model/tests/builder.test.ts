@@ -11,6 +11,7 @@ const model = modelBuilder({
 
 const userModel = model("user", {});
 const postsModel = model("userPosts", {});
+const commentsModel = model("postComments", {});
 
 const testRaw1 = await userModel
 	.age(123)
@@ -46,4 +47,17 @@ const testRaw4 = await postsModel.id(1).findOne().with({
 	user: true,
 });
 
+const testRaw5 = await userModel
+	.age(123)
+	.findOne()
+	.with({
+		posts: true,
+	})
+	.select({
+		age: true,
+		email: true,
+		posts: {
+			id: true,
+		},
+	});
 // testRaw4.user.

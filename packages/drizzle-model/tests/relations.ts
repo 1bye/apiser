@@ -11,5 +11,10 @@ export const relations = defineRelations(schema, (r) => ({
 	},
 	userPosts: {
 		user: r.one.user(),
+		comments: r.many.postComments(),
+	},
+	postComments: {
+		author: r.one.user(),
+		post: r.one.userPosts(),
 	},
 }));
