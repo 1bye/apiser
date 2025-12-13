@@ -106,4 +106,8 @@ export type PickTrueValues<
 		string];
 };
 
+export type ExtactKeysWithTrue<T> = {
+	[K in keyof T]: T[K] extends true ? K : never;
+}[keyof T];
+
 export type { DrizzleTable };
