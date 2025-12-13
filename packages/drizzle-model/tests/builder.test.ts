@@ -32,6 +32,18 @@ const testRaw2 = await userModel
 		age: true,
 		email: true,
 		posts: {
-			featured: true,
+			id: true,
 		},
 	});
+
+// testRaw2.posts[0]?.id
+
+const testRaw3 = await userModel.age(123).findOne().with({
+	invitee: true,
+});
+
+const testRaw4 = await postsModel.id(1).findOne().with({
+	user: true,
+});
+
+// testRaw4.user.

@@ -4,6 +4,10 @@ import { defineRelations } from "drizzle-orm";
 export const relations = defineRelations(schema, (r) => ({
 	user: {
 		posts: r.many.userPosts(),
+		invitee: r.one.user({
+			from: r.user.invitedBy,
+			to: r.user.id,
+		}),
 	},
 	userPosts: {
 		user: r.one.user(),

@@ -5,6 +5,7 @@ import type {
 	DrizzleRelations,
 	DrizzleSchema,
 	DrizzleTable,
+	ExtactKeysWithTrue,
 	IsDrizzleTable,
 } from "@/types";
 import type {
@@ -41,7 +42,7 @@ export type IModel<
 	columns: DrizzleColumns<TTable>;
 	db: TDb;
 	relations: TRelations;
-	tableName: TTable["_"]["name"];
+	tableName: ResolveSchemaTableName<TTables, TTable>;
 } & ModelColumnFunctions<
 	/* Table section */
 	TTable,
@@ -51,11 +52,23 @@ export type IModel<
 	DrizzleColumns<TTable>,
 	keyof DrizzleColumns<TTable> & string,
 	/* Relations section */
-	TRelations[TTable["_"]["name"]]["relations"] extends undefined
+	TRelations[ResolveSchemaTableName<
+		TTables,
+		TTable
+	>]["relations"] extends undefined
 		? DrizzleRelations
-		: TRelations[TTable["_"]["name"]]["relations"]
+		: TRelations[ResolveSchemaTableName<TTables, TTable>]["relations"]
 > &
 	ModelFunctions<TTables, TTable>;
+
+export type ResolveSchemaTableName<
+	Tables extends DrizzleSchema,
+	Table extends DrizzleTable,
+> = ExtactKeysWithTrue<{
+	[Key in keyof Tables as Tables[Key]["_"]["name"] extends Table["_"]["name"]
+		? Key
+		: never]: true;
+}>;
 
 export type IAnyModel = any;
 
