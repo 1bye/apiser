@@ -18,14 +18,44 @@ const testRaw = await userModel
 		posts: {
 			comments: true,
 		},
+	})
+	.select({
+		age: true,
+		posts: {
+			title: true,
+			comments: {
+				content: true,
+			},
+		},
 	});
-// testRaw.posts
-// const postsModel = model("userPosts", {});
-// const commentsModel = model("postComments", {});
+
+// testRaw.posts[0]?.comments[0]?.content;
+const testRaw1 = await userModel
+	.age(12)
+	.findFirst()
+	.with({
+		posts: {
+			comments: true,
+		},
+	})
+	.exclude({
+		age: true,
+		posts: {
+			id: true,
+			comments: {
+				content: true,
+			},
+		},
+	});
+
+// testRaw1.posts[0]?.comments[0].;
+
+const postsModel = model("userPosts", {});
+const commentsModel = model("postComments", {});
 
 // const testRaw1 = await userModel
 // 	.age(123)
-// 	.findOne()
+// 	.findFirst()
 // 	.with({
 // 		// Fix is relations in here are from userModel not from posts
 // 		posts: postsModel.id(123),

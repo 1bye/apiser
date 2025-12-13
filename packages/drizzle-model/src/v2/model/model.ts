@@ -1,4 +1,4 @@
-import type { DrizzleColumnTypeToType } from "@/types";
+import type { DrizzleColumnTypeToType, UnwrapArray } from "@/types";
 import type {
 	FindTargetTableInRelationalConfig,
 	RelationsRecord,
@@ -8,6 +8,44 @@ import type {
 import type { TableColumn, TableColumns, TableOutput } from "./table";
 import type { ResolveRelationSelection } from "./relation";
 
+export type ResolveMethodExcludeValue<
+	TValue extends Record<string, any>,
+	TResult extends Record<string, any>,
+> = {
+	[Key in keyof TResult as TValue[Key & string] extends true
+		? never
+		: Key]: TValue[Key & string] extends object
+		? TResult[Key & string] extends (infer RItem)[]
+			? RItem extends Record<string, any>
+				? ResolveMethodExcludeValue<TValue[Key & string], RItem>[]
+				: never
+			: TResult[Key & string] extends Record<string, any>
+				? ResolveMethodExcludeValue<TValue[Key & string], TResult[Key & string]>
+				: never
+		: TResult[Key & string];
+};
+
+export type ResolveMethodSelectValue<
+	TValue extends Record<string, any>,
+	TResult extends Record<string, any>,
+> = {
+	[Key in keyof TValue]: TValue[Key] extends object
+		? TResult[Key & string] extends (infer RItem)[]
+			? RItem extends Record<string, any>
+				? ResolveMethodSelectValue<TValue[Key], RItem>[]
+				: never
+			: TResult[Key & string] extends Record<string, any>
+				? ResolveMethodSelectValue<TValue[Key], TResult[Key & string]>
+				: never
+		: TResult[Key & string];
+};
+
+export type MethodSelectValue<TResult extends Record<string, any>> = {
+	[Key in keyof TResult]?: UnwrapArray<TResult[Key]> extends object
+		? MethodSelectValue<UnwrapArray<TResult[Key]>> | boolean
+		: boolean;
+};
+
 /**
  * Recursive type structure for defining nested relation selections in the .with() method.
  *
@@ -16,13 +54,13 @@ import type { ResolveRelationSelection } from "./relation";
  * @typeParam TSchema - Full relational schema
  * @typeParam TRelations - Record of relations for the current level
  */
-export type WithMethodValue<
+export type MethodWithValue<
 	TSchema extends TablesRelationalConfig,
 	TRelations extends RelationsRecord,
 > = {
 	[Key in keyof TRelations]?:
 		| boolean
-		| WithMethodValue<
+		| MethodWithValue<
 				TSchema,
 				FindTargetTableInRelationalConfig<TSchema, TRelations[Key]>["relations"]
 		  >;
@@ -43,13 +81,21 @@ export interface ModelResult<
 	TSchema extends TablesRelationalConfig,
 	TTable extends TableRelationalConfig,
 > extends Promise<TResult> {
-	with<TValue extends WithMethodValue<TSchema, TTable["relations"]>>(
+	with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
 		value: TValue,
 	): ModelResult<
 		ResolveRelationSelection<TValue, TSchema, TTable> & TResult,
 		TSchema,
 		TTable
 	>;
+
+	select<TValue extends MethodSelectValue<TResult>>(
+		value: TValue,
+	): ModelResult<ResolveMethodSelectValue<TValue, TResult>, TSchema, TTable>;
+
+	exclude<TValue extends MethodSelectValue<TResult>>(
+		value: TValue,
+	): ModelResult<ResolveMethodExcludeValue<TValue, TResult>, TSchema, TTable>;
 }
 
 /**
