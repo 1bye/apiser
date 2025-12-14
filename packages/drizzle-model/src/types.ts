@@ -1,4 +1,5 @@
 import {
+	Column,
 	type AnyRelation,
 	type ColumnDataConstraint,
 	type ColumnDataType,
@@ -63,6 +64,9 @@ export type DrizzleColumnTypeToType<T extends ColumnType> = DrizzleDataType<
 	ColumnTypeToDrizzleKind<ParseColumnType<T>>
 >;
 
+export type DrizzleColumnDataType<TColumn extends Column> =
+	DrizzleColumnTypeToType<TColumn["dataType"]>;
+
 export type DrizzleDataKindMap = {
 	string: string;
 	number: number;
@@ -109,5 +113,9 @@ export type PickTrueValues<
 export type ExtactKeysWithTrue<T> = {
 	[K in keyof T]: T[K] extends true ? K : never;
 }[keyof T];
+
+export interface RecursiveBooleanRecord {
+	[key: string]: boolean | RecursiveBooleanRecord;
+}
 
 export type { DrizzleTable };

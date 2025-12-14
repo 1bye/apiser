@@ -53,15 +53,34 @@ const testRaw1 = await userModel
 const postsModel = model("userPosts", {});
 const commentsModel = model("postComments", {});
 
-// const testRaw1 = await userModel
-// 	.age(123)
-// 	.findFirst()
-// 	.with({
-// 		// Fix is relations in here are from userModel not from posts
-// 		posts: postsModel.id(123),
-// 	});
+const testRaw2 = await userModel
+	.age(123)
+	.findFirst()
+	.with({
+		// Fix is relations in here are from userModel not from posts
+		posts: postsModel.id(123).with({
+			comments: true,
+		}),
+	});
 
-// testRaw1.posts;
+// testRaw2.posts[0]?.comments[0].;
+
+const testRaw3 = await userModel
+	.age({
+		or: [
+			{
+				equal: 1,
+			},
+			2,
+		],
+	})
+	.findFirst()
+	.with({
+		// Fix is relations in here are from userModel not from posts
+		posts: postsModel.id(123).with({
+			comments: true,
+		}),
+	});
 
 // const testRaw2 = await userModel
 // 	.age(123)

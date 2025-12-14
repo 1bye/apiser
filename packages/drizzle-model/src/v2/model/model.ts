@@ -1,4 +1,4 @@
-import type { DrizzleColumnTypeToType, UnwrapArray } from "@/types";
+import type { UnwrapArray } from "@/types";
 import type {
 	FindTargetTableInRelationalConfig,
 	RelationsRecord,
@@ -7,6 +7,7 @@ import type {
 } from "drizzle-orm/relations";
 import type { TableColumn, TableColumns, TableOutput } from "./table";
 import type { ResolveRelationSelection } from "./relation";
+import type { ColumnValue } from "./operations";
 
 export type ResolveMethodExcludeValue<
 	TValue extends Record<string, any>,
@@ -63,7 +64,8 @@ export type MethodWithValue<
 		| MethodWithValue<
 				TSchema,
 				FindTargetTableInRelationalConfig<TSchema, TRelations[Key]>["relations"]
-		  >;
+		  >
+		| object;
 };
 
 /**
@@ -110,6 +112,10 @@ export type ModelMethods<
 > = {
 	findMany: () => ModelResult<TableOutput<TTable>[], TSchema, TTable>;
 	findFirst: () => ModelResult<TableOutput<TTable>, TSchema, TTable>;
+
+	with: <TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
+		value: TValue,
+	) => TValue;
 };
 
 /**
@@ -127,7 +133,7 @@ export type ModelField<
 	TSchema extends TablesRelationalConfig,
 	TTable extends TableRelationalConfig,
 > = (
-	value: DrizzleColumnTypeToType<TableColumn<TColumnName, TTable>["dataType"]>,
+	value: ColumnValue<TableColumn<TColumnName, TTable>>,
 ) => Omit<Model<TSchema, TTable>, TColumnName>;
 
 /**
@@ -145,10 +151,14 @@ export type ModelField<
 export type Model<
 	TSchema extends TablesRelationalConfig,
 	TTable extends TableRelationalConfig,
-> = {
+> = ModelIdentifier & {
 	[ColumnKey in keyof TableColumns<TTable>]: ModelField<
 		ColumnKey & string,
 		TSchema,
 		TTable
 	>;
 } & ModelMethods<TSchema, TTable>;
+
+export type ModelIdentifier = {
+	$model: "model";
+};

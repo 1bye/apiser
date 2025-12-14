@@ -1,8 +1,13 @@
-import type { DrizzleRawOutput, IsDrizzleTable } from "@/types";
+import type {
+	DrizzleRawOutput,
+	IsDrizzleTable,
+	RecursiveBooleanRecord,
+} from "@/types";
 import type {
 	TableRelationalConfig,
 	TablesRelationalConfig,
 } from "drizzle-orm/relations";
+import type { ModelIdentifier } from "./model";
 
 /**
  * Defines the cardinality of a relation: "one" (hasOne) or "many" (hasMany).
@@ -105,7 +110,10 @@ export type ResolveRelationSelection<
 	TSchema extends TablesRelationalConfig,
 	TTable extends TableRelationalConfig,
 > = {
-	[Key in keyof TSelection as TSelection[Key] extends true | object
+	[Key in keyof TSelection as TSelection[Key] extends
+		| true
+		| RecursiveBooleanRecord
+		| ModelIdentifier
 		? Key & string
 		: never]: ResolveSingleRelation<
 		Key & string,
