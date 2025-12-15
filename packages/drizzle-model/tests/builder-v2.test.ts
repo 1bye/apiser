@@ -82,6 +82,56 @@ const testRaw3 = await userModel
 		}),
 	});
 
+const testRaw4 = await userModel
+	.age({
+		or: [
+			{
+				equal: 1,
+			},
+			2,
+		],
+	})
+	.findMany()
+	.with({
+		// Fix is relations in here are from userModel not from posts
+		posts: postsModel.id(123).with({
+			comments: true,
+		}),
+	})
+	.select({
+		posts: {
+			description: true,
+			comments: true,
+		},
+	});
+
+// testRaw4[0]?.posts[0].
+
+const testRaw5 = await userModel
+	.age({
+		or: [
+			{
+				equal: 1,
+			},
+			2,
+		],
+	})
+	.findMany()
+	.with({
+		// Fix is relations in here are from userModel not from posts
+		posts: postsModel.id(123).with({
+			comments: true,
+		}),
+	})
+	.exclude({
+		posts: {
+			description: true,
+			comments: true,
+		},
+	});
+
+// testRaw5[0]?.posts[0].
+
 // const testRaw2 = await userModel
 // 	.age(123)
 // 	.findOne()

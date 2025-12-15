@@ -1,13 +1,13 @@
-- Add all essential functions as `update`, `insert`, `delete`, `find`, `findOne`
+- Add all essential functions as `update`, `insert`, `delete`, `findMany`, `findFirst`
 - Make `route` function (Just duplicate):
 ```ts
 const [val1, val2] = await userModel.name({
   like: "A%"
 }).route(
-  (userModel) => userModel.isVerified(true).find(),
+  (userModel) => userModel.isVerified(true).findMany(),
   (userModel) => userModel.isVerified(false).age({
     lte: 18
-  }).find()
+  }).findMany()
   // ...args[]
 )
 ```
@@ -43,7 +43,7 @@ userModel.transaction(tx => ...);
 
 // With other models
 userModel.transaction(tx => {
-  postsModel.db(tx).create({
+  postsModel.db(tx).insert({
     userId: 123,
     content: ...
   })
@@ -52,7 +52,7 @@ userModel.transaction(tx => {
   
   const txPostsModel = postsModel.db(tx);
   
-  txPostsModel.create({
+  txPostsModel.insert({
     userId: 123,
     content: ...
   })

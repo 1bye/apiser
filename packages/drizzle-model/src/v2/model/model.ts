@@ -1,72 +1,15 @@
-import type { UnwrapArray } from "@/types";
 import type {
-	FindTargetTableInRelationalConfig,
-	RelationsRecord,
 	TableRelationalConfig,
 	TablesRelationalConfig,
 } from "drizzle-orm/relations";
 import type { TableColumn, TableColumns, TableOutput } from "./table";
-import type { ResolveRelationSelection } from "./relation";
 import type { ColumnValue } from "./operations";
-
-export type ResolveMethodExcludeValue<
-	TValue extends Record<string, any>,
-	TResult extends Record<string, any>,
-> = {
-	[Key in keyof TResult as TValue[Key & string] extends true
-		? never
-		: Key]: TValue[Key & string] extends object
-		? TResult[Key & string] extends (infer RItem)[]
-			? RItem extends Record<string, any>
-				? ResolveMethodExcludeValue<TValue[Key & string], RItem>[]
-				: never
-			: TResult[Key & string] extends Record<string, any>
-				? ResolveMethodExcludeValue<TValue[Key & string], TResult[Key & string]>
-				: never
-		: TResult[Key & string];
-};
-
-export type ResolveMethodSelectValue<
-	TValue extends Record<string, any>,
-	TResult extends Record<string, any>,
-> = {
-	[Key in keyof TValue]: TValue[Key] extends object
-		? TResult[Key & string] extends (infer RItem)[]
-			? RItem extends Record<string, any>
-				? ResolveMethodSelectValue<TValue[Key], RItem>[]
-				: never
-			: TResult[Key & string] extends Record<string, any>
-				? ResolveMethodSelectValue<TValue[Key], TResult[Key & string]>
-				: never
-		: TResult[Key & string];
-};
-
-export type MethodSelectValue<TResult extends Record<string, any>> = {
-	[Key in keyof TResult]?: UnwrapArray<TResult[Key]> extends object
-		? MethodSelectValue<UnwrapArray<TResult[Key]>> | boolean
-		: boolean;
-};
-
-/**
- * Recursive type structure for defining nested relation selections in the .with() method.
- *
- * It maps relation keys to either a boolean (for simple inclusion) or a nested selection object.
- *
- * @typeParam TSchema - Full relational schema
- * @typeParam TRelations - Record of relations for the current level
- */
-export type MethodWithValue<
-	TSchema extends TablesRelationalConfig,
-	TRelations extends RelationsRecord,
-> = {
-	[Key in keyof TRelations]?:
-		| boolean
-		| MethodWithValue<
-				TSchema,
-				FindTargetTableInRelationalConfig<TSchema, TRelations[Key]>["relations"]
-		  >
-		| object;
-};
+import type { MethodWithResult, MethodWithValue } from "./methods/with";
+import type { MethodSelectResult, MethodSelectValue } from "./methods/select";
+import type {
+	MethodExcludeResult,
+	MethodExcludeValue,
+} from "./methods/exclude";
 
 /**
  * Represents the result of a model operation (like findMany or findFirst).
@@ -86,18 +29,18 @@ export interface ModelResult<
 	with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
 		value: TValue,
 	): ModelResult<
-		ResolveRelationSelection<TValue, TSchema, TTable> & TResult,
+		MethodWithResult<TValue, TResult, TSchema, TTable>,
 		TSchema,
 		TTable
 	>;
 
 	select<TValue extends MethodSelectValue<TResult>>(
 		value: TValue,
-	): ModelResult<ResolveMethodSelectValue<TValue, TResult>, TSchema, TTable>;
+	): ModelResult<MethodSelectResult<TValue, TResult>, TSchema, TTable>;
 
-	exclude<TValue extends MethodSelectValue<TResult>>(
+	exclude<TValue extends MethodExcludeValue<TResult>>(
 		value: TValue,
-	): ModelResult<ResolveMethodExcludeValue<TValue, TResult>, TSchema, TTable>;
+	): ModelResult<MethodExcludeResult<TValue, TResult>, TSchema, TTable>;
 }
 
 /**
@@ -106,17 +49,17 @@ export interface ModelResult<
  * @typeParam TSchema - Full relational schema
  * @typeParam TTable - Relational configuration for the current table
  */
-export type ModelMethods<
+export interface ModelMethods<
 	TSchema extends TablesRelationalConfig,
 	TTable extends TableRelationalConfig,
-> = {
-	findMany: () => ModelResult<TableOutput<TTable>[], TSchema, TTable>;
-	findFirst: () => ModelResult<TableOutput<TTable>, TSchema, TTable>;
+> {
+	findMany(): ModelResult<TableOutput<TTable>[], TSchema, TTable>;
+	findFirst(): ModelResult<TableOutput<TTable>, TSchema, TTable>;
 
-	with: <TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
+	with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
 		value: TValue,
-	) => TValue;
-};
+	): TValue;
+}
 
 /**
  * Represents a strongly-typed setter function for a single model field.
