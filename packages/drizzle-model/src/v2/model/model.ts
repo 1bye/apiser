@@ -56,6 +56,8 @@ export interface ModelMethods<
 	findMany(): ModelResult<TableOutput<TTable>[], TSchema, TTable>;
 	findFirst(): ModelResult<TableOutput<TTable>, TSchema, TTable>;
 
+	insert(): void;
+
 	with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
 		value: TValue,
 	): TValue;
