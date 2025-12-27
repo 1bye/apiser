@@ -1,94 +1,94 @@
 import {
-	Column,
-	type AnyRelation,
-	type ColumnDataConstraint,
-	type ColumnDataType,
-	type ColumnType,
-	type ColumnTypeData,
-	type Table as DrizzleTable,
-	type InferInsertModel,
-	type InferSelectModel,
-	type RelationsRecord,
-	type Schema,
+  Column,
+  type AnyRelation,
+  type ColumnDataConstraint,
+  type ColumnDataType,
+  type ColumnType,
+  type ColumnTypeData,
+  type Table as DrizzleTable,
+  type InferInsertModel,
+  type InferSelectModel,
+  type RelationsRecord,
+  type Schema,
 } from "drizzle-orm";
 
 export type DrizzleColumns<Table extends DrizzleTable> = Table["_"]["columns"];
 export type DrizzleColumn<
-	Table extends DrizzleTable,
-	Columns extends DrizzleColumns<Table> = DrizzleColumns<Table>,
+  Table extends DrizzleTable,
+  Columns extends DrizzleColumns<Table> = DrizzleColumns<Table>,
 > = Columns[keyof Columns];
 
 export type DrizzleRawOutput<Table extends DrizzleTable> =
-	InferSelectModel<Table>;
+  InferSelectModel<Table>;
 
 export type DrizzleVariativeRawOutput<Table extends DrizzleTable> =
-	| DrizzleRawOutput<Table>
-	| DrizzleRawOutput<Table>[]
-	| null;
+  | DrizzleRawOutput<Table>
+  | DrizzleRawOutput<Table>[]
+  | null;
 
 export type DrizzleInsertModel<Table extends DrizzleTable> =
-	InferInsertModel<Table>;
+  InferInsertModel<Table>;
 
 export type DrizzleInsertValues<Table extends DrizzleTable> =
-	| DrizzleInsertModel<Table>
-	| DrizzleInsertModel<Table>[];
+  | DrizzleInsertModel<Table>
+  | DrizzleInsertModel<Table>[];
 
 export type ParseColumnType<T extends ColumnType> =
-	// Case 1: "number int32" (type + constraint)
-	T extends `${infer TType extends ColumnDataType} ${infer TConstraint extends ColumnDataConstraint}`
-		? ColumnTypeData<TType, TConstraint>
-		: // Case 2: "string" | "number" | "array" | ...
-			T extends `${infer TType extends ColumnDataType}`
-			? ColumnTypeData<TType, undefined>
-			: // Should never happen, but keeps TS satisfied
-				never;
+  // Case 1: "number int32" (type + constraint)
+  T extends `${infer TType extends ColumnDataType} ${infer TConstraint extends ColumnDataConstraint}`
+  ? ColumnTypeData<TType, TConstraint>
+  : // Case 2: "string" | "number" | "array" | ...
+  T extends `${infer TType extends ColumnDataType}`
+  ? ColumnTypeData<TType, undefined>
+  : // Should never happen, but keeps TS satisfied
+  never;
 
 export type ColumnTypeToDrizzleKind<T extends ColumnTypeData> =
-	T["type"] extends "string"
-		? "string"
-		: T["type"] extends "number"
-			? "number"
-			: T["type"] extends "boolean"
-				? "boolean"
-				: T["type"] extends "array"
-					? "array"
-					: T["type"] extends "object"
-						? "json"
-						: T["type"] extends "bigint"
-							? "bigint"
-							: T["type"] extends "custom"
-								? "custom"
-								: never;
+  T["type"] extends "string"
+  ? "string"
+  : T["type"] extends "number"
+  ? "number"
+  : T["type"] extends "boolean"
+  ? "boolean"
+  : T["type"] extends "array"
+  ? "array"
+  : T["type"] extends "object"
+  ? "json"
+  : T["type"] extends "bigint"
+  ? "bigint"
+  : T["type"] extends "custom"
+  ? "custom"
+  : never;
 
 export type DrizzleColumnTypeToType<T extends ColumnType> = DrizzleDataType<
-	ColumnTypeToDrizzleKind<ParseColumnType<T>>
+  ColumnTypeToDrizzleKind<ParseColumnType<T>>
 >;
 
 export type DrizzleColumnDataType<TColumn extends Column> =
-	DrizzleColumnTypeToType<TColumn["dataType"]>;
+  DrizzleColumnTypeToType<TColumn["dataType"]>;
 
 export type DrizzleDataKindMap = {
-	string: string;
-	number: number;
-	boolean: boolean;
-	array: unknown[];
-	json: Record<string, unknown>;
-	date: Date;
-	bigint: bigint;
-	custom: unknown;
-	buffer: ArrayBuffer;
+  string: string;
+  number: number;
+  boolean: boolean;
+  array: unknown[];
+  json: Record<string, unknown>;
+  date: Date;
+  bigint: bigint;
+  custom: unknown;
+  buffer: ArrayBuffer;
 
-	// the following could be real domain types, but default to string/date
-	dateDuration: string;
-	duration: string;
-	relDuration: string;
-	localTime: string;
-	localDate: string;
-	localDateTime: string;
+  // the following could be real domain types, but default to string/date
+  dateDuration: string;
+  duration: string;
+  relDuration: string;
+  localTime: string;
+  localDate: string;
+  localDateTime: string;
 };
 
 export type DrizzleDataType<K extends keyof DrizzleDataKindMap> =
-	DrizzleDataKindMap[K];
+  DrizzleDataKindMap[K];
 
 export type NonUndefined<T> = T extends undefined ? never : T;
 
@@ -103,19 +103,24 @@ export type DrizzleAnyRelation = AnyRelation;
 export type UnwrapArray<T> = T extends (infer R)[] ? R : T;
 
 export type PickTrueValues<
-	Value extends Record<string, any>,
-	PickFrom extends Record<string, any>,
+  Value extends Record<string, any>,
+  PickFrom extends Record<string, any>,
 > = {
-	[Key in keyof Value as Value[Key] extends true ? Key : never]: PickFrom[Key &
-		string];
-};
+    [Key in keyof Value as Value[Key] extends true ? Key : never]: PickFrom[Key &
+    string];
+  };
 
 export type ExtactKeysWithTrue<T> = {
-	[K in keyof T]: T[K] extends true ? K : never;
+  [K in keyof T]: T[K] extends true ? K : never;
 }[keyof T];
 
 export interface RecursiveBooleanRecord {
-	[key: string]: boolean | RecursiveBooleanRecord;
+  [key: string]: boolean | RecursiveBooleanRecord;
 }
+
+// Picks values that null and make them undefined as well
+export type NullToOptional<T extends Record<string, any>> = {
+  [K in keyof T]: T[K] extends null ? null | undefined : T[K];
+};
 
 export type { DrizzleTable };

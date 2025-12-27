@@ -1,47 +1,12 @@
 import type {
-	TableRelationalConfig,
-	TablesRelationalConfig,
+  TableRelationalConfig,
+  TablesRelationalConfig,
 } from "drizzle-orm/relations";
 import type { TableColumn, TableColumns, TableOutput } from "./table";
 import type { ColumnValue } from "./operations";
-import type { MethodWithResult, MethodWithValue } from "./methods/with";
-import type { MethodSelectResult, MethodSelectValue } from "./methods/select";
-import type {
-	MethodExcludeResult,
-	MethodExcludeValue,
-} from "./methods/exclude";
-
-/**
- * Represents the result of a model operation (like findMany or findFirst).
- *
- * It extends Promise to be awaitable, returning the result data.
- * It also exposes a `.with()` method for chaining relation loading.
- *
- * @typeParam TResult - The type of the data returned (e.g. Row[])
- * @typeParam TSchema - Full relational schema
- * @typeParam TTable - Relational configuration for the current table
- */
-export interface ModelResult<
-	TResult extends Record<string, any>,
-	TSchema extends TablesRelationalConfig,
-	TTable extends TableRelationalConfig,
-> extends Promise<TResult> {
-	with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
-		value: TValue,
-	): ModelResult<
-		MethodWithResult<TValue, TResult, TSchema, TTable>,
-		TSchema,
-		TTable
-	>;
-
-	select<TValue extends MethodSelectValue<TResult>>(
-		value: TValue,
-	): ModelResult<MethodSelectResult<TValue, TResult>, TSchema, TTable>;
-
-	exclude<TValue extends MethodExcludeValue<TResult>>(
-		value: TValue,
-	): ModelResult<MethodExcludeResult<TValue, TResult>, TSchema, TTable>;
-}
+import type { MethodWithValue } from "./methods/with";
+import type { MethodInsertValue } from "./methods/insert";
+import type { ModelResult, ModelInsertResult } from "./result";
 
 /**
  * Interface defining standard query methods available on a model.
@@ -50,18 +15,20 @@ export interface ModelResult<
  * @typeParam TTable - Relational configuration for the current table
  */
 export interface ModelMethods<
-	TSchema extends TablesRelationalConfig,
-	TTable extends TableRelationalConfig,
+  TSchema extends TablesRelationalConfig,
+  TTable extends TableRelationalConfig,
 > {
-	findMany(): ModelResult<TableOutput<TTable>[], TSchema, TTable>;
-	findFirst(): ModelResult<TableOutput<TTable>, TSchema, TTable>;
+  findMany(): ModelResult<TableOutput<TTable>[], TSchema, TTable>;
+  findFirst(): ModelResult<TableOutput<TTable>, TSchema, TTable>;
 
-	insert(): void;
+  insert<TValue extends MethodInsertValue<TTable>>(value: TValue): ModelInsertResult<void, TValue, TSchema, TTable>;
 
-	with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
-		value: TValue,
-	): TValue;
+  with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
+    value: TValue,
+  ): TValue;
 }
+
+export type ModelFirstLevelMethods = "insert";
 
 /**
  * Represents a strongly-typed setter function for a single model field.
@@ -74,12 +41,12 @@ export interface ModelMethods<
  * @typeParam TTable - Relational configuration for the current table
  */
 export type ModelField<
-	TColumnName extends string,
-	TSchema extends TablesRelationalConfig,
-	TTable extends TableRelationalConfig,
+  TColumnName extends string,
+  TSchema extends TablesRelationalConfig,
+  TTable extends TableRelationalConfig,
 > = (
-	value: ColumnValue<TableColumn<TColumnName, TTable>>,
-) => Omit<Model<TSchema, TTable>, TColumnName>;
+  value: ColumnValue<TableColumn<TColumnName, TTable>>,
+) => Omit<Model<TSchema, TTable>, TColumnName | ModelFirstLevelMethods>;
 
 /**
  * Main model interface for a table.
@@ -94,16 +61,16 @@ export type ModelField<
  * @typeParam TTable - Relational configuration for the current table
  */
 export type Model<
-	TSchema extends TablesRelationalConfig,
-	TTable extends TableRelationalConfig,
+  TSchema extends TablesRelationalConfig,
+  TTable extends TableRelationalConfig,
 > = ModelIdentifier & {
-	[ColumnKey in keyof TableColumns<TTable>]: ModelField<
-		ColumnKey & string,
-		TSchema,
-		TTable
-	>;
+  [ColumnKey in keyof TableColumns<TTable>]: ModelField<
+    ColumnKey & string,
+    TSchema,
+    TTable
+  >;
 } & ModelMethods<TSchema, TTable>;
 
 export type ModelIdentifier = {
-	$model: "model";
+  $model: "model";
 };
