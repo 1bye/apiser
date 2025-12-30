@@ -6,7 +6,9 @@ import type { TableColumn, TableColumns, TableOutput } from "./table";
 import type { ColumnValue } from "./operations";
 import type { MethodWithValue } from "./methods/with";
 import type { MethodInsertValue } from "./methods/insert";
-import type { ModelResult, ModelInsertResult } from "./result";
+import type { ModelQueryResult, ModelMutateResult } from "./result";
+import type { MethodUpdateValue } from "./methods/update";
+import type { ModelDialect } from "./dialect";
 
 /**
  * Interface defining standard query methods available on a model.
@@ -17,11 +19,14 @@ import type { ModelResult, ModelInsertResult } from "./result";
 export interface ModelMethods<
   TSchema extends TablesRelationalConfig,
   TTable extends TableRelationalConfig,
+  TDialect extends ModelDialect
 > {
-  findMany(): ModelResult<TableOutput<TTable>[], TSchema, TTable>;
-  findFirst(): ModelResult<TableOutput<TTable>, TSchema, TTable>;
+  findMany(): ModelQueryResult<TableOutput<TTable>[], TSchema, TTable>;
+  findFirst(): ModelQueryResult<TableOutput<TTable>, TSchema, TTable>;
 
-  insert<TValue extends MethodInsertValue<TTable>>(value: TValue): ModelInsertResult<void, TValue, TSchema, TTable>;
+  insert<TValue extends MethodInsertValue<TTable>>(value: TValue): ModelMutateResult<void, TValue, TSchema, TTable, TDialect, "one">;
+  update<TValue extends MethodUpdateValue<TTable>>(value: TValue): ModelMutateResult<void, TValue, TSchema, TTable, TDialect, "many">;
+  delete(): ModelMutateResult<void, {}, TSchema, TTable, TDialect, "many">;
 
   with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
     value: TValue,
@@ -44,9 +49,10 @@ export type ModelField<
   TColumnName extends string,
   TSchema extends TablesRelationalConfig,
   TTable extends TableRelationalConfig,
+  TDialect extends ModelDialect
 > = (
   value: ColumnValue<TableColumn<TColumnName, TTable>>,
-) => Omit<Model<TSchema, TTable>, TColumnName | ModelFirstLevelMethods>;
+) => Omit<Model<TSchema, TTable, TDialect>, TColumnName | ModelFirstLevelMethods>;
 
 /**
  * Main model interface for a table.
@@ -63,13 +69,15 @@ export type ModelField<
 export type Model<
   TSchema extends TablesRelationalConfig,
   TTable extends TableRelationalConfig,
+  TDialect extends ModelDialect
 > = ModelIdentifier & {
   [ColumnKey in keyof TableColumns<TTable>]: ModelField<
     ColumnKey & string,
     TSchema,
-    TTable
+    TTable,
+    TDialect
   >;
-} & ModelMethods<TSchema, TTable>;
+} & ModelMethods<TSchema, TTable, TDialect>;
 
 export type ModelIdentifier = {
   $model: "model";

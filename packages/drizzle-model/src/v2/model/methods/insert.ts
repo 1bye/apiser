@@ -1,5 +1,5 @@
 import type { DrizzleInsertValues, IsDrizzleTable } from "@/types";
-import type { FindTargetTableInRelationalConfig, RelationsRecord, TableRelationalConfig, TablesRelationalConfig } from "drizzle-orm/relations";
+import type { RelationsRecord, TableRelationalConfig, TablesRelationalConfig } from "drizzle-orm/relations";
 
 export type MethodInsertValue<TTable extends TableRelationalConfig> = DrizzleInsertValues<IsDrizzleTable<TTable["table"]>>;
 

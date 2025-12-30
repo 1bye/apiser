@@ -1,0 +1,1 @@
+- Support the (`Views`)[https://orm.drizzle.team/docs/views] on future.

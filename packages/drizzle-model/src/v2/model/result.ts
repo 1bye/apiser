@@ -10,6 +10,8 @@ import type {
 } from "./methods/exclude";
 import type { MethodReturnResult } from "./methods/return";
 import type { MethodWithInsertValue } from "./methods/insert";
+import type { ModelDialect, ReturningIdDialects } from "./dialect";
+import type { TableOutput } from "./table";
 
 /**
  * Represents the result of a model operation (like findMany or findFirst).
@@ -21,14 +23,14 @@ import type { MethodWithInsertValue } from "./methods/insert";
  * @typeParam TSchema - Full relational schema
  * @typeParam TTable - Relational configuration for the current table
  */
-export interface ModelResult<
+export interface ModelQueryResult<
   TResult extends Record<string, any>,
   TSchema extends TablesRelationalConfig,
   TTable extends TableRelationalConfig,
 > extends Promise<TResult> {
   with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
     value: TValue,
-  ): ModelResult<
+  ): ModelQueryResult<
     MethodWithResult<TValue, TResult, TSchema, TTable>,
     TSchema,
     TTable
@@ -36,30 +38,42 @@ export interface ModelResult<
 
   select<TValue extends MethodSelectValue<TResult>>(
     value: TValue,
-  ): ModelResult<MethodSelectResult<TValue, TResult>, TSchema, TTable>;
+  ): ModelQueryResult<MethodSelectResult<TValue, TResult>, TSchema, TTable>;
 
   exclude<TValue extends MethodExcludeValue<TResult>>(
     value: TValue,
-  ): ModelResult<MethodExcludeResult<TValue, TResult>, TSchema, TTable>;
+  ): ModelQueryResult<MethodExcludeResult<TValue, TResult>, TSchema, TTable>;
 }
 
-export interface ModelInsertResult<
-  TResult extends Record<string, any> | void,
+export interface ModelMutateResult<
+  TBaseResult extends Record<string, any> | void,
   TPayload extends Record<string, any> | any[],
   TSchema extends TablesRelationalConfig,
   TTable extends TableRelationalConfig,
-> extends Promise<TResult> {
+  TDialect extends ModelDialect,
+  TResultType extends string = "one"
+> extends Promise<TBaseResult> {
   // TODO: Planned for future
   // with<TValue extends MethodWithInsertValue<TSchema, TTable["relations"]>>(
   //   value: TValue,
   // ): void;
 
-  return(): Omit<
-    ModelInsertResult<
-      MethodReturnResult<TPayload, TTable>,
+  return<
+    TValue extends MethodSelectValue<TableOutput<TTable>> | undefined,
+    TReturnResult extends MethodReturnResult<TPayload, TTable, TDialect> = MethodReturnResult<TPayload, TTable, TDialect>,
+    TResult extends Record<string, any> = TValue extends undefined ? TReturnResult : MethodSelectResult<Exclude<TValue, undefined>, TReturnResult>
+  >(
+    value?: TDialect extends ReturningIdDialects ? never : TValue,
+  ): Omit<
+    ModelMutateResult<
+      (TResultType extends "many"
+        ? TResult[]
+        : TResult),
       TPayload,
       TSchema,
-      TTable
+      TTable,
+      TDialect,
+      TResultType
     >,
     "with"
   >;

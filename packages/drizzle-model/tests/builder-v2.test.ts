@@ -7,6 +7,7 @@ const model = modelBuilder({
   schema,
   db,
   relations,
+  dialect: "PostgreSQL"
 });
 
 const userModel = model("user", {});
@@ -138,6 +139,20 @@ const testRaw6 = await userModel.insert({
   email: "email@email",
   name: "Nameie",
   age: 123,
-}).return();
+}).return({
+  age: true
+});
+
+// testRaw6
 
 // testRaw6.age
+
+const testRaw7 = await userModel.id(1).update({
+  age: 12
+}).return();
+
+// testRaw7[0].
+
+const testRaw8 = await userModel.id(1).delete().return();
+
+// testRaw8[0].

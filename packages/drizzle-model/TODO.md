@@ -61,3 +61,4 @@ userModel.transaction(tx => {
 });
 ```
 - Soft delete?
+- Dialect based configuration `mysql`, `pgsql` and etc... like `returning()` on pgsql and `$returningId()` on mysql
