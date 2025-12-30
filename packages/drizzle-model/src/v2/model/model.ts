@@ -9,6 +9,8 @@ import type { MethodInsertValue } from "./methods/insert";
 import type { ModelQueryResult, ModelMutateResult } from "./result";
 import type { MethodUpdateValue } from "./methods/update";
 import type { ModelDialect } from "./dialect";
+import type { ModelForegins } from "./foreigns";
+import type { ModelFirstLevelMethods } from "./methods/levels";
 
 /**
  * Interface defining standard query methods available on a model.
@@ -33,8 +35,6 @@ export interface ModelMethods<
   ): TValue;
 }
 
-export type ModelFirstLevelMethods = "insert";
-
 /**
  * Represents a strongly-typed setter function for a single model field.
  *
@@ -49,10 +49,27 @@ export type ModelField<
   TColumnName extends string,
   TSchema extends TablesRelationalConfig,
   TTable extends TableRelationalConfig,
-  TDialect extends ModelDialect
+  TDialect extends ModelDialect,
 > = (
   value: ColumnValue<TableColumn<TColumnName, TTable>>,
 ) => Omit<Model<TSchema, TTable, TDialect>, TColumnName | ModelFirstLevelMethods>;
+
+
+/**
+ * Just base represenation of model. This type JUST made for more clearer types, not more...
+ */
+export type ModelBase<
+  TSchema extends TablesRelationalConfig,
+  TTable extends TableRelationalConfig,
+  TDialect extends ModelDialect,
+> = {
+  [ColumnKey in keyof TableColumns<TTable>]: ModelField<
+    ColumnKey & string,
+    TSchema,
+    TTable,
+    TDialect
+  >;
+} & ModelMethods<TSchema, TTable, TDialect> & ModelForegins<TSchema, TTable, TDialect>;
 
 /**
  * Main model interface for a table.
@@ -69,16 +86,10 @@ export type ModelField<
 export type Model<
   TSchema extends TablesRelationalConfig,
   TTable extends TableRelationalConfig,
-  TDialect extends ModelDialect
-> = ModelIdentifier & {
-  [ColumnKey in keyof TableColumns<TTable>]: ModelField<
-    ColumnKey & string,
-    TSchema,
-    TTable,
-    TDialect
-  >;
-} & ModelMethods<TSchema, TTable, TDialect>;
+  TDialect extends ModelDialect,
+> = ModelIdentifier<TTable["name"]> & ModelBase<TSchema, TTable, TDialect>;
 
-export type ModelIdentifier = {
+export type ModelIdentifier<ModelName> = {
   $model: "model";
+  $modelName: ModelName;
 };

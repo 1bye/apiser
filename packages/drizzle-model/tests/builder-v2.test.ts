@@ -12,9 +12,11 @@ const model = modelBuilder({
 
 const userModel = model("user", {});
 
+// userModel.
+
 const testRaw = await userModel
   .age(12)
-  .findFirst()
+  .$findFirst()
   .with({
     posts: {
       comments: true,
@@ -33,7 +35,7 @@ const testRaw = await userModel
 // testRaw.posts[0]?.comments[0]?.content;
 const testRaw1 = await userModel
   .age(12)
-  .findFirst()
+  .$findFirst()
   .with({
     posts: {
       comments: true,
@@ -56,10 +58,10 @@ const commentsModel = model("postComments", {});
 
 const testRaw2 = await userModel
   .age(123)
-  .findFirst()
+  .$findFirst()
   .with({
     // Fix is relations in here are from userModel not from posts
-    posts: postsModel.id(123).with({
+    posts: postsModel.id(123).$with({
       comments: true,
     }),
   });
@@ -75,11 +77,11 @@ const testRaw3 = await userModel
       2,
     ],
   })
-  .findFirst()
+  .$findFirst()
   .with({
     // Fix is relations in here are from userModel not from posts
-    posts: postsModel.id(123).with({
-      comments: commentsModel.id(1).with({
+    posts: postsModel.id(123).$with({
+      comments: commentsModel.id(1).$with({
         author: true
       }),
     }),
@@ -96,10 +98,10 @@ const testRaw4 = await userModel
       2,
     ],
   })
-  .findMany()
+  .$findMany()
   .with({
     // Fix is relations in here are from userModel not from posts
-    posts: postsModel.id(123).with({
+    posts: postsModel.id(123).$with({
       comments: true,
     }),
   })
@@ -121,10 +123,10 @@ const testRaw5 = await userModel
       2,
     ],
   })
-  .findMany()
+  .$findMany()
   .with({
     // Fix is relations in here are from userModel not from posts
-    posts: postsModel.id(123).with({
+    posts: postsModel.id(123).$with({
       comments: true,
     }),
   })
@@ -135,7 +137,7 @@ const testRaw5 = await userModel
     },
   });
 
-const testRaw6 = await userModel.insert({
+const testRaw6 = await userModel.$insert({
   email: "email@email",
   name: "Nameie",
   age: 123,
@@ -153,12 +155,14 @@ const testRaw7 = await userModel.id(1).$update({
 
 // testRaw7[0].
 
-const testRaw8 = await userModel.id(1).delete().return();
+const testRaw8 = await userModel.id(1).$delete().return();
 
 // testRaw8[0].
 
-const testRaw9 = await postsModel.User(
-  (c) => c.id(123)
-).update({
-  age: 12
+// postsModel.
+
+const testRaw9 = await postsModel.user(
+  userModel.id(123)
+).$update({
+  description: ""
 }).return();
