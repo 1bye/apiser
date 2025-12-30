@@ -147,7 +147,7 @@ const testRaw6 = await userModel.insert({
 
 // testRaw6.age
 
-const testRaw7 = await userModel.id(1).update({
+const testRaw7 = await userModel.id(1).$update({
   age: 12
 }).return();
 
@@ -156,3 +156,9 @@ const testRaw7 = await userModel.id(1).update({
 const testRaw8 = await userModel.id(1).delete().return();
 
 // testRaw8[0].
+
+const testRaw9 = await postsModel.User(
+  (c) => c.id(123)
+).update({
+  age: 12
+}).return();

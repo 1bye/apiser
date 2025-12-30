@@ -21,14 +21,14 @@ export interface ModelMethods<
   TTable extends TableRelationalConfig,
   TDialect extends ModelDialect
 > {
-  findMany(): ModelQueryResult<TableOutput<TTable>[], TSchema, TTable>;
-  findFirst(): ModelQueryResult<TableOutput<TTable>, TSchema, TTable>;
+  $findMany(): ModelQueryResult<TableOutput<TTable>[], TSchema, TTable>;
+  $findFirst(): ModelQueryResult<TableOutput<TTable>, TSchema, TTable>;
 
-  insert<TValue extends MethodInsertValue<TTable>>(value: TValue): ModelMutateResult<void, TValue, TSchema, TTable, TDialect, "one">;
-  update<TValue extends MethodUpdateValue<TTable>>(value: TValue): ModelMutateResult<void, TValue, TSchema, TTable, TDialect, "many">;
-  delete(): ModelMutateResult<void, {}, TSchema, TTable, TDialect, "many">;
+  $insert<TValue extends MethodInsertValue<TTable>>(value: TValue): ModelMutateResult<void, TValue, TSchema, TTable, TDialect, "one">;
+  $update<TValue extends MethodUpdateValue<TTable>>(value: TValue): ModelMutateResult<void, TValue, TSchema, TTable, TDialect, "many">;
+  $delete(): ModelMutateResult<void, {}, TSchema, TTable, TDialect, "many">;
 
-  with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
+  $with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
     value: TValue,
   ): TValue;
 }
