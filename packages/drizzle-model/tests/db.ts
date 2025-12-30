@@ -12,6 +12,8 @@ export const db = drizzle(process.env.DATABASE_URL!, {
   relations,
 });
 
+// db.select().from().where
+
 // db.query.user.findFirst({
 //   with: {
 //     posts: {

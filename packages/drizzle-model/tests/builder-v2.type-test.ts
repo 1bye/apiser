@@ -2,6 +2,7 @@ import * as schema from "./schema";
 import { db } from "./db";
 import { relations } from "./relations";
 import { modelBuilder } from "@/v2/model";
+import { gte, sql } from "drizzle-orm";
 
 const model = modelBuilder({
   schema,
@@ -11,6 +12,7 @@ const model = modelBuilder({
 });
 
 const userModel = model("user", {});
+const userIdeasModel = model("userIdeas", {});
 
 // userModel.
 
@@ -163,6 +165,24 @@ const testRaw8 = await userModel.id(1).$delete().return();
 
 const testRaw9 = await postsModel.user(
   userModel.id(123)
+).$update({
+  description: ""
+}).return();
+
+const testRaw10 = await postsModel.where(
+  commentsModel.id(123)
+).$update({
+  description: ""
+}).return();
+
+const testRaw11 = await postsModel.where(
+  sql``
+).$update({
+  description: ""
+}).return();
+
+const testRaw12 = await postsModel.where(
+  gte(schema.postComments.id, 123)
 ).$update({
   description: ""
 }).return();

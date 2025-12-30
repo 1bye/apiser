@@ -10,7 +10,7 @@ import type { TableRelationalConfig } from "drizzle-orm/relations";
  * @typeParam TTable - Relational configuration for the table
  */
 export type TableColumns<TTable extends TableRelationalConfig> = DrizzleColumns<
-	IsDrizzleTable<TTable["table"]>
+  IsDrizzleTable<TTable["table"]>
 >;
 
 /**
@@ -20,9 +20,16 @@ export type TableColumns<TTable extends TableRelationalConfig> = DrizzleColumns<
  * @typeParam TTable - Relational configuration for the table
  */
 export type TableColumn<
-	TColumnName extends string,
-	TTable extends TableRelationalConfig,
+  TColumnName extends string,
+  TTable extends TableRelationalConfig,
 > = TableColumns<TTable>[TColumnName];
 
 export type TableOutput<TTable extends TableRelationalConfig> =
-	DrizzleRawOutput<IsDrizzleTable<TTable["table"]>>;
+  DrizzleRawOutput<IsDrizzleTable<TTable["table"]>>;
+
+export type TableRelationsTableName<
+  TTable extends TableRelationalConfig
+> = {
+  [K in keyof TTable["relations"]]:
+  TTable["relations"][K]["targetTableName"]
+}[keyof TTable["relations"]];

@@ -11,6 +11,7 @@ import type { MethodUpdateValue } from "./methods/update";
 import type { ModelDialect } from "./dialect";
 import type { ModelForegins } from "./foreigns";
 import type { ModelFirstLevelMethods } from "./methods/levels";
+import type { MethodWhereValue } from "./methods/query/where";
 
 /**
  * Interface defining standard query methods available on a model.
@@ -33,6 +34,14 @@ export interface ModelMethods<
   $with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
     value: TValue,
   ): TValue;
+}
+
+export interface ModelQueryMethods<
+  TSchema extends TablesRelationalConfig,
+  TTable extends TableRelationalConfig,
+  TDialect extends ModelDialect
+> {
+  where(value: MethodWhereValue<TTable>): Model<TSchema, TTable, TDialect>;
 }
 
 /**
@@ -69,7 +78,10 @@ export type ModelBase<
     TTable,
     TDialect
   >;
-} & ModelMethods<TSchema, TTable, TDialect> & ModelForegins<TSchema, TTable, TDialect>;
+}
+  & ModelMethods<TSchema, TTable, TDialect>
+  & ModelForegins<TSchema, TTable, TDialect>
+  & ModelQueryMethods<TSchema, TTable, TDialect>;
 
 /**
  * Main model interface for a table.
