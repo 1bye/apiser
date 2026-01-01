@@ -163,11 +163,12 @@ const testRaw8 = await userModel.id(1).$delete().return();
 
 // postsModel.
 
-const testRaw9 = await postsModel.user(
-  userModel.id(123)
-).$update({
-  description: ""
-}).return();
+const testRaw9 = await postsModel
+  .user(c => c.id(1))
+  .$update({
+    description: ""
+  })
+  .return();
 
 const testRaw10 = await postsModel.where(
   commentsModel.id(123)
@@ -186,3 +187,17 @@ const testRaw12 = await postsModel.where(
 ).$update({
   description: ""
 }).return();
+
+db.transaction(async tx => {
+  const result = await postsModel
+    .$db(tx)
+    .where(
+      gte(schema.postComments.id, 123)
+    )
+    .$update({
+      description: ""
+    })
+    .return({
+      id: true
+    });
+});

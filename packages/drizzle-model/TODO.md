@@ -1,4 +1,4 @@
-- Add all essential functions as `update`, `insert`, `delete`, `findMany`, `findFirst`
+- * Add all essential functions as `update`, `insert`, `delete`, `findMany`, `findFirst`
 - Make `route` function (Just duplicate):
 ```ts
 const [val1, val2] = await userModel.name({
@@ -60,5 +60,5 @@ userModel.transaction(tx => {
   txPostsModel.userId(123).delete()
 });
 ```
-- Soft delete?
-- Dialect based configuration `mysql`, `pgsql` and etc... like `returning()` on pgsql and `$returningId()` on mysql
+- / Soft delete?
+- * Dialect based configuration `mysql`, `pgsql` and etc... like `returning()` on pgsql and `$returningId()` on mysql

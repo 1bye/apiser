@@ -34,6 +34,8 @@ export interface ModelMethods<
   $with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
     value: TValue,
   ): TValue;
+
+  $db(db: any): Model<TSchema, TTable, TDialect>;
 }
 
 export interface ModelQueryMethods<
@@ -42,6 +44,8 @@ export interface ModelQueryMethods<
   TDialect extends ModelDialect
 > {
   where(value: MethodWhereValue<TTable>): Model<TSchema, TTable, TDialect>;
+
+  $db(db: any): Model<TSchema, TTable, TDialect>;
 }
 
 /**
