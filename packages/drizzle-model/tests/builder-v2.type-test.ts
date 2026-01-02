@@ -11,8 +11,19 @@ const model = modelBuilder({
   dialect: "PostgreSQL"
 });
 
-const userModel = model("user", {});
+const userModel = model("user", {
+  methods: {
+    whereActive() {
+      return {
+        id: 123
+      } as const;
+    },
+  }
+});
 const userIdeasModel = model("userIdeas", {});
+
+// userModel.whereActive
+// userModel.
 
 // userModel.
 
@@ -78,7 +89,7 @@ const testRaw2 = await userModel
     }),
   });
 
-// testRaw2.posts[0]?.comments[0].;
+// testRaw2.posts[0]?.comments;
 
 const testRaw3 = await userModel
   .where({
@@ -177,7 +188,7 @@ const testRaw6 = await userModel.insert({
 
 // testRaw6
 
-// testRaw6.age
+// testRaw6.
 
 const testRaw7 = await userModel.where({ id: 1 }).update({
   age: 12

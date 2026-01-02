@@ -1,10 +1,8 @@
 import type { AnyRelations, EmptyRelations } from "drizzle-orm";
-import type {
-  ExtractTablesWithRelations,
-  TablesRelationalConfig,
-} from "drizzle-orm/_relations";
 import type { Model } from "./model";
 import type { ModelDialect } from "./dialect";
+import type { ModelOptions } from "./options";
+import type { ModelConfig } from "./config";
 
 export function modelBuilder<
   TFullSchema extends Record<string, unknown> = Record<string, never>,
@@ -20,10 +18,12 @@ export function modelBuilder<
   schema: TFullSchema;
   dialect: TDialect;
 }) {
-  return <TTableName extends keyof TRelations>(
+  return <TTableName extends keyof TRelations, TOptions extends ModelOptions>(
     table: TTableName,
-    options: any,
+    options: TOptions,
   ) => {
-    return {} as Model<TRelations, TRelations[TTableName], TDialect>;
+    return {} as Model<
+      ModelConfig<TRelations, TRelations[TTableName], TDialect, TOptions>
+    >;
   };
 }

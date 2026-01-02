@@ -1,5 +1,6 @@
-export type ModelDialect = SqlLiteDialect | MySqlDialect | SingleStoreDialect | PgDialect | MssqlDialect | CockroachDbDialect;
+export type ModelDialect = SqlLiteDialect | MySqlDialect | SingleStoreDialect | PgDialect | MssqlDialect | CockroachDbDialect | UnknownDialect;
 
+export type UnknownDialect = "Unknown[DO_NOT_USE]";
 export type SqlLiteDialect = "SQLite";
 export type MySqlDialect = "MySQL";
 export type SingleStoreDialect = "SingleStore";

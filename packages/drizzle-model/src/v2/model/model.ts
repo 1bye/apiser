@@ -14,6 +14,8 @@ import type { ModelFirstLevelMethods } from "./methods/levels";
 import type { MethodWhereValue } from "./methods/query/where";
 import type { Compose } from "../types";
 import type { MethodIncludeIdentifier } from "./methods/include";
+import type { ModelOptions } from "./options";
+import type { ModelConfig } from "./config";
 
 /**
  * Interface defining standard query methods available on a model.
@@ -22,9 +24,10 @@ import type { MethodIncludeIdentifier } from "./methods/include";
  * @typeParam TTable - Relational configuration for the current table
  */
 export interface ModelMethods<
-  TSchema extends TablesRelationalConfig,
-  TTable extends TableRelationalConfig,
-  TDialect extends ModelDialect
+  TConfig extends ModelConfig,
+  TSchema extends TablesRelationalConfig = TConfig["schema"],
+  TTable extends TableRelationalConfig = TConfig["table"],
+  TDialect extends ModelDialect = TConfig["dialect"]
 > {
   findMany(): ModelQueryResult<TableOutput<TTable>[], TSchema, TTable>;
   findFirst(): ModelQueryResult<TableOutput<TTable>, TSchema, TTable>;
@@ -35,19 +38,18 @@ export interface ModelMethods<
 
   include<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
     value: TValue,
-  ): Compose<Model<TSchema, TTable, TDialect>, MethodIncludeIdentifier<true>>;
+  ): TValue;
+  // ): Compose<Model<TConfig>, MethodIncludeIdentifier<true>>;
 
-  db(db: any): Model<TSchema, TTable, TDialect>;
+  db(db: any): Model<TConfig>;
 }
 
 export interface ModelQueryMethods<
-  TSchema extends TablesRelationalConfig,
-  TTable extends TableRelationalConfig,
-  TDialect extends ModelDialect
+  TConfig extends ModelConfig
 > {
-  where(value: MethodWhereValue<TSchema, TTable>): Model<TSchema, TTable, TDialect>;
+  where(value: MethodWhereValue<TConfig["schema"], TConfig["table"]>): Model<TConfig>;
 
-  db(db: any): Model<TSchema, TTable, TDialect>;
+  db(db: any): Model<TConfig>;
 }
 
 /**
@@ -60,26 +62,23 @@ export interface ModelQueryMethods<
  * @typeParam TSchema - Full relational schema containing all tables
  * @typeParam TTable - Relational configuration for the current table
  */
-export type ModelField<
-  TColumnName extends string,
-  TSchema extends TablesRelationalConfig,
-  TTable extends TableRelationalConfig,
-  TDialect extends ModelDialect,
-> = (
-  value: ColumnValue<TableColumn<TColumnName, TTable>>,
-) => Omit<Model<TSchema, TTable, TDialect>, TColumnName | ModelFirstLevelMethods>;
+// export type ModelField<
+//   TColumnName extends string,
+//   TSchema extends TablesRelationalConfig,
+//   TTable extends TableRelationalConfig,
+//   TDialect extends ModelDialect,
+// > = (
+//   value: ColumnValue<TableColumn<TColumnName, TTable>>,
+// ) => Omit<Model<TSchema, TTable, TDialect>, TColumnName | ModelFirstLevelMethods>;
 
 
 /**
  * Just base represenation of model. This type JUST made for more clearer types, not more...
  */
 export type ModelBase<
-  TSchema extends TablesRelationalConfig,
-  TTable extends TableRelationalConfig,
-  TDialect extends ModelDialect,
-> = ModelMethods<TSchema, TTable, TDialect>
-  & ModelForegins<TSchema, TTable, TDialect>
-  & ModelQueryMethods<TSchema, TTable, TDialect>;
+  TConfig extends ModelConfig
+> = ModelMethods<TConfig>
+  & ModelQueryMethods<TConfig>;
 
 /**
  * Main model interface for a table.
@@ -94,10 +93,8 @@ export type ModelBase<
  * @typeParam TTable - Relational configuration for the current table
  */
 export type Model<
-  TSchema extends TablesRelationalConfig,
-  TTable extends TableRelationalConfig,
-  TDialect extends ModelDialect,
-> = ModelIdentifier<TTable["name"]> & ModelBase<TSchema, TTable, TDialect>;
+  TConfig extends ModelConfig,
+> = ModelIdentifier<TConfig["table"]["name"]> & ModelBase<TConfig> & TConfig["options"]["methods"];
 
 export type ModelIdentifier<ModelName> = {
   $model: "model";
