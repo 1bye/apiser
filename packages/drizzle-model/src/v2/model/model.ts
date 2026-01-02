@@ -12,6 +12,8 @@ import type { ModelDialect } from "./dialect";
 import type { ModelForegins } from "./foreigns";
 import type { ModelFirstLevelMethods } from "./methods/levels";
 import type { MethodWhereValue } from "./methods/query/where";
+import type { Compose } from "../types";
+import type { MethodIncludeIdentifier } from "./methods/include";
 
 /**
  * Interface defining standard query methods available on a model.
@@ -24,18 +26,18 @@ export interface ModelMethods<
   TTable extends TableRelationalConfig,
   TDialect extends ModelDialect
 > {
-  $findMany(): ModelQueryResult<TableOutput<TTable>[], TSchema, TTable>;
-  $findFirst(): ModelQueryResult<TableOutput<TTable>, TSchema, TTable>;
+  findMany(): ModelQueryResult<TableOutput<TTable>[], TSchema, TTable>;
+  findFirst(): ModelQueryResult<TableOutput<TTable>, TSchema, TTable>;
 
-  $insert<TValue extends MethodInsertValue<TTable>>(value: TValue): ModelMutateResult<void, TValue, TSchema, TTable, TDialect, "one">;
-  $update<TValue extends MethodUpdateValue<TTable>>(value: TValue): ModelMutateResult<void, TValue, TSchema, TTable, TDialect, "many">;
-  $delete(): ModelMutateResult<void, {}, TSchema, TTable, TDialect, "many">;
+  insert<TValue extends MethodInsertValue<TTable>>(value: TValue): ModelMutateResult<void, TValue, TSchema, TTable, TDialect, "one">;
+  update<TValue extends MethodUpdateValue<TTable>>(value: TValue): ModelMutateResult<void, TValue, TSchema, TTable, TDialect, "many">;
+  delete(): ModelMutateResult<void, {}, TSchema, TTable, TDialect, "many">;
 
-  $with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
+  include<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
     value: TValue,
-  ): TValue;
+  ): Compose<Model<TSchema, TTable, TDialect>, MethodIncludeIdentifier<true>>;
 
-  $db(db: any): Model<TSchema, TTable, TDialect>;
+  db(db: any): Model<TSchema, TTable, TDialect>;
 }
 
 export interface ModelQueryMethods<
@@ -43,9 +45,9 @@ export interface ModelQueryMethods<
   TTable extends TableRelationalConfig,
   TDialect extends ModelDialect
 > {
-  where(value: MethodWhereValue<TTable>): Model<TSchema, TTable, TDialect>;
+  where(value: MethodWhereValue<TSchema, TTable>): Model<TSchema, TTable, TDialect>;
 
-  $db(db: any): Model<TSchema, TTable, TDialect>;
+  db(db: any): Model<TSchema, TTable, TDialect>;
 }
 
 /**
@@ -75,15 +77,7 @@ export type ModelBase<
   TSchema extends TablesRelationalConfig,
   TTable extends TableRelationalConfig,
   TDialect extends ModelDialect,
-> = {
-  [ColumnKey in keyof TableColumns<TTable>]: ModelField<
-    ColumnKey & string,
-    TSchema,
-    TTable,
-    TDialect
-  >;
-}
-  & ModelMethods<TSchema, TTable, TDialect>
+> = ModelMethods<TSchema, TTable, TDialect>
   & ModelForegins<TSchema, TTable, TDialect>
   & ModelQueryMethods<TSchema, TTable, TDialect>;
 

@@ -19,9 +19,11 @@ export const transaction = transactionBuilder({
 
 transaction((tx) => {
   const result = tx.user
-    .id(123)
-    .name("Me")
-    .$update({
+    .where({
+      id: 123,
+      name: "Me"
+    })
+    .update({
       name: "Not me"
     })
     .return({ 

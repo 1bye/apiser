@@ -17,8 +17,12 @@ const userIdeasModel = model("userIdeas", {});
 // userModel.
 
 const testRaw = await userModel
-  .age(12)
-  .$findFirst()
+  .where({
+    id: {
+      or: [1, 2]
+    }
+  })
+  .findFirst()
   .with({
     posts: {
       comments: true,
@@ -36,8 +40,10 @@ const testRaw = await userModel
 
 // testRaw.posts[0]?.comments[0]?.content;
 const testRaw1 = await userModel
-  .age(12)
-  .$findFirst()
+  .where({
+    age: 12
+  })
+  .findFirst()
   .with({
     posts: {
       comments: true,
@@ -59,11 +65,15 @@ const postsModel = model("userPosts", {});
 const commentsModel = model("postComments", {});
 
 const testRaw2 = await userModel
-  .age(123)
-  .$findFirst()
+  .where({
+    age: 12
+  })
+  .findFirst()
   .with({
     // Fix is relations in here are from userModel not from posts
-    posts: postsModel.id(123).$with({
+    posts: postsModel.where({
+      id: 12
+    }).include({
       comments: true,
     }),
   });
@@ -71,41 +81,53 @@ const testRaw2 = await userModel
 // testRaw2.posts[0]?.comments[0].;
 
 const testRaw3 = await userModel
-  .age({
-    or: [
-      {
-        equal: 1,
-      },
-      2,
-    ],
+  .where({
+    id: {
+      or: [
+        {
+          equal: 1,
+        },
+        2,
+      ],
+    }
   })
-  .$findFirst()
+  .findFirst()
   .with({
     // Fix is relations in here are from userModel not from posts
-    posts: postsModel.id(123).$with({
-      comments: commentsModel.id(1).$with({
-        author: true
+    posts: postsModel
+      .where({
+        id: 12
+      })
+      .include({
+        comments: commentsModel.where({ id: 12 }).include({
+          author: true
+        }),
       }),
-    }),
   });
 
 // testRaw3.posts[0]?.comments[0]?.author
 
 const testRaw4 = await userModel
-  .age({
-    or: [
-      {
-        equal: 1,
-      },
-      2,
-    ],
+  .where({
+    age: {
+      or: [
+        {
+          equal: 1,
+        },
+        2,
+      ],
+    }
   })
-  .$findMany()
+  .findMany()
   .with({
     // Fix is relations in here are from userModel not from posts
-    posts: postsModel.id(123).$with({
-      comments: true,
-    }),
+    posts: postsModel
+      .where({
+        id: 12
+      })
+      .include({
+        comments: true,
+      }),
   })
   .select({
     posts: {
@@ -117,20 +139,26 @@ const testRaw4 = await userModel
 // testRaw4[0]?.posts[0].
 
 const testRaw5 = await userModel
-  .age({
-    or: [
-      {
-        equal: 1,
-      },
-      2,
-    ],
+  .where({
+    age: {
+      or: [
+        {
+          equal: 1,
+        },
+        2,
+      ]
+    },
   })
-  .$findMany()
+  .findMany()
   .with({
     // Fix is relations in here are from userModel not from posts
-    posts: postsModel.id(123).$with({
-      comments: true,
-    }),
+    posts: postsModel
+      .where({
+        id: 123
+      })
+      .include({
+        comments: true,
+      }),
   })
   .exclude({
     posts: {
@@ -139,7 +167,7 @@ const testRaw5 = await userModel
     },
   });
 
-const testRaw6 = await userModel.$insert({
+const testRaw6 = await userModel.insert({
   email: "email@email",
   name: "Nameie",
   age: 123,
@@ -151,50 +179,58 @@ const testRaw6 = await userModel.$insert({
 
 // testRaw6.age
 
-const testRaw7 = await userModel.id(1).$update({
+const testRaw7 = await userModel.where({ id: 1 }).update({
   age: 12
 }).return();
 
 // testRaw7[0].
 
-const testRaw8 = await userModel.id(1).$delete().return();
+const testRaw8 = await userModel.where({ id: 1 }).delete().return();
 
 // testRaw8[0].
 
 // postsModel.
 
 const testRaw9 = await postsModel
-  .user(c => c.id(1))
-  .$update({
+  .where({
+    user: {
+      id: 1
+    },
+  })
+  .update({
     description: ""
   })
   .return();
 
 const testRaw10 = await postsModel.where(
-  commentsModel.id(123)
-).$update({
+  userModel.where({ id: 123 }).include({
+    posts: {
+      user: true
+    }
+  })
+).update({
   description: ""
 }).return();
 
 const testRaw11 = await postsModel.where(
   sql``
-).$update({
+).update({
   description: ""
 }).return();
 
 const testRaw12 = await postsModel.where(
   gte(schema.postComments.id, 123)
-).$update({
+).update({
   description: ""
 }).return();
 
 db.transaction(async tx => {
   const result = await postsModel
-    .$db(tx)
+    .db(tx)
     .where(
       gte(schema.postComments.id, 123)
     )
-    .$update({
+    .update({
       description: ""
     })
     .return({

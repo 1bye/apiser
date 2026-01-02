@@ -33,3 +33,15 @@ export type TableRelationsTableName<
   [K in keyof TTable["relations"]]:
   TTable["relations"][K]["targetTableName"]
 }[keyof TTable["relations"]];
+
+type TableOneRelationsMap<TTable extends TableRelationalConfig> = {
+  [K in keyof TTable["relations"]as
+  TTable["relations"][K]["relationType"] extends "many"
+  ? never
+  : K
+  ]: TTable["relations"][K]["targetTableName"]
+};
+
+export type TableOneRelationsTableName<
+  TTable extends TableRelationalConfig
+> = TableOneRelationsMap<TTable>[keyof TableOneRelationsMap<TTable>];
