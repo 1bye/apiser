@@ -12,17 +12,31 @@ const model = modelBuilder({
 });
 
 const userModel = model("user", {
-  methods: {
-    whereActive() {
-      return {
-        id: 123
-      } as const;
+  methods: (model) => ({
+    whereName(name: string) {
+      return model.where({
+        name
+      });
     },
+    findByName(name: string) {
+      return model
+        .where({
+          name
+        })
+        .findFirst()
+        .select({
+          id: true,
+          name: true
+        });
+    },
+  }),
+  format: ({ secretField, ...rest }) => {
+    return rest;
   }
 });
 const userIdeasModel = model("userIdeas", {});
 
-// userModel.whereActive
+// userModel.
 // userModel.
 
 // userModel.
@@ -116,7 +130,7 @@ const testRaw3 = await userModel
       }),
   });
 
-// testRaw3.posts[0]?.comments[0]?.author
+// testRaw3.posts[0]?.comments[0]?.author;
 
 const testRaw4 = await userModel
   .where({
@@ -178,25 +192,33 @@ const testRaw5 = await userModel
     },
   });
 
-const testRaw6 = await userModel.insert({
-  email: "email@email",
-  name: "Nameie",
-  age: 123,
-}).return({
-  age: true
-});
+const testRaw6 = await userModel
+  .insert({
+    email: "email@email",
+    name: "Nameie",
+    age: 123,
+  })
+  .return({
+    age: true
+  });
 
 // testRaw6
 
 // testRaw6.
 
-const testRaw7 = await userModel.where({ id: 1 }).update({
-  age: 12
-}).return();
+const testRaw7 = await userModel
+  .where({ id: 1 })
+  .update({
+    age: 12
+  })
+  .return();
 
 // testRaw7[0].
 
-const testRaw8 = await userModel.where({ id: 1 }).delete().return();
+const testRaw8 = await userModel
+  .where({ id: 1 })
+  .delete()
+  .return();
 
 // testRaw8[0].
 
@@ -213,27 +235,32 @@ const testRaw9 = await postsModel
   })
   .return();
 
-const testRaw10 = await postsModel.where(
-  userModel.where({ id: 123 }).include({
-    posts: {
-      user: true
-    }
+const testRaw10 = await postsModel
+  .where(
+    userModel.where({ id: 123 })
+  )
+  .update({
+    description: ""
   })
-).update({
-  description: ""
-}).return();
+  .return();
 
-const testRaw11 = await postsModel.where(
-  sql``
-).update({
-  description: ""
-}).return();
+const testRaw11 = await postsModel
+  .where(
+    sql``
+  )
+  .update({
+    description: ""
+  })
+  .return();
 
-const testRaw12 = await postsModel.where(
-  gte(schema.postComments.id, 123)
-).update({
-  description: ""
-}).return();
+const testRaw12 = await postsModel
+  .where(
+    gte(schema.postComments.id, 123)
+  )
+  .update({
+    description: ""
+  })
+  .return();
 
 db.transaction(async tx => {
   const result = await postsModel
@@ -248,3 +275,8 @@ db.transaction(async tx => {
       id: true
     });
 });
+
+const testRaw13 = await userModel.whereName("Alex").findFirst();
+const testRaw14 = await userModel.findByName("Alex");
+
+// testRaw14.

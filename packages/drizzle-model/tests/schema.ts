@@ -9,6 +9,7 @@ export const user = pgTable("user", {
   age: integer().notNull().default(0),
   isVerified: boolean("is_verified"),
   invitedBy: integer("invited_by"),
+  secretField: integer("secret_field").default(0),
 });
 
 export const userPosts = pgTable("user_posts", {

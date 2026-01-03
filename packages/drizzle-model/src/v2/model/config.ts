@@ -6,7 +6,7 @@ export type ModelConfig<
   TSchema extends TablesRelationalConfig = TablesRelationalConfig,
   TTable extends TableRelationalConfig = TableRelationalConfig,
   TDialect extends ModelDialect = ModelDialect,
-  TOptions extends ModelOptions = ModelOptions
+  TOptions extends ModelOptions<any> = ModelOptions<any>
 > = {
   schema: TSchema;
   table: TTable;

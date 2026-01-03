@@ -14,7 +14,7 @@ import type { ModelFirstLevelMethods } from "./methods/levels";
 import type { MethodWhereValue } from "./methods/query/where";
 import type { Compose } from "../types";
 import type { MethodIncludeIdentifier } from "./methods/include";
-import type { ModelOptions } from "./options";
+import type { InferModelMethods, ModelOptions, ResolveOptionsMethods } from "./options";
 import type { ModelConfig } from "./config";
 
 /**
@@ -89,12 +89,13 @@ export type ModelBase<
  * This type is intended to be extended with query helpers and other
  * model-level utilities.
  *
- * @typeParam TSchema - Full relational schema containing all tables
- * @typeParam TTable - Relational configuration for the current table
+ * @typeParam TConfig - Config that includes all related information about tables, relations and etc...
  */
 export type Model<
   TConfig extends ModelConfig,
-> = ModelIdentifier<TConfig["table"]["name"]> & ModelBase<TConfig> & TConfig["options"]["methods"];
+> = ModelIdentifier<TConfig["table"]["name"]>
+  & ModelBase<TConfig>
+  & ResolveOptionsMethods<TConfig["options"]["methods"]>;
 
 export type ModelIdentifier<ModelName> = {
   $model: "model";
