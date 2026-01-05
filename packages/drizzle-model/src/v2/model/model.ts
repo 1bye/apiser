@@ -2,20 +2,16 @@ import type {
   TableRelationalConfig,
   TablesRelationalConfig,
 } from "drizzle-orm/relations";
-import type { TableColumn, TableColumns, TableOutput } from "./table";
-import type { ColumnValue } from "./operations";
+import type { TableOutput } from "./table";
 import type { MethodWithValue } from "./methods/with";
 import type { MethodInsertValue } from "./methods/insert";
 import type { ModelQueryResult, ModelMutateResult } from "./result";
 import type { MethodUpdateValue } from "./methods/update";
 import type { ModelDialect } from "./dialect";
-import type { ModelForegins } from "./foreigns";
-import type { ModelFirstLevelMethods } from "./methods/levels";
 import type { MethodWhereValue } from "./methods/query/where";
-import type { Compose } from "../types";
-import type { MethodIncludeIdentifier } from "./methods/include";
-import type { InferModelMethods, ModelOptions, ResolveOptionsMethods } from "./options";
+import type { ComposeModelOptions, ModelOptions, ResolveOptionsFormat, ResolveOptionsMethods } from "./options";
 import type { ModelConfig } from "./config";
+import type { Replace } from "../types";
 
 /**
  * Interface defining standard query methods available on a model.
@@ -29,8 +25,16 @@ export interface ModelMethods<
   TTable extends TableRelationalConfig = TConfig["table"],
   TDialect extends ModelDialect = TConfig["dialect"]
 > {
-  findMany(): ModelQueryResult<TableOutput<TTable>[], TSchema, TTable>;
-  findFirst(): ModelQueryResult<TableOutput<TTable>, TSchema, TTable>;
+  findMany(): ModelQueryResult<
+    TableOutput<TTable>[],
+    TConfig
+  >;
+  findFirst(): ModelQueryResult<
+    TableOutput<TTable>,
+    TConfig
+  >,
+
+  where(value: MethodWhereValue<TConfig["schema"], TConfig["table"]>): Model<TConfig>;
 
   insert<TValue extends MethodInsertValue<TTable>>(value: TValue): ModelMutateResult<void, TValue, TSchema, TTable, TDialect, "one">;
   update<TValue extends MethodUpdateValue<TTable>>(value: TValue): ModelMutateResult<void, TValue, TSchema, TTable, TDialect, "many">;
@@ -41,13 +45,25 @@ export interface ModelMethods<
   ): TValue;
   // ): Compose<Model<TConfig>, MethodIncludeIdentifier<true>>;
 
-  db(db: any): Model<TConfig>;
+  // db(db: any): Model<TConfig>;
 }
 
 export interface ModelQueryMethods<
   TConfig extends ModelConfig
 > {
-  where(value: MethodWhereValue<TConfig["schema"], TConfig["table"]>): Model<TConfig>;
+  extend<
+    TOptions extends ModelOptions<TConfig["schema"], TConfig["table"], TConfig["dialect"]>
+  >(config: TOptions): Model<
+    Replace<
+      TConfig,
+      {
+        options: ComposeModelOptions<
+          TOptions,
+          TConfig["options"]
+        >;
+      }
+    >
+  >;
 
   db(db: any): Model<TConfig>;
 }
@@ -95,7 +111,11 @@ export type Model<
   TConfig extends ModelConfig,
 > = ModelIdentifier<TConfig["table"]["name"]>
   & ModelBase<TConfig>
-  & ResolveOptionsMethods<TConfig["options"]["methods"]>;
+  & ResolveOptionsMethods<TConfig["options"]["methods"]>
+  & {
+    $format: TConfig["options"]["format"];
+    $formatValue: ResolveOptionsFormat<TConfig["options"]["format"]>;
+  };
 
 export type ModelIdentifier<ModelName> = {
   $model: "model";

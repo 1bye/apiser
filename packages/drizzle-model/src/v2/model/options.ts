@@ -3,28 +3,62 @@ import type { ModelDialect } from "./dialect";
 import type { Model } from "./model";
 import type { ModelConfig } from "./config";
 import type { TableOutput } from "./table";
+import type { Fallback } from "../types";
 
 /**
  * Options to define a model
  */
 export interface ModelOptions<
-  TModel,
   TSchema extends TablesRelationalConfig = TablesRelationalConfig,
   TTable extends TableRelationalConfig = TableRelationalConfig,
-  TDialect extends ModelDialect = ModelDialect
+  TDialect extends ModelDialect = ModelDialect,
+  TSelf extends ModelOptions<any, any, any, TSelf> = ModelOptions<TSchema, TTable, TDialect, any>
 > {
-  format?: (output: TableOutput<TTable>) => any;
+  format?: ModelOptionFormat<TTable>;
 
-  insertSchema?: any;
-  updateSchema?: any;
+  // TODO: Make zod schemas
+  // insertSchema?: any;
+  // updateSchema?: any;
 
-  methods?: ModelMethodsFactory<TModel>;
+  // TODO: Maybe planned for future releases
+  // select?: MethodSelectValue<TableOutput<TTable>>;
+  // exclude?: MethodExcludeValue<TableOutput<TTable>>;
+
+  methods?: ModelMethodsFactory;
 }
 
-export type ModelMethodsFactory<
-  TModel,
-> = (model: TModel) => Record<string, any>;
+export type ComposeModelOptions<
+  O1 extends ModelOptions,
+  O2 extends ModelOptions
+> = Omit<O1, "format" | "methods"> & {
+  format: Fallback<O1["format"], O2["format"]>;
+  methods: MergeModelOptionsMethods<O1["methods"], O2["methods"]>;
+};
 
-export type ResolveOptionsMethods<TFactory extends ModelMethodsFactory<any> | undefined> = TFactory extends ModelMethodsFactory<any>
-  ? ReturnType<TFactory>
-  : {};
+export type ModelOptionFormat<TTable extends TableRelationalConfig> = {
+  bivarianceHack(output: TableOutput<TTable>): any;
+}["bivarianceHack"];
+// export type ModelMethodsFactory = {
+//   bivarianceHack(): Record<string, any>;
+// }["bivarianceHack"];
+export type ModelMethodsFactory = Record<string, any>;
+
+export type ResolveOptionsMethods<TFactory extends ModelMethodsFactory | undefined> =
+  (TFactory extends ModelMethodsFactory
+    ? TFactory
+    : {});
+
+export type ResolveOptionsFormat<TFormat> =
+  TFormat extends (...args: any[]) => any
+  ? ReturnType<TFormat>
+  : undefined;
+
+export type MergeModelOptionsMethods<
+  M1 extends ModelMethodsFactory | undefined,
+  M2 extends ModelMethodsFactory | undefined
+> =
+  M1 extends ModelMethodsFactory
+  ? M2 extends ModelMethodsFactory
+  ? Omit<M2, keyof M1> & M1
+  : M1
+  : M2;

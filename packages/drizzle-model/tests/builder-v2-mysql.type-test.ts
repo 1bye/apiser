@@ -22,11 +22,8 @@ const schema = {
 };
 
 const relations = defineRelations(schema, (r) => ({
-  usersTable: {
-
-  }
+  usersTable: {}
 }));
-
 
 const model = modelBuilder({
   schema,
@@ -39,6 +36,8 @@ const model = modelBuilder({
 
 const userModel = model("usersTableDefFn", {});
 
-const testRaw1 = await userModel.customId("123").delete().return();
+const testRaw1 = await userModel.where({
+  customId: "123"
+}).delete().return();
 
-// testRaw1.
+// testRaw1[0].

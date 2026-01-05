@@ -12,14 +12,14 @@ const model = modelBuilder({
 });
 
 const userModel = model("user", {
-  methods: (model) => ({
+  methods: {
     whereName(name: string) {
-      return model.where({
+      return userModel.where({
         name
       });
     },
     findByName(name: string) {
-      return model
+      return userModel
         .where({
           name
         })
@@ -28,11 +28,12 @@ const userModel = model("user", {
           id: true,
           name: true
         });
-    },
-  }),
-  format: ({ secretField, ...rest }) => {
-    return rest;
-  }
+    }
+  },
+  format: ({ secretField, ...rest }) => ({
+    ...rest,
+    customField: "123"
+  })
 });
 const userIdeasModel = model("userIdeas", {});
 
@@ -278,5 +279,37 @@ db.transaction(async tx => {
 
 const testRaw13 = await userModel.whereName("Alex").findFirst();
 const testRaw14 = await userModel.findByName("Alex");
-
+// testRaw13.
 // testRaw14.
+
+// userModel.$form.methods.
+
+// userModel.w
+
+const testRaw15 = await userModel
+  .where({
+    name: "Alex"
+  })
+  .findFirst()
+  .raw();
+
+const userModel2 = userModel.extend({
+  methods: {
+    whereName(name: string) {
+      return userModel2.where({
+        name: name
+      });
+    }
+  },
+  format: (output) => {
+    return {
+      ...output,
+      isJoke: true
+    };
+  }
+});
+
+
+// testRaw16.
+
+// userModel2.

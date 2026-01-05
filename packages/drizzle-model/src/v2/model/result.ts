@@ -12,6 +12,9 @@ import type { MethodReturnResult } from "./methods/return";
 import type { MethodWithInsertValue } from "./methods/insert";
 import type { ModelDialect, ReturningIdDialects } from "./dialect";
 import type { TableOutput } from "./table";
+import type { ModelConfig } from "./config";
+import type { ResolveOptionsFormat } from "./options";
+import type { ModelFormatValue } from "./format";
 
 /**
  * Represents the result of a model operation (like findMany or findFirst).
@@ -25,24 +28,39 @@ import type { TableOutput } from "./table";
  */
 export interface ModelQueryResult<
   TResult extends Record<string, any>,
-  TSchema extends TablesRelationalConfig,
-  TTable extends TableRelationalConfig,
-> extends Promise<TResult> {
-  with<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
+  TConfig extends ModelConfig,
+  TExcludedKeys extends string = string,
+  TSchema extends TablesRelationalConfig = TConfig["schema"],
+  TTable extends TableRelationalConfig = TConfig["table"],
+  TFormat extends Record<string, any> | undefined = ResolveOptionsFormat<TConfig["options"]["format"]>
+> extends Promise<ModelFormatValue<TResult, TFormat>> {
+  with<TValue extends MethodWithValue<TSchema, TTable["relations"]>, TExcludeKeys extends string = TExcludedKeys | "with">(
     value: TValue,
   ): ModelQueryResult<
     MethodWithResult<TValue, TResult, TSchema, TTable>,
-    TSchema,
-    TTable
-  >;
+    TConfig,
+    TExcludeKeys
+  >,
 
-  select<TValue extends MethodSelectValue<TResult>>(
+  select<TValue extends MethodSelectValue<TResult>, TExcludeKeys extends string = TExcludedKeys | "select">(
     value: TValue,
-  ): ModelQueryResult<MethodSelectResult<TValue, TResult>, TSchema, TTable>;
+  ): ModelQueryResult<
+    MethodSelectResult<TValue, TResult>,
+    TConfig,
+    TExcludeKeys
+  >,
 
-  exclude<TValue extends MethodExcludeValue<TResult>>(
+  exclude<TValue extends MethodExcludeValue<TResult>, TExcludeKeys extends string = TExcludedKeys | "exclude">(
     value: TValue,
-  ): ModelQueryResult<MethodExcludeResult<TValue, TResult>, TSchema, TTable>;
+  ): ModelQueryResult<
+    MethodExcludeResult<TValue, TResult>,
+    TConfig,
+    TExcludeKeys
+  >,
+
+  raw<TExcludeKeys extends string = TExcludedKeys | "raw">(): ModelQueryResult<TResult, TConfig, TExcludeKeys, TSchema, TTable, undefined>;
+
+  debug(): any;
 }
 
 export interface ModelMutateResult<
