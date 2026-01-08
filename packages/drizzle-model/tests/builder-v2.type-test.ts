@@ -2,7 +2,8 @@ import * as schema from "./schema";
 import { db } from "./db";
 import { relations } from "./relations";
 import { modelBuilder } from "@/v2/model";
-import { gte, sql } from "drizzle-orm";
+import { gte, sql, eq, or } from "drizzle-orm";
+import { esc } from "@/v2/model/operations";
 
 const model = modelBuilder({
   schema,
@@ -15,13 +16,13 @@ const userModel = model("user", {
   methods: {
     whereName(name: string) {
       return userModel.where({
-        name
+        name: esc(eq, name)
       });
     },
     findByName(name: string) {
       return userModel
         .where({
-          name
+          name: esc(name)
         })
         .findFirst()
         .select({
@@ -45,7 +46,10 @@ const userIdeasModel = model("userIdeas", {});
 const testRaw = await userModel
   .where({
     id: {
-      or: [1, 2]
+      or: [
+        esc(1),
+        esc(2),
+      ]
     }
   })
   .findFirst()
@@ -67,7 +71,7 @@ const testRaw = await userModel
 // testRaw.posts[0]?.comments[0]?.content;
 const testRaw1 = await userModel
   .where({
-    age: 12
+    age: esc(12)
   })
   .findFirst()
   .with({
@@ -92,13 +96,13 @@ const commentsModel = model("postComments", {});
 
 const testRaw2 = await userModel
   .where({
-    age: 12
+    age: esc(12)
   })
   .findFirst()
   .with({
     // Fix is relations in here are from userModel not from posts
     posts: postsModel.where({
-      id: 12
+      id: esc(12)
     }).include({
       comments: true,
     }),
@@ -113,7 +117,7 @@ const testRaw3 = await userModel
         {
           equal: 1,
         },
-        2,
+        esc(12),
       ],
     }
   })
@@ -122,10 +126,10 @@ const testRaw3 = await userModel
     // Fix is relations in here are from userModel not from posts
     posts: postsModel
       .where({
-        id: 12
+        id: esc(12)
       })
       .include({
-        comments: commentsModel.where({ id: 12 }).include({
+        comments: commentsModel.where({ id: esc(12) }).include({
           author: true
         }),
       }),
@@ -140,7 +144,7 @@ const testRaw4 = await userModel
         {
           equal: 1,
         },
-        2,
+        esc(2),
       ],
     }
   })
@@ -149,7 +153,7 @@ const testRaw4 = await userModel
     // Fix is relations in here are from userModel not from posts
     posts: postsModel
       .where({
-        id: 12
+        id: esc(12)
       })
       .include({
         comments: true,
@@ -171,7 +175,7 @@ const testRaw5 = await userModel
         {
           equal: 1,
         },
-        2,
+        esc(12),
       ]
     },
   })
@@ -180,7 +184,7 @@ const testRaw5 = await userModel
     // Fix is relations in here are from userModel not from posts
     posts: postsModel
       .where({
-        id: 123
+        id: esc(12)
       })
       .include({
         comments: true,
@@ -208,7 +212,7 @@ const testRaw6 = await userModel
 // testRaw6.
 
 const testRaw7 = await userModel
-  .where({ id: 1 })
+  .where({ id: esc(12) })
   .update({
     age: 12
   })
@@ -217,7 +221,7 @@ const testRaw7 = await userModel
 // testRaw7[0].
 
 const testRaw8 = await userModel
-  .where({ id: 1 })
+  .where({ id: esc(12) })
   .delete()
   .return();
 
@@ -228,7 +232,7 @@ const testRaw8 = await userModel
 const testRaw9 = await postsModel
   .where({
     user: {
-      id: 1
+      id: esc(12)
     },
   })
   .update({
@@ -238,7 +242,7 @@ const testRaw9 = await postsModel
 
 const testRaw10 = await postsModel
   .where(
-    userModel.where({ id: 123 })
+    userModel.where({ id: esc(12) })
   )
   .update({
     description: ""
@@ -288,7 +292,7 @@ const testRaw14 = await userModel.findByName("Alex");
 
 const testRaw15 = await userModel
   .where({
-    name: "Alex"
+    name: esc("Alex")
   })
   .findFirst()
   .raw();
@@ -297,7 +301,7 @@ const userModel2 = userModel.extend({
   methods: {
     whereName(name: string) {
       return userModel2.where({
-        name: name
+        name: esc(name)
       });
     }
   },
