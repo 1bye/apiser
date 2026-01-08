@@ -27,11 +27,11 @@ export interface ModelMethods<
   TDialect extends ModelDialect = TConfig["dialect"]
 > {
   findMany(): ModelQueryResult<
-    TableOutput<TTable>[],
+    TConfig["tableOutput"][],
     TConfig
   >;
   findFirst(): ModelQueryResult<
-    TableOutput<TTable>,
+    TConfig["tableOutput"],
     TConfig
   >,
 

@@ -9,8 +9,7 @@ import type {
   MethodExcludeValue,
 } from "./methods/exclude";
 import type { MethodReturnResult } from "./methods/return";
-import type { MethodWithInsertValue } from "./methods/insert";
-import type { ModelDialect, ReturningIdDialects } from "./dialect";
+import type { ReturningIdDialects } from "./dialect";
 import type { TableOutput } from "./table";
 import type { ModelConfig } from "./config";
 import type { ResolveOptionsFormat } from "./options";
@@ -83,9 +82,7 @@ export interface ModelMutateResult<
       : TValue,
   ): Omit<
     ModelMutateResult<
-      (TResultType extends "many"
-        ? TResult[]
-        : TResult),
+      TResult,
       TConfig,
       TResultType
     >,

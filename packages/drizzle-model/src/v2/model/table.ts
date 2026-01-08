@@ -1,6 +1,5 @@
-import type { DrizzleColumns, DrizzleRawOutput } from "@/types";
-import type { Table } from "drizzle-orm";
-import type { TableRelationalConfig } from "drizzle-orm/relations";
+import type { InferInsertModel, InferSelectModel, Table } from "drizzle-orm";
+import type { SchemaEntry, TableRelationalConfig } from "drizzle-orm/relations";
 
 /**
  * Extracts the column definitions from a Drizzle table configuration.
@@ -10,9 +9,7 @@ import type { TableRelationalConfig } from "drizzle-orm/relations";
  *
  * @typeParam TTable - Relational configuration for the table
  */
-export type TableColumns<TTable extends TableRelationalConfig> = DrizzleColumns<
-  IsTable<TTable["table"]>
->;
+export type TableColumns<TTable extends TableRelationalConfig> = IsTable<TTable["table"]>["_"]["columns"];
 
 /**
  * Resolves a single column definition from a table by column name.
@@ -25,8 +22,30 @@ export type TableColumn<
   TTable extends TableRelationalConfig,
 > = TableColumns<TTable>[TColumnName];
 
-export type TableOutput<TTable extends TableRelationalConfig> =
-  DrizzleRawOutput<IsTable<TTable["table"]>>;
+export type TableOutput<TTable extends TableRelationalConfig | SchemaEntry | Table> =
+  NormalizeTable<TTable> extends Table ? InferSelectModel<NormalizeTable<TTable>> : never;
+// Is relation?
+// (TTable extends TableRelationalConfig
+//   ? InferSelectModel<IsTable<TTable["table"]>>
+//   : (TTable extends SchemaEntry
+//     // Is schema entry (view/table)?
+//     ? InferSelectModel<IsTable<TTable>>
+//     : (TTable extends Table
+//       // Is Table?
+//       ? InferSelectModel<TTable>
+//       : never)));
+
+export type NormalizeTable<TTable extends TableRelationalConfig | SchemaEntry | Table> =
+  // Is relation?
+  (TTable extends TableRelationalConfig
+    ? IsTable<TTable["table"]>
+    : (TTable extends SchemaEntry
+      // Is schema entry (view/table)?
+      ? IsTable<TTable>
+      : (TTable extends Table
+        // Is Table?
+        ? TTable
+        : never)));
 
 export type TableRelationsTableName<
   TTable extends TableRelationalConfig
@@ -48,3 +67,10 @@ export type TableOneRelationsTableName<
 > = TableOneRelationsMap<TTable>[keyof TableOneRelationsMap<TTable>];
 
 export type IsTable<T> = T extends Table ? T : never;
+
+export type TableInsertModel<TTable extends Table> =
+  InferInsertModel<TTable>;
+
+export type TableInsertValues<TTable extends Table> =
+  | InferInsertModel<TTable>
+  | InferInsertModel<TTable>[];

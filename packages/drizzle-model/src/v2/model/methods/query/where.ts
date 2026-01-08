@@ -3,8 +3,8 @@ import type { ModelIdentifier } from "../../model";
 import type { TableRelationalConfig, TablesRelationalConfig } from "drizzle-orm/relations";
 import type { TableColumn, TableOneRelationsTableName } from "../../table";
 import type { IsDrizzleTable } from "@/types";
-import type { ColumnValue } from "../../operations";
 import type { MethodIncludeIdentifier } from "../include";
+import type { ColumnValue } from "../../query/operations";
 
 export type MethodWhereValue<
   TSchema extends TablesRelationalConfig,

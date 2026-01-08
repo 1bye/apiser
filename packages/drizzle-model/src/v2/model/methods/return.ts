@@ -1,8 +1,5 @@
-import type { TableRelationalConfig } from "drizzle-orm/relations";
-import type { TableOutput } from "../table";
-import type { ModelDialect, ReturningIdDialects } from "../dialect";
+import type { ReturningIdDialects } from "../dialect";
 import type { InferModelFromColumns } from "drizzle-orm/table";
-import type { IsDrizzleTable } from "@/types";
 import type { Column } from "drizzle-orm";
 import type { ModelConfig } from "../config";
 import type { ModelFormatValue } from "../format";

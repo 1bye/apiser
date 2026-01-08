@@ -1,13 +1,10 @@
 import type {
-  DrizzleRawOutput,
-  IsDrizzleTable,
-  RecursiveBooleanRecord,
-} from "@/types";
-import type {
   TableRelationalConfig,
   TablesRelationalConfig,
 } from "drizzle-orm/relations";
 import type { ModelIdentifier } from "./model";
+import type { IsTable, TableOutput } from "./table";
+import type { RecursiveBooleanRecord } from "../types";
 
 /**
  * Defines the cardinality of a relation: "one" (hasOne) or "many" (hasMany).
@@ -59,8 +56,8 @@ export type RelationTargetRow<
   Key extends string,
   TSchema extends TablesRelationalConfig,
   TTable extends TableRelationalConfig,
-> = DrizzleRawOutput<
-  IsDrizzleTable<TargetTable<TSchema, RelationMeta<TTable, Key>>["table"]>
+> = TableOutput<
+  IsTable<TargetTable<TSchema, RelationMeta<TTable, Key>>["table"]>
 >;
 
 /**

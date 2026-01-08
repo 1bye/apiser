@@ -3,7 +3,7 @@ import { db } from "./db";
 import { relations } from "./relations";
 import { modelBuilder } from "@/v2/model";
 import { gte, sql, eq, or } from "drizzle-orm";
-import { esc } from "@/v2/model/operations";
+import { esc } from "@/v2/model/query/operations";
 
 const model = modelBuilder({
   schema,
@@ -218,7 +218,7 @@ const testRaw7 = await userModel
   })
   .return();
 
-testRaw7?.[0]?.;
+// testRaw7?.[0]?.;
 
 const testRaw8 = await userModel
   .where({ id: esc(12) })
@@ -257,6 +257,8 @@ const testRaw11 = await postsModel
     description: ""
   })
   .return();
+
+// testRaw11[0].
 
 const testRaw12 = await postsModel
   .where(
