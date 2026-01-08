@@ -1,4 +1,5 @@
-import type { DrizzleInsertValues, IsDrizzleTable } from "@/types";
+import type { DrizzleInsertValues } from "@/types";
 import type { TableRelationalConfig } from "drizzle-orm/relations";
+import type { IsTable } from "../table";
 
-export type MethodUpdateValue<TTable extends TableRelationalConfig> = Partial<DrizzleInsertValues<IsDrizzleTable<TTable["table"]>>>;
+export type MethodUpdateValue<TTable extends TableRelationalConfig> = Partial<DrizzleInsertValues<IsTable<TTable["table"]>>>;

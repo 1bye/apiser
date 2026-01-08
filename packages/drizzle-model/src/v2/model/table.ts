@@ -1,4 +1,5 @@
-import type { DrizzleColumns, DrizzleRawOutput, IsDrizzleTable } from "@/types";
+import type { DrizzleColumns, DrizzleRawOutput } from "@/types";
+import type { Table } from "drizzle-orm";
 import type { TableRelationalConfig } from "drizzle-orm/relations";
 
 /**
@@ -10,7 +11,7 @@ import type { TableRelationalConfig } from "drizzle-orm/relations";
  * @typeParam TTable - Relational configuration for the table
  */
 export type TableColumns<TTable extends TableRelationalConfig> = DrizzleColumns<
-  IsDrizzleTable<TTable["table"]>
+  IsTable<TTable["table"]>
 >;
 
 /**
@@ -25,7 +26,7 @@ export type TableColumn<
 > = TableColumns<TTable>[TColumnName];
 
 export type TableOutput<TTable extends TableRelationalConfig> =
-  DrizzleRawOutput<IsDrizzleTable<TTable["table"]>>;
+  DrizzleRawOutput<IsTable<TTable["table"]>>;
 
 export type TableRelationsTableName<
   TTable extends TableRelationalConfig
@@ -45,3 +46,5 @@ type TableOneRelationsMap<TTable extends TableRelationalConfig> = {
 export type TableOneRelationsTableName<
   TTable extends TableRelationalConfig
 > = TableOneRelationsMap<TTable>[keyof TableOneRelationsMap<TTable>];
+
+export type IsTable<T> = T extends Table ? T : never;

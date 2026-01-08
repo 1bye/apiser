@@ -1,6 +1,7 @@
 import type { TableRelationalConfig, TablesRelationalConfig } from "drizzle-orm/relations";
 import type { ModelDialect } from "./dialect";
-import type { ModelOptions } from "./options";
+import type { ModelOptions, ResolveOptionsFormat } from "./options";
+import type { IsTable, TableOutput } from "./table";
 
 export type ModelConfig<
   TSchema extends TablesRelationalConfig = TablesRelationalConfig,
@@ -12,4 +13,10 @@ export type ModelConfig<
   table: TTable;
   dialect: TDialect;
   options: TOptions;
+
+  // Aliases:
+  tableOutput: TableOutput<TTable>;
+  tableColumns: IsTable<TTable["table"]>["_"]["columns"];
+
+  optionsFormat: ResolveOptionsFormat<TOptions["format"]>;
 };

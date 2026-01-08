@@ -207,7 +207,7 @@ const testRaw6 = await userModel
     age: true
   });
 
-// testRaw6
+// testRaw6.
 
 // testRaw6.
 
@@ -218,7 +218,7 @@ const testRaw7 = await userModel
   })
   .return();
 
-// testRaw7[0].
+testRaw7?.[0]?.;
 
 const testRaw8 = await userModel
   .where({ id: esc(12) })
@@ -292,7 +292,7 @@ const testRaw14 = await userModel.findByName("Alex");
 
 const testRaw15 = await userModel
   .where({
-    name: esc("Alex")
+    name: esc("Alex"),
   })
   .findFirst()
   .raw();
@@ -313,6 +313,26 @@ const userModel2 = userModel.extend({
   }
 });
 
+const testRaw16 = await userModel2.upsert({
+  insert: {
+    email: "123",
+    name: "123",
+    age: 123,
+  },
+  update: (c) => ({
+    name: c.inserted("name")
+  }),
+  updateWhere: (c) => ({
+    name: {
+      not: c.excluded("name")
+    }
+  }),
+  target: ["id"]
+}).return({
+  age: true
+});
+
+// testRaw16.
 
 // testRaw16.
 

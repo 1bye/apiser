@@ -12,6 +12,7 @@ import type { MethodWhereValue } from "./methods/query/where";
 import type { ComposeModelOptions, ModelOptions, ResolveOptionsFormat, ResolveOptionsMethods } from "./options";
 import type { ModelConfig } from "./config";
 import type { Replace } from "../types";
+import type { MethodUpsertValue } from "./methods/upsert";
 
 /**
  * Interface defining standard query methods available on a model.
@@ -36,9 +37,11 @@ export interface ModelMethods<
 
   where(value: MethodWhereValue<TConfig["schema"], TConfig["table"]>): Model<TConfig>;
 
-  insert<TValue extends MethodInsertValue<TTable>>(value: TValue): ModelMutateResult<void, TValue, TSchema, TTable, TDialect, "one">;
-  update<TValue extends MethodUpdateValue<TTable>>(value: TValue): ModelMutateResult<void, TValue, TSchema, TTable, TDialect, "many">;
-  delete(): ModelMutateResult<void, {}, TSchema, TTable, TDialect, "many">;
+  insert<TValue extends MethodInsertValue<TTable>>(value: TValue): ModelMutateResult<void, TConfig, TValue extends any[] ? "many" : "one">;
+  update<TValue extends MethodUpdateValue<TTable>>(value: TValue): ModelMutateResult<void, TConfig, "many">;
+  delete(): ModelMutateResult<void, TConfig, "many">;
+
+  upsert<TValue extends MethodUpsertValue<TConfig>>(value: TValue): ModelMutateResult<void, TConfig, TValue["insert"] extends any[] ? "many" : "one">;
 
   include<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
     value: TValue,

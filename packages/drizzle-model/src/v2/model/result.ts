@@ -65,10 +65,7 @@ export interface ModelQueryResult<
 
 export interface ModelMutateResult<
   TBaseResult extends Record<string, any> | void,
-  TPayload extends Record<string, any> | any[],
-  TSchema extends TablesRelationalConfig,
-  TTable extends TableRelationalConfig,
-  TDialect extends ModelDialect,
+  TConfig extends ModelConfig,
   TResultType extends string = "one"
 > extends Promise<TBaseResult> {
   // TODO: Planned for future
@@ -77,20 +74,19 @@ export interface ModelMutateResult<
   // ): void;
 
   return<
-    TValue extends MethodSelectValue<TableOutput<TTable>> | undefined,
-    TReturnResult extends MethodReturnResult<TPayload, TTable, TDialect> = MethodReturnResult<TPayload, TTable, TDialect>,
-    TResult extends Record<string, any> = TValue extends undefined ? TReturnResult : MethodSelectResult<Exclude<TValue, undefined>, TReturnResult>
+    TValue extends MethodSelectValue<TableOutput<TConfig["table"]>> | undefined,
+    TReturnResult extends MethodReturnResult<TResultType, TConfig> = MethodReturnResult<TResultType, TConfig>,
+    TResult extends Record<string, any> = TValue extends undefined ? TReturnResult : MethodSelectResult<Exclude<TValue, undefined>, TReturnResult>,
   >(
-    value?: TDialect extends ReturningIdDialects ? never : TValue,
+    value?: TConfig["dialect"] extends ReturningIdDialects
+      ? never
+      : TValue,
   ): Omit<
     ModelMutateResult<
       (TResultType extends "many"
         ? TResult[]
         : TResult),
-      TPayload,
-      TSchema,
-      TTable,
-      TDialect,
+      TConfig,
       TResultType
     >,
     "with"

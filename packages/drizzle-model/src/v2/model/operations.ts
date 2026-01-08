@@ -1,32 +1,32 @@
 import type { DrizzleColumnDataType } from "@/types";
-import type { Column } from "drizzle-orm";
+import type { Column, SQL } from "drizzle-orm";
 
 export type ColumnOpsBase<T> = {
-  eq?: T;
-  equal?: T;
-  not?: T;
-  in?: T[];
-  nin?: T[];
+  eq?: T | SQL;
+  equal?: T | SQL;
+  not?: T | SQL;
+  in?: (T | SQL)[];
+  nin?: (T | SQL)[];
   isNull?: boolean;
 };
 
 export type NumberOps = {
-  gt?: number;
-  gte?: number;
-  lt?: number;
-  lte?: number;
-  between?: [number, number];
-  notBetween?: [number, number];
+  gt?: number | SQL;
+  gte?: number | SQL;
+  lt?: number | SQL;
+  lte?: number | SQL;
+  between?: [number | SQL, number | SQL];
+  notBetween?: [number | SQL, number | SQL];
 };
 
 export type StringOps = {
-  like?: string;
-  ilike?: string;
-  startsWith?: string;
-  endsWith?: string;
-  contains?: string;
-  regex?: string;
-  notRegex?: string;
+  like?: string | SQL;
+  ilike?: string | SQL;
+  startsWith?: string | SQL;
+  endsWith?: string | SQL;
+  contains?: string | SQL;
+  regex?: string | SQL;
+  notRegex?: string | SQL;
   length?: NumberOps;
 };
 
@@ -36,11 +36,11 @@ export type BoolOps = {
 };
 
 export type DateOps = {
-  before?: Date | string;
-  after?: Date | string;
-  on?: Date | string;
-  notOn?: Date | string;
-  between?: [Date | string, Date | string];
+  before?: Date | string | SQL;
+  after?: Date | string | SQL;
+  on?: Date | string | SQL;
+  notOn?: Date | string | SQL;
+  between?: [Date | string | SQL, Date | string | SQL];
 };
 
 export type JsonOps<T> = {
