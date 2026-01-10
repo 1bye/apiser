@@ -1,12 +1,12 @@
 import type { TableRelationalConfig, TablesRelationalConfig } from "drizzle-orm/relations";
-import type { ModelConfig } from "../config";
-import type { MethodInsertValue } from "./insert";
-import type { MethodUpdateValue } from "./update";
-import type { GetPrimarySerialOrDefaultKeys } from "./return";
-import type { MethodWhereValue } from "./query/where";
+import type { ModelConfig } from "../config.ts";
+import type { MethodInsertValue } from "./insert.ts";
+import type { MethodUpdateValue } from "./update.ts";
+import type { GetPrimarySerialOrDefaultKeys } from "./return.ts";
+import type { MethodWhereValue } from "./query/where.ts";
 import type { SQL } from "drizzle-orm";
-import type { IsTable } from "../table";
-import type { AddUnionToValues } from "@/v2/types";
+import type { IsTable } from "../table.ts";
+import type { AddUnionToValues } from "@/types.ts";
 
 export type MethodUpsertValue<
   TConfig extends ModelConfig,

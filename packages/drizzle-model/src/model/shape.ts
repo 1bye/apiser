@@ -1,6 +1,6 @@
-import type { ModelConfig } from "./config";
-import type { ModelBase, ModelIdentifier } from "./model";
-import type { ResolveOptionsMethods } from "./options";
+import type { ModelConfig } from "./config.ts";
+import type { ModelBase, ModelIdentifier } from "./model.ts";
+import type { ResolveOptionsMethods } from "./options.ts";
 
 export type ModelShape<TConfig extends ModelConfig> =
   ModelIdentifier<TConfig["table"]["name"]> &

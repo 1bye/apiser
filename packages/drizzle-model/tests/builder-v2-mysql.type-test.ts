@@ -1,5 +1,5 @@
 import { mysqlDb } from "./db";
-import { modelBuilder } from "@/v2/model";
+import { modelBuilder } from "src/model";
 import { boolean, int, text, mysqlTable, varchar } from 'drizzle-orm/mysql-core';
 import { defineRelations } from "drizzle-orm";
 

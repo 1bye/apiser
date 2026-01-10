@@ -1,4 +1,4 @@
-import type { MethodSelectValue } from "./select";
+import type { MethodSelectValue } from "./select.ts";
 
 export type ResolveMethodExcludeValue<
 	TValue extends Record<string, any>,

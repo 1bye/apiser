@@ -2,18 +2,18 @@ import type {
   TableRelationalConfig,
   TablesRelationalConfig,
 } from "drizzle-orm/relations";
-import type { MethodWithResult, MethodWithValue } from "./methods/with";
-import type { MethodSelectResult, MethodSelectValue } from "./methods/select";
+import type { MethodWithResult, MethodWithValue } from "./methods/with.ts";
+import type { MethodSelectResult, MethodSelectValue } from "./methods/select.ts";
 import type {
   MethodExcludeResult,
   MethodExcludeValue,
-} from "./methods/exclude";
-import type { MethodReturnResult } from "./methods/return";
-import type { ReturningIdDialects } from "./dialect";
-import type { TableOutput } from "./table";
-import type { ModelConfig } from "./config";
-import type { ResolveOptionsFormat } from "./options";
-import type { ModelFormatValue } from "./format";
+} from "./methods/exclude.ts";
+import type { MethodReturnResult } from "./methods/return.ts";
+import type { ReturningIdDialects } from "./dialect.ts";
+import type { TableOutput } from "./table.ts";
+import type { ModelConfig } from "./config.ts";
+import type { ResolveOptionsFormat } from "./options.ts";
+import type { ModelFormatValue } from "./format.ts";
 
 /**
  * Represents the result of a model operation (like findMany or findFirst).

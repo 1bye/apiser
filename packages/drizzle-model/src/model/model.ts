@@ -2,16 +2,16 @@ import type {
   TableRelationalConfig,
   TablesRelationalConfig,
 } from "drizzle-orm/relations";
-import type { MethodWithValue } from "./methods/with";
-import type { MethodInsertValue } from "./methods/insert";
-import type { ModelQueryResult, ModelMutateResult } from "./result";
-import type { MethodUpdateValue } from "./methods/update";
-import type { ModelDialect } from "./dialect";
-import type { MethodWhereValue } from "./methods/query/where";
-import type { ComposeModelOptions, ModelOptions, ResolveOptionsFormat, ResolveOptionsMethods } from "./options";
-import type { ModelConfig } from "./config";
-import type { Replace } from "../types";
-import type { MethodUpsertValue } from "./methods/upsert";
+import type { MethodWithValue } from "./methods/with.ts";
+import type { MethodInsertValue } from "./methods/insert.ts";
+import type { ModelQueryResult, ModelMutateResult } from "./result.ts";
+import type { MethodUpdateValue } from "./methods/update.ts";
+import type { ModelDialect } from "./dialect.ts";
+import type { MethodWhereValue } from "./methods/query/where.ts";
+import type { ComposeModelOptions, ModelOptions, ResolveOptionsFormat, ResolveOptionsMethods } from "./options.ts";
+import type { ModelConfig } from "./config.ts";
+import type { Replace } from "../types.ts";
+import type { MethodUpsertValue } from "./methods/upsert.ts";
 
 /**
  * Interface defining standard query methods available on a model.

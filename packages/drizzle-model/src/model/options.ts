@@ -1,7 +1,7 @@
 import type { TableRelationalConfig, TablesRelationalConfig } from "drizzle-orm/relations";
-import type { ModelDialect } from "./dialect";
-import type { TableOutput } from "./table";
-import type { Fallback } from "../types";
+import type { ModelDialect } from "./dialect.ts";
+import type { TableOutput } from "./table.ts";
+import type { Fallback } from "../types.ts";
 
 /**
  * Options to define a model

@@ -4,7 +4,7 @@ import type {
 	TableRelationalConfig,
 	TablesRelationalConfig,
 } from "drizzle-orm/relations";
-import type { ResolveRelationSelection } from "../relation";
+import type { ResolveRelationSelection } from "../relation.ts";
 
 /**
  * Recursive type structure for defining nested relation selections in the .with() method.

@@ -1,8 +1,8 @@
-import type { ReturningIdDialects } from "../dialect";
+import type { ReturningIdDialects } from "../dialect.ts";
 import type { InferModelFromColumns } from "drizzle-orm/table";
 import type { Column } from "drizzle-orm";
-import type { ModelConfig } from "../config";
-import type { ModelFormatValue } from "../format";
+import type { ModelConfig } from "../config.ts";
+import type { ModelFormatValue } from "../format.ts";
 
 // export type GetPrimarySerialOrDefaultKeys<TTable extends TableRelationalConfig, T extends IsDrizzleTable<TTable["table"]>["_"]["columns"] = IsDrizzleTable<TTable["table"]>["_"]["columns"]> = {
 //   [K in keyof T]: T[K]['_']['isPrimaryKey'] extends true

@@ -1,8 +1,8 @@
 import type { AnyRelations, EmptyRelations } from "drizzle-orm";
-import type { Model } from "./model";
-import type { ModelDialect } from "./dialect";
-import type { ModelOptions } from "./options";
-import type { ModelConfig } from "./config";
+import type { Model } from "./model.ts";
+import type { ModelDialect } from "./dialect.ts";
+import type { ModelOptions } from "./options.ts";
+import type { ModelConfig } from "./config.ts";
 
 export function modelBuilder<
   TFullSchema extends Record<string, unknown> = Record<string, never>,

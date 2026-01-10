@@ -2,9 +2,9 @@ import type {
   TableRelationalConfig,
   TablesRelationalConfig,
 } from "drizzle-orm/relations";
-import type { ModelIdentifier } from "./model";
-import type { IsTable, TableOutput } from "./table";
-import type { RecursiveBooleanRecord } from "../types";
+import type { ModelIdentifier } from "./model.ts";
+import type { IsTable, TableOutput } from "./table.ts";
+import type { RecursiveBooleanRecord } from "../types.ts";
 
 /**
  * Defines the cardinality of a relation: "one" (hasOne) or "many" (hasMany).

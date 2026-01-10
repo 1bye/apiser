@@ -1,9 +1,9 @@
 import * as schema from "./schema";
 import { db } from "./db";
 import { relations } from "./relations";
-import { modelBuilder } from "@/v2/model";
+import { modelBuilder } from "src/model";
 import { gte, sql, eq, or } from "drizzle-orm";
-import { esc } from "@/v2/model/query/operations";
+import { esc } from "@/model/query/operations";
 
 const model = modelBuilder({
   schema,

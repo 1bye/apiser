@@ -1,10 +1,10 @@
 import type { SQL } from "drizzle-orm/sql";
-import type { ModelIdentifier } from "../../model";
+import type { ModelIdentifier } from "../../model.ts";
 import type { TableRelationalConfig, TablesRelationalConfig } from "drizzle-orm/relations";
-import type { TableColumn, TableOneRelationsTableName } from "../../table";
+import type { TableColumn, TableOneRelationsTableName } from "../../table.ts";
 import type { IsDrizzleTable } from "@/types";
-import type { MethodIncludeIdentifier } from "../include";
-import type { ColumnValue } from "../../query/operations";
+import type { MethodIncludeIdentifier } from "../include.ts";
+import type { ColumnValue } from "../../query/operations.ts";
 
 export type MethodWhereValue<
   TSchema extends TablesRelationalConfig,

@@ -1,7 +1,7 @@
 import type { TableRelationalConfig, TablesRelationalConfig } from "drizzle-orm/relations";
-import type { ModelDialect } from "./dialect";
-import type { ModelOptions, ResolveOptionsFormat } from "./options";
-import type { IsTable, TableOutput } from "./table";
+import type { ModelDialect } from "./dialect.ts";
+import type { ModelOptions, ResolveOptionsFormat } from "./options.ts";
+import type { IsTable, TableOutput } from "./table.ts";
 
 export type ModelConfig<
   TSchema extends TablesRelationalConfig = TablesRelationalConfig,

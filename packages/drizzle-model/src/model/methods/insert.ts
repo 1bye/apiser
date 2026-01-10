@@ -1,6 +1,6 @@
 // import type { DrizzleInsertValues, IsDrizzleTable } from "@/types";
 import type { RelationsRecord, TableRelationalConfig, TablesRelationalConfig } from "drizzle-orm/relations";
-import type { IsTable, NormalizeTable, TableInsertValues } from "../table";
+import type { IsTable, NormalizeTable, TableInsertValues } from "../table.ts";
 
 export type MethodInsertValue<TTable extends TableRelationalConfig> = TableInsertValues<
   NormalizeTable<TTable>

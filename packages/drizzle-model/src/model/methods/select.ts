@@ -1,4 +1,4 @@
-import type { UnwrapArray } from "@/v2/types";
+import type { UnwrapArray } from "@/types.ts";
 
 export type ResolveMethodSelectValue<
   TValue extends Record<string, any>,
