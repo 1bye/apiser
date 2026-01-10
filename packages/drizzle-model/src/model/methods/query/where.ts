@@ -1,8 +1,7 @@
 import type { SQL } from "drizzle-orm/sql";
 import type { ModelIdentifier } from "../../model.ts";
 import type { TableRelationalConfig, TablesRelationalConfig } from "drizzle-orm/relations";
-import type { TableColumn, TableOneRelationsTableName } from "../../table.ts";
-import type { IsDrizzleTable } from "@/types";
+import type { TableColumn, TableColumns, TableOneRelationsTableName } from "../../table.ts";
 import type { MethodIncludeIdentifier } from "../include.ts";
 import type { ColumnValue } from "../../query/operations.ts";
 
@@ -45,5 +44,5 @@ export type MethodWhereRelations<TSchema extends TablesRelationalConfig, TTable 
 export type RelationWhere<TTable extends TableRelationalConfig> = MethodWhereColumns<TTable>;
 
 export type MethodWhereColumns<TTable extends TableRelationalConfig> = {
-  [ColumnName in keyof IsDrizzleTable<TTable["table"]>["_"]["columns"]]?: ColumnValue<TableColumn<ColumnName & string, TTable>>
+  [ColumnName in keyof TableColumns<TTable>]?: ColumnValue<TableColumn<ColumnName & string, TTable>>
 };

@@ -2,6 +2,7 @@ import { mysqlDb } from "./db";
 import { modelBuilder } from "src/model";
 import { boolean, int, text, mysqlTable, varchar } from 'drizzle-orm/mysql-core';
 import { defineRelations } from "drizzle-orm";
+import { esc } from "@/model/query/operations";
 
 const usersTable = mysqlTable('users', {
   id: int('id').primaryKey(),
@@ -9,12 +10,10 @@ const usersTable = mysqlTable('users', {
   verified: boolean('verified').notNull().default(false),
 });
 
-
 const usersTableDefFn = mysqlTable('users_default_fn', {
   customId: varchar('id', { length: 256 }).primaryKey().$defaultFn(() => "123"),
   name: text('name').notNull(),
 });
-
 
 const schema = {
   usersTable,
@@ -32,12 +31,10 @@ const model = modelBuilder({
   dialect: "MySQL"
 });
 
-
-
 const userModel = model("usersTableDefFn", {});
 
 const testRaw1 = await userModel.where({
-  customId: "123"
+  customId: esc("123")
 }).delete().return();
 
 // testRaw1[0].

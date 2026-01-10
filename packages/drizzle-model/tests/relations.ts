@@ -10,14 +10,29 @@ export const relations = defineRelations(schema, (r) => ({
     }),
   },
   userPosts: {
-    user: r.one.user(),
-    comments: r.many.postComments(),
+    user: r.one.user({
+      from: r.userPosts.userId,
+      to: r.user.id,
+    }),
+    comments: r.many.postComments({
+      from: r.userPosts.id,
+      to: r.postComments.postId,
+    }),
   },
   postComments: {
-    author: r.one.user(),
-    post: r.one.userPosts(),
+    author: r.one.user({
+      from: r.postComments.authorId,
+      to: r.user.id,
+    }),
+    post: r.one.userPosts({
+      from: r.postComments.postId,
+      to: r.userPosts.id,
+    }),
   },
   userIdeas: {
-    user: r.one.user(),
+    user: r.one.user({
+      from: r.userIdeas.userId,
+      to: r.user.id,
+    }),
   }
 }));
