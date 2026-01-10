@@ -197,15 +197,17 @@ const testRaw5 = await userModel
     },
   });
 
+// testRaw5[0]?.posts[0].
+
 const testRaw6 = await userModel
   .insert({
     email: "email@email",
     name: "Nameie",
     age: 123,
   })
-  .return({
-    age: true
-  });
+  .return();
+
+// testRaw6.
 
 // testRaw6.
 

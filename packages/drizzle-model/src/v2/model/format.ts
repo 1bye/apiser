@@ -1,9 +1,13 @@
 export type ModelFormatValue<
   TValue extends Record<string, any>,
   TFormat extends Record<string, any> | undefined
-> = TFormat extends undefined ? TValue : {
-  [K in keyof TFormat]: TValue[K & string] & TFormat[K & string];
-};
+> = TFormat extends undefined
+  ? TValue
+  : TValue extends (infer TItem)[]
+    ? (TItem extends Record<string, any>
+        ? ModelFormatValue<TItem, TFormat>[]
+        : TValue)
+    : Omit<TValue, keyof TFormat> & TFormat;
 
 // export type ModelFormatResult<
 //   TResult extends Promise<any>,
