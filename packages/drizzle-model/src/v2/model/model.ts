@@ -2,7 +2,6 @@ import type {
   TableRelationalConfig,
   TablesRelationalConfig,
 } from "drizzle-orm/relations";
-import type { TableOutput } from "./table";
 import type { MethodWithValue } from "./methods/with";
 import type { MethodInsertValue } from "./methods/insert";
 import type { ModelQueryResult, ModelMutateResult } from "./result";
@@ -26,34 +25,70 @@ export interface ModelMethods<
   TTable extends TableRelationalConfig = TConfig["table"],
   TDialect extends ModelDialect = TConfig["dialect"]
 > {
+  /**
+   * Fetches all rows for the current model query.
+   */
   findMany(): ModelQueryResult<
     TConfig["tableOutput"][],
     TConfig
   >;
+  /**
+   * Fetches the first matching row for the current model query.
+   */
   findFirst(): ModelQueryResult<
     TConfig["tableOutput"],
     TConfig
   >,
 
+  /**
+   * Adds a where clause to the current model query.
+   *
+   * @param value - Where conditions for the model query
+   */
   where(value: MethodWhereValue<TConfig["schema"], TConfig["table"]>): Model<TConfig>;
 
+  /**
+   * Inserts one or many rows into the model table.
+   *
+   * @param value - Insert payload or batch payload
+   */
   insert<TValue extends MethodInsertValue<TTable>>(value: TValue): ModelMutateResult<void, TConfig, TValue extends any[] ? "many" : "one">;
+  /**
+   * Updates rows that match the current model query.
+   *
+   * @param value - Update payload
+   */
   update<TValue extends MethodUpdateValue<TTable>>(value: TValue): ModelMutateResult<void, TConfig, "many">;
+  /**
+   * Deletes rows that match the current model query.
+   */
   delete(): ModelMutateResult<void, TConfig, "many">;
 
+  /**
+   * Inserts or updates rows based on conflict criteria.
+   *
+   * @param value - Upsert payload or batch payload
+   */
   upsert<TValue extends MethodUpsertValue<TConfig>>(value: TValue): ModelMutateResult<void, TConfig, TValue["insert"] extends any[] ? "many" : "one">;
 
+  /**
+   * Includes related entities in the current model query.
+   *
+   * @param value - Include configuration for relations
+   */
   include<TValue extends MethodWithValue<TSchema, TTable["relations"]>>(
     value: TValue,
   ): TValue;
-  // ): Compose<Model<TConfig>, MethodIncludeIdentifier<true>>;
-
-  // db(db: any): Model<TConfig>;
 }
 
 export interface ModelQueryMethods<
   TConfig extends ModelConfig
 > {
+  /**
+   * Extends the current model with additional options.
+   *
+   * @param config - Options to merge into the model
+   */
   extend<
     TOptions extends ModelOptions<TConfig["schema"], TConfig["table"], TConfig["dialect"]>
   >(config: TOptions): Model<
@@ -68,28 +103,13 @@ export interface ModelQueryMethods<
     >
   >;
 
+  /**
+   * Binds a database client to the model.
+   *
+   * @param db - Database client instance
+   */
   db(db: any): Model<TConfig>;
 }
-
-/**
- * Represents a strongly-typed setter function for a single model field.
- *
- * The field type is derived from the underlying Drizzle column's `dataType`,
- * ensuring that only valid values for that column can be assigned.
- *
- * @typeParam TColumnName - Name of the column in the table
- * @typeParam TSchema - Full relational schema containing all tables
- * @typeParam TTable - Relational configuration for the current table
- */
-// export type ModelField<
-//   TColumnName extends string,
-//   TSchema extends TablesRelationalConfig,
-//   TTable extends TableRelationalConfig,
-//   TDialect extends ModelDialect,
-// > = (
-//   value: ColumnValue<TableColumn<TColumnName, TTable>>,
-// ) => Omit<Model<TSchema, TTable, TDialect>, TColumnName | ModelFirstLevelMethods>;
-
 
 /**
  * Just base represenation of model. This type JUST made for more clearer types, not more...

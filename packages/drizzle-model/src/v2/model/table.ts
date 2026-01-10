@@ -9,10 +9,21 @@ import type { SchemaEntry, TableRelationalConfig } from "drizzle-orm/relations";
  *
  * @typeParam TTable - Relational configuration for the table
  */
+/**
+ * Returns the column map from the underlying Drizzle table definition.
+ *
+ * @typeParam TTable - Relational configuration for the table
+ */
 export type TableColumns<TTable extends TableRelationalConfig> = IsTable<TTable["table"]>["_"]["columns"];
 
 /**
  * Resolves a single column definition from a table by column name.
+ *
+ * @typeParam TColumnName - Name of the column to extract
+ * @typeParam TTable - Relational configuration for the table
+ */
+/**
+ * Selects a single column definition by name.
  *
  * @typeParam TColumnName - Name of the column to extract
  * @typeParam TTable - Relational configuration for the table
@@ -22,6 +33,11 @@ export type TableColumn<
   TTable extends TableRelationalConfig,
 > = TableColumns<TTable>[TColumnName];
 
+/**
+ * Resolves the inferred select model for a table-like input.
+ *
+ * @typeParam TTable - Relation config, schema entry, or table
+ */
 export type TableOutput<TTable extends TableRelationalConfig | SchemaEntry | Table> =
   NormalizeTable<TTable> extends Table ? InferSelectModel<NormalizeTable<TTable>> : never;
 // Is relation?
@@ -35,6 +51,11 @@ export type TableOutput<TTable extends TableRelationalConfig | SchemaEntry | Tab
 //       ? InferSelectModel<TTable>
 //       : never)));
 
+/**
+ * Normalizes relation config and schema entries into a Drizzle table type.
+ *
+ * @typeParam TTable - Relation config, schema entry, or table
+ */
 export type NormalizeTable<TTable extends TableRelationalConfig | SchemaEntry | Table> =
   // Is relation?
   (TTable extends TableRelationalConfig
@@ -47,6 +68,11 @@ export type NormalizeTable<TTable extends TableRelationalConfig | SchemaEntry | 
         ? TTable
         : never)));
 
+/**
+ * Collects target table names from all relations.
+ *
+ * @typeParam TTable - Relational configuration for the table
+ */
 export type TableRelationsTableName<
   TTable extends TableRelationalConfig
 > = {
@@ -54,6 +80,11 @@ export type TableRelationsTableName<
   TTable["relations"][K]["targetTableName"]
 }[keyof TTable["relations"]];
 
+/**
+ * Maps non-"many" relations to their target table names.
+ *
+ * @typeParam TTable - Relational configuration for the table
+ */
 type TableOneRelationsMap<TTable extends TableRelationalConfig> = {
   [K in keyof TTable["relations"]as
   TTable["relations"][K]["relationType"] extends "many"
@@ -62,15 +93,35 @@ type TableOneRelationsMap<TTable extends TableRelationalConfig> = {
   ]: TTable["relations"][K]["targetTableName"]
 };
 
+/**
+ * Collects target table names for non-"many" relations.
+ *
+ * @typeParam TTable - Relational configuration for the table
+ */
 export type TableOneRelationsTableName<
   TTable extends TableRelationalConfig
 > = TableOneRelationsMap<TTable>[keyof TableOneRelationsMap<TTable>];
 
+/**
+ * Narrows a type to a Drizzle table when possible.
+ *
+ * @typeParam T - Candidate table type
+ */
 export type IsTable<T> = T extends Table ? T : never;
 
+/**
+ * Infers insert model for a Drizzle table.
+ *
+ * @typeParam TTable - Drizzle table type
+ */
 export type TableInsertModel<TTable extends Table> =
   InferInsertModel<TTable>;
 
+/**
+ * Accepts a single insert payload or a batch of insert payloads.
+ *
+ * @typeParam TTable - Drizzle table type
+ */
 export type TableInsertValues<TTable extends Table> =
   | InferInsertModel<TTable>
   | InferInsertModel<TTable>[];
