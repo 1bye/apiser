@@ -10,6 +10,7 @@ import { applyExclude, applyFormat, applySelect } from "./transform.ts";
 import { buildSelectProjection } from "./projection.ts";
 import { compileWhere } from "./where.ts";
 import { runWithJoins } from "./with.ts";
+import type { ReturningIdDialects } from "../dialect.ts";
 
 type AnyObj = Record<string, any>;
 
@@ -19,6 +20,29 @@ type BaseState = {
   db: any;
   where: unknown;
 };
+
+function isReturningIdDialect(dialect: string): dialect is ReturningIdDialects {
+  return dialect === "MySQL" || dialect === "SingleStore" || dialect === "CockroachDB";
+}
+
+async function execReturn(q: any, mState: MutateState, dialect: string): Promise<any> {
+  if (typeof q?.returning === "function") {
+    return await (mState.returnSelect ? q.returning(mState.returnSelect) : q.returning());
+  }
+  if (isReturningIdDialect(dialect) && typeof q?.$returningId === "function") {
+    return await q.$returningId();
+  }
+  return await q;
+}
+
+function normalizeUpsertTarget(table: AnyObj, target: any): any {
+  if (!target) return target;
+  if (typeof target === "string") return (table as any)[target] ?? target;
+  if (Array.isArray(target)) {
+    return target.map((t) => (typeof t === "string" ? ((table as any)[t] ?? t) : t));
+  }
+  return target;
+}
 
 export function makeModelRuntime(config: {
   db: any;
@@ -151,10 +175,7 @@ export function makeModelRuntime(config: {
       const runner = async (mState: MutateState) => {
         const table = (config.schema as any)[config.tableName];
         const q = (config.db as any).insert(table).values(mState.value);
-        const returned = (q as any).returning
-          ? await (mState.returnSelect ? q.returning(mState.returnSelect) : q.returning())
-          : await q;
-        return returned as any;
+        return await execReturn(q, mState, config.dialect);
       };
 
       return new MutateResult({ kind: "insert" as MutateKind, value } as MutateState, runner) as any;
@@ -166,10 +187,7 @@ export function makeModelRuntime(config: {
         const whereSql = compileWhere(table as AnyObj, state.where);
         let q = (config.db as any).update(table).set(mState.value);
         if (whereSql) q = q.where(whereSql);
-        const returned = (q as any).returning
-          ? await (mState.returnSelect ? q.returning(mState.returnSelect) : q.returning())
-          : await q;
-        return returned as any;
+        return await execReturn(q, mState, config.dialect);
       };
 
       return new MutateResult({ kind: "update" as MutateKind, value } as MutateState, runner) as any;
@@ -181,10 +199,7 @@ export function makeModelRuntime(config: {
         const whereSql = compileWhere(table as AnyObj, state.where);
         let q = (config.db as any).delete(table);
         if (whereSql) q = q.where(whereSql);
-        const returned = (q as any).returning
-          ? await (mState.returnSelect ? q.returning(mState.returnSelect) : q.returning())
-          : await q;
-        return returned as any;
+        return await execReturn(q, mState, config.dialect);
       };
 
       return new MutateResult({ kind: "delete" as MutateKind } as MutateState, runner) as any;
@@ -195,7 +210,7 @@ export function makeModelRuntime(config: {
         const table = (config.schema as any)[config.tableName];
         const insertValues = (mState.value as any).insert;
         const updateCfg = (mState.value as any).update;
-        const target = (mState.value as any).target;
+        const target = normalizeUpsertTarget(table as AnyObj, (mState.value as any).target);
         let updateSet = updateCfg;
         if (typeof updateCfg === "function") {
           updateSet = updateCfg({
@@ -212,10 +227,7 @@ export function makeModelRuntime(config: {
           });
         }
 
-        const returned = (q as any).returning
-          ? await (mState.returnSelect ? q.returning(mState.returnSelect) : q.returning())
-          : await q;
-        return returned as any;
+        return await execReturn(q, mState, config.dialect);
       };
 
       return new MutateResult({ kind: "upsert" as MutateKind, value } as MutateState, runner) as any;

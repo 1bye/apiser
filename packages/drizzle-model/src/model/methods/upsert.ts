@@ -5,6 +5,7 @@ import type { MethodUpdateValue } from "./update.ts";
 import type { GetPrimarySerialOrDefaultKeys } from "./return.ts";
 import type { MethodWhereValue } from "./query/where.ts";
 import type { SQL } from "drizzle-orm";
+import type { Column } from "drizzle-orm";
 import type { IsTable } from "../table.ts";
 import type { AddUnionToValues } from "@/types.ts";
 
@@ -16,9 +17,15 @@ export type MethodUpsertValue<
   insert: MethodInsertValue<TTable>;
   update: MethodUpsertUpdate<TTable>;
 
-  target?: (keyof GetPrimarySerialOrDefaultKeys<
-    IsTable<TTable["table"]>["_"]["columns"]
-  >)[];
+  target?:
+    | (keyof GetPrimarySerialOrDefaultKeys<
+      IsTable<TTable["table"]>["_"]["columns"]
+    >)
+    | (keyof GetPrimarySerialOrDefaultKeys<
+      IsTable<TTable["table"]>["_"]["columns"]
+    >)[]
+    | Column
+    | Column[];
   updateWhere?: MethodUpsertUpdateWhere<TSchema, TTable>;
 };
 
