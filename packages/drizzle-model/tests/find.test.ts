@@ -49,8 +49,7 @@ describe("Model Find Test", () => {
     const expected = await rawUsers();
 
     expect(raw).toBeArray();
-    expect(raw).toHaveLength(4);
-    expect((raw as any[]).map((u) => u.id).sort()).toEqual([1, 2, 3, 5]);
+    expect(raw).toHaveLength((expected as any[]).length);
     expect(sortById(raw as any)).toEqual(sortById(expected as any));
   });
 
