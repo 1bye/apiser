@@ -1,0 +1,24 @@
+{
+  "name": "@apiser/controller",
+  "version": "0.0.0",
+  "module": "src/index.ts",
+  "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
+    "@types/bun": "latest",
+    "@types/node": "^22.15.3",
+    "dotenv": "^17.2.3",
+    "eslint": "^9.39.1",
+    "typescript": "5.9.2"
+  },
+  "private": true,
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "generate:component": "turbo gen react-component",
+    "check-types": "tsc --noEmit"
+  },
+  "type": "module",
+  "dependencies": {
+    "@typeschema/main": "^0.14.1"
+  }
+}
