@@ -1,0 +1,509 @@
+### 1:
+```ts
+const userController = controller({
+  name: "user-controller",
+  bindings: ({ handler }) => ({
+    User: handler.name === "index" 
+      ? userModel.extend({
+        where: {
+          id: esc(handler.props.id)
+        }
+      })
+      : userModel,
+  }),
+  handlers: (handle) => ({
+    index: handle(() => {
+      
+    }),
+    
+    name: handle(({ props, User }) => {
+      // some operation
+      
+      const user = await User.where({
+        name: esc(name)
+      }).findFirst()
+      
+      return user.email;
+    }, {
+      inputSchema: z.object({
+        name: z.string()
+      })
+    }) // Handle<Props, Options, Output>
+  })
+});
+
+userController.index({
+  name: "Alex"
+});
+
+new Elysia()
+  .get("/", () => {
+    return 
+  })
+  .post("/by-name", ({ body }) => {
+    return userController.name(body);
+  }, {
+    body: userController.name.schema()
+  })
+```
+
+### 2:
+```ts
+const userController = controller({
+  name: "user-controller",
+  bindings: {
+    User: userModel,
+    
+    auth: (payload /* rn is just boolean */) => ({
+      inputSchema: z.object({
+        userId: z.string()
+      }),
+      
+      // `resolve` called when has any value except undefined and null
+      resolve({ props /* props from `inputSchema` */, handler /*object of handler, containing props, name and etc... */ }) => {
+        const userId = props.userId;
+        
+        console.log(handler.props);
+        
+        if (userId !== "test-user") throw new Error("Some error");
+        
+        // If we want we can return smth like:
+        return {
+          isAuth: true
+        }
+      }
+    })
+  },
+  handlers: (handle) => ({
+    index: handle(() => {
+      
+    }, {
+      // Boolean in case of binding is `payload`
+      auth: true
+    }),
+    
+    name: handle(({ props, User }) => {
+      // some operation
+      
+      const user = await User.where({
+        name: esc(name)
+      }).findFirst()
+      
+      return user.email;
+    }, {
+      inputSchema: z.object({
+        name: z.string()
+      })
+    }) // Handle<Props, Options, Output>
+  })
+});
+
+userController.index({
+  name: "Alex"
+});
+
+new Elysia()
+  .get("/", () => {
+    return 
+  }, {
+    headers: userController.index.auth.schema() // will merge inputSchema (if exists) and binding schema
+  })
+  .post("/by-name", ({ body }) => {
+    return userController.name(body);
+  }, {
+    body: userController.name.schema()
+  })
+```
+
+### 3:
+```ts
+const userController = controller({
+  name: "user-controller",
+  bindings: {
+    User: userModel,
+
+    auth: (payload: boolean) => ({
+      input: {
+        headers: z.object({ userId: z.string() }),
+      },
+      resolve({ input, handler }) {
+        const userId = input.headers.userId;
+        if (userId !== "test-user") throw new Error("Some error");
+        return { 
+          User: userModel.extend({
+            where: {
+              id: esc(userId)
+            },
+            
+            format: ({ secretField, ...props }) => ({
+              ...props,
+              secretField: !!handler.props?.raw ? secretField : undefined
+            })
+          })
+        };
+      }
+    })
+  },
+
+  handlers: (handle) => ({
+    index: handle(async ({ User, query }) => {
+      if (query.raw) {
+        return User.findFirst().raw();
+      }
+      
+      return User.findFirst();
+    }, {
+      auth: true,
+      // optional handler input too
+      input: { 
+        query: z.object({
+          raw: z.boolean().optional()
+        }) 
+      }
+    }),
+
+    name: handle(async ({ input, User }) => {
+      const user = await User.where({ name: esc(input.body.name) }).findFirst();
+      return user?.email;
+    }, {
+      input: { body: z.object({ name: z.string() }) }
+    })
+  })
+});
+
+app.get("/", ...userController.index.elysia());
+app.post("/by-name", ...userController.name.elysia());
+
+await userController.index({
+  // merged
+});
+
+await userController.index.raw({
+  body: {},
+  query: {},
+  params: {},
+  headers: {},
+});
+```
+
+### 4:
+```ts
+const userController = controller((handle) => ({
+  index: handle(async ({ User, query }) => {
+    if (query.raw) {
+      return User.findFirst().raw();
+    }
+    
+    return User.findFirst();
+  }, {
+    auth: true,
+    // optional handler input too
+    input: { 
+      query: z.object({
+        raw: z.boolean().optional()
+      }) 
+    }
+  }),
+
+  name: handle(async ({ input, User }) => {
+    const user = await User.where({ name: esc(input.body.name) }).findFirst();
+    return user?.email;
+  }, {
+    input: { body: z.object({ name: z.string() }) }
+  })
+}), {
+  name: "user-controller",
+  
+  bindings: {
+    User: userModel,
+
+    auth: (payload: boolean) => ({
+      input: {
+        headers: z.object({ userId: z.string() }),
+      },
+      resolve({ input, handler }) {
+        const userId = input.headers.userId;
+        if (userId !== "test-user") throw new Error("Some error");
+        return { 
+          User: userModel.extend({
+            where: {
+              id: esc(userId)
+            },
+            
+            format: ({ secretField, ...props }) => ({
+              ...props,
+              secretField: !!handler.props?.raw ? secretField : undefined
+            })
+          })
+        };
+      }
+    })
+  },
+});
+
+app.get("/", ...userController.index.elysia());
+app.post("/by-name", ...userController.name.elysia());
+
+await userController.index({
+  // merged
+});
+
+await userController.index.raw({
+  body: {},
+  query: {},
+  params: {},
+  headers: {},
+});
+```
+
+
+### 5:
+```ts
+const options = controller.options({
+  name: "user-controller",
+  
+  bindings: {
+    User: userModel,
+
+    auth: (payload: boolean) => ({
+      input: {
+        headers: z.object({ userId: z.string() }),
+      },
+      resolve({ input, handler }) {
+        const userId = input.headers.userId;
+        if (userId !== "test-user") throw new Error("Some error");
+        return { 
+          User: userModel.extend({
+            where: {
+              id: esc(userId)
+            },
+            
+            format: ({ secretField, ...props }) => ({
+              ...props,
+              secretField: !!handler.props?.raw ? secretField : undefined
+            })
+          })
+        };
+      }
+    })
+  },
+});
+
+const userController = controller(options, (handle) => ({
+  index: handle(async ({ User, query }) => {
+    if (query.raw) {
+      return User.findFirst().raw();
+    }
+    
+    return User.findFirst();
+  }, {
+    auth: true,
+    // optional handler input too
+    input: { 
+      query: z.object({
+        raw: z.boolean().optional()
+      }) 
+    }
+  }),
+
+  name: handle(async ({ input, User }) => {
+    const user = await User.where({ name: esc(input.body.name) }).findFirst();
+    return user?.email;
+  }, {
+    input: { body: z.object({ name: z.string() }) }
+  })
+});
+
+app.get("/", ...userController.index.elysia());
+app.post("/by-name", ...userController.name.elysia());
+
+await userController.index({
+  // merged
+});
+
+await userController.index.raw({
+  body: {},
+  query: {},
+  params: {},
+  headers: {},
+});
+```
+
+### 6:
+```ts
+const options = controller.options({
+  name: "user-controller",
+  
+  bindings: {
+    User: userModel,
+
+    auth: (enabled: boolean) => ({
+      payload: z.object({ 
+        userId: z.string().from("headers", { key: "x-user-id" })
+      }),
+      resolve({ payload, handler }) {
+        const userId = payload.userId;
+        
+        if (userId !== "test-user") throw new Error("Some error");
+        
+        return { 
+          User: userModel.extend({
+            where: {
+              id: esc(userId)
+            },
+            
+            format: ({ secretField, ...props }) => ({
+              ...props,
+              // for now handler props is any
+              secretField: !!handler.props?.raw ? secretField : undefined
+            })
+          })
+        };
+      }
+    })
+  },
+});
+
+const userController = controller(options, (handle) => ({
+  index: handle(async ({ User, payload }) => {
+    if (payload.raw) {
+      return User.findFirst().raw();
+    }
+    
+    return User.findFirst();
+  }, {
+    auth: true,
+    // optional handler input too
+    payload: z.object({
+      raw: z.boolean().optional().meta({ from: "query" })
+    })
+  }),
+
+  name: handle(async ({ payload, User }) => {
+    const user = await User
+      .where({ name: esc(payload.name) })
+      .findFirst();
+    
+    return user?.email;
+  }, {
+    // Or import `zod` from `@apiser/zod` for `from` syntax
+    payload: z.object({ 
+      name: z.string().from("body")
+    })
+  })
+});
+
+app.get("/", ...userController.index.elysia());
+app.post("/by-name", ...userController.name.elysia());
+
+await userController.index({
+  // merged
+});
+```
+
+#### 6.1:
+Examples of core principles
+
+```ts
+const options = controller.options({
+  name: "user-controller",
+  
+  // @apiser/logger
+  logger: CustomLogger
+});
+
+const userController = controller(options, (handle) => ({
+  index: handle(async ({ this }) => {
+    this.hello("World")
+  }),
+  
+  hello: handle(async ({ log, payload }) => {
+    // Prints: [user-controller:419] World
+    log(payload);
+    
+    
+    // Prints (Just red): [user-controller:423] World
+    log.error(payload);
+    
+    // Prints: [user-controller:426] World
+    //                               { 
+    //                                  someData: true 
+    //                               }
+    log.info(payload, {
+      someData: true
+    });
+    
+  }, {
+    path: "/hello",
+    
+    payload: z.string().from("query", {
+      key: "text"
+    })
+  })
+});
+
+app.get("/", ...userController.index.elysia());
+// OR
+app.use(
+  // with `hello` only becuase `path` is set
+  userController.elysia()
+);
+
+await userController.index({
+  // merged
+});
+```
+
+#### 6.2:
+Seperated handlers
+
+```ts
+import { createHandler, createController } from "@apiser/controller"
+
+// Only `this` is not available.
+const handle = createHandler({
+  name: "user-controller",
+  
+  // More options:
+  
+  // @apiser/logger
+  // logger?: Logger;
+  // 
+  // I: Logger base class, can be used from pre-defined integrations on `@apiser/logger`
+  
+  // @apiser/response
+  // errorHandler?: ErrorHandler;
+  // 
+  // I: Receives error and maps into response format for server
+   
+  // @apiser/response
+  // responseHandler?: ResponseHandler;
+  // 
+  // I: Takes output from handle and maps into response format for server
+})
+
+export const index = handle(() => {
+  hello("World");
+});
+
+export const hello = handle(async ({ log, payload }) => {
+  // Prints: [user-controller:419] World
+  log(payload);
+}, {
+  // Takes from request query string key that eq to "text"
+  payload: z.string().from("query", {
+    key: "text"
+  })
+})
+
+export const userController = createController({
+  hello,
+  index
+})
+
+app.get("/hello", ...elysia(userController.hello));
+
+await index({
+  // merged
+});
+```
