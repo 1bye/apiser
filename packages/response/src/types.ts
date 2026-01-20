@@ -6,3 +6,4 @@ export type FunctionObject<T extends any, TFnArg = never> = T | (
 );
 
 export type PromiseOr<T> = PromiseLike<T> | T;
+// export type IfUndefined<> =

@@ -9,7 +9,8 @@
     "@types/node": "^22.15.3",
     "dotenv": "^17.2.3",
     "eslint": "^9.39.1",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "zod": "^4.3.5"
   },
   "private": true,
   "scripts": {
@@ -17,8 +18,5 @@
     "generate:component": "turbo gen react-component",
     "check-types": "tsc --noEmit"
   },
-  "type": "module",
-  "dependencies": {
-    "@typeschema/main": "^0.14.1"
-  }
+  "type": "module"
 }
