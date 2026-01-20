@@ -1,5 +1,5 @@
 import type { PromiseOr } from "@/types";
-import type { ErrorOptionsInferedSchema, Options } from "./options";
+import type { ErrorOptionsInferedSchema, MetaOptions, Options } from "./options";
 import type { ExtractSchema, Infer, Schema } from "./schema";
 
 // Start of types ------------------
@@ -39,10 +39,29 @@ export type ErrorRegistry<TOptions extends Options> = Record<string, ErrorDefini
 /**
  *
  */
-export class ResponseError extends Error {
+export class ResponseError<
+  TName extends string,
+  TMeta extends Record<string, any>,
+  TOutput extends Record<string, any>
+> extends Error {
+  public override name: TName;
+  public meta: TMeta;
+  public output: TOutput;
 
+  constructor({ meta, name, output }: {
+    // Name of error in response handler
+    name: TName;
 
-  constructor() {
+    // Meta of response
+    meta: TMeta;
 
+    // Output of handler
+    output: TOutput;
+  }) {
+    super();
+
+    this.name = name;
+    this.meta = meta;
+    this.output = output;
   }
 }

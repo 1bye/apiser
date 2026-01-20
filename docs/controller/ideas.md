@@ -462,8 +462,6 @@ import { createHandler, createController } from "@apiser/controller"
 
 // Only `this` is not available.
 const handle = createHandler({
-  name: "user-controller",
-  
   // More options:
   
   // @apiser/logger
@@ -477,7 +475,7 @@ const handle = createHandler({
   // I: Receives error and maps into response format for server
    
   // @apiser/response
-  // responseHandler?: ResponseHandler;
+  // responseHandler?: ResponseHandler | ({ handler, payload, request: RawRequest }) => PromiseOr<ResponseHandler>;
   // 
   // I: Takes output from handle and maps into response format for server
 })
@@ -486,24 +484,36 @@ export const index = handle(() => {
   hello("World");
 });
 
-export const hello = handle(async ({ log, payload }) => {
-  // Prints: [user-controller:419] World
+export const hello = handle(async ({ log, payload, fail }) => {
+  // Prints if called from controller: [user-controller:488] World
+  // Prints: [ideas.md:489] World
   log(payload);
+  
+  throw fail("custom error");
 }, {
   // Takes from request query string key that eq to "text"
   payload: z.string().from("query", {
     key: "text"
-  })
+  }),
 })
 
-export const userController = createController({
+export const userController = createController("user-controller", {
   hello,
   index
 })
 
 app.get("/hello", ...elysia(userController.hello));
 
-await index({
+// data: unknwon, error: custom error, meta: {}
+const { data, error, meta } = await hello({
   // merged
+});
+
+// response is `Response`
+const response = await hello.raw({
+  body: {},
+  query: {},
+  params: {},
+  headers: {}
 });
 ```

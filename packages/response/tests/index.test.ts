@@ -10,13 +10,18 @@ const response = createResponseHandler({
 
   error: {
     schema: z.object({
-      name: z.string()
+      name: z.string(),
+      details: z.string().optional()
     }),
     // onError: ({ meta }) => {
 
     // }
   }
 })
+  .defineError("custom error", ({
+    name: "123",
+    details: "Some details"
+  }), {})
   .defineError("123", ({ input, meta }) => {
     // errpr.
 
@@ -38,7 +43,11 @@ const response = createResponseHandler({
 
 response.json();
 
-response.fail("internal");
+const error = response.fail("123", {
+  raw2: true
+});
+const error2 = response.fail("custom error");
+
 //   .withErrors({
 //   unauth: {
 //     handler: ({ meta, input }) => {
