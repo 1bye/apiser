@@ -1,33 +1,12 @@
-// import type { MetaOptions, Options, ErrorOptions } from "./options";
-
-import type { DefaultErrorTypes, ErrorHandler, ErrorHandlerOptions } from "./error";
+import { ResponseError, type DefaultErrorTypes, type ErrorDefinition, type ErrorHandler, type ErrorHandlerOptions, type ErrorRegistry } from "./error";
 import type { Options, MetaOptions, ErrorOptionsInferedSchema } from "./options";
-
-// export function createResponseHandler<
-//   TMetaOptions extends MetaOptions,
-//   TErrorOptions extends ErrorOptions<TMetaOptions>,
-//   TOptions extends Options<TMetaOptions, TErrorOptions> = Options<TMetaOptions, TErrorOptions>
-// >(options: TOptions) {
-//   return new ResponseHandler<TMetaOptions, TErrorOptions, TOptions>(options);
-// }
-
-// export class ResponseHandler<
-//   TMetaOptions extends MetaOptions,
-//   TErrorOptions extends ErrorOptions<TMetaOptions>,
-//   TOptions extends Options<TMetaOptions, TErrorOptions> = Options<TMetaOptions, TErrorOptions>
-// > {
-//   public options: TOptions;
-
-//   constructor(options: TOptions) {
-//     this.options = options;
-//   }
-// }
+import type { Infer } from "./schema";
 
 export function createResponseHandler<
   TMeta extends MetaOptions,
   TOptions extends Options<TMeta>
 >(options: TOptions) {
-  return new ResponseHandler<TMeta, TOptions>(options);
+  return new ResponseHandler<TMeta, TOptions>({ options });
 }
 
 export type ResolveOptionsMeta<TOptions extends Options> = TOptions["meta"] extends undefined
@@ -37,15 +16,50 @@ export type ResolveOptionsMeta<TOptions extends Options> = TOptions["meta"] exte
 export class ResponseHandler<
   TMeta extends MetaOptions,
   TOptions extends Options<TMeta>,
-  TErrors extends string = string
+  TErrors extends ErrorRegistry<TOptions> = {}
 > {
   public options: TOptions;
+  private errors: TErrors;
 
-  constructor(options: TOptions) {
+  constructor({ options, errors }: {
+    options: TOptions;
+    errors?: TErrors;
+  }) {
     this.options = options;
+    this.errors = errors ?? ({} as TErrors);
   }
 
-  fail(name: TErrors) {
+  fail<TKey extends keyof TErrors & string>(
+    name: TKey,
+    input?: Infer<TErrors[TKey]["options"]["input"]>
+  ): ResponseError;
+
+  fail(
+    name: DefaultErrorTypes,
+    input?: Record<string, any>
+  ): ResponseError;
+
+  fail(name: string, input?: unknown) {
+    return new ResponseError();
+  }
+
+  json() {
+
+  }
+
+  ok() {
+
+  }
+
+  text() {
+
+  }
+
+  binary() {
+
+  }
+
+  image() {
 
   }
 
@@ -53,16 +67,31 @@ export class ResponseHandler<
 
   }
 
-  // withErrors<
-  //   TValue extends Record<string, ErrorHandler<ResolveOptionsMeta<TOptions>>>
-  // >(errors: TValue): ResponseHandler<TMeta, TOptions, TErrors | (keyof TValue & string)> {
-  //   return this;
-  // }
-
   defineError<
     TName extends string,
     THandlerOptions extends ErrorHandlerOptions
-  >(name: TName | DefaultErrorTypes, handler: ErrorHandler<TOptions, THandlerOptions> | ErrorOptionsInferedSchema<TOptions>, options: THandlerOptions): ResponseHandler<TMeta, TOptions, TErrors | TName> {
-    return this;
+  >(
+    name: TName,
+    handler: ErrorHandler<TOptions, THandlerOptions> | ErrorOptionsInferedSchema<TOptions>,
+    options: THandlerOptions
+  ): ResponseHandler<
+    TMeta,
+    TOptions,
+    TErrors & Record<TName, ErrorDefinition<TOptions, THandlerOptions>>
+  > {
+    const nextErrors = {
+      ...(this.errors as Record<string, unknown>),
+      [name]: {
+        handler,
+        options
+      }
+    } as TErrors & Record<TName, ErrorDefinition<TOptions, THandlerOptions>>;
+
+    const instance = new ResponseHandler({
+      options: this.options,
+      errors: nextErrors
+    });
+
+    return instance;
   };
 }

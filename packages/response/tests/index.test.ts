@@ -17,7 +17,7 @@ const response = createResponseHandler({
     // }
   }
 })
-  .defineError("unauthorized", ({ input, meta }) => {
+  .defineError("123", ({ input, meta }) => {
     // errpr.
 
     return {
@@ -27,9 +27,18 @@ const response = createResponseHandler({
     input: z.object({
       raw2: z.boolean()
     })
+  })
+  .defineError("456", () => ({
+    name: ""
+  }), {
+    input: z.object({
+      raw3: z.boolean()
+    })
   });
 
-response.fail("")
+response.json();
+
+response.fail("internal");
 //   .withErrors({
 //   unauth: {
 //     handler: ({ meta, input }) => {
