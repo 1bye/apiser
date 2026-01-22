@@ -24,6 +24,10 @@ export namespace JsonResponse {
     get output(): TOutput | undefined {
       return this._output;
     }
+
+    override json: () => Promise<TOutput> = () => {
+      return Response.prototype.json.call(this) as Promise<TOutput>;
+    };
   }
   // export type Base = Record<string, any> & {
   //   [responseSymbol]: () => Response;
