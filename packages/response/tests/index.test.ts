@@ -24,10 +24,10 @@ const response = createResponseHandler({
     })
   }
 })
-  .defineError("custom error", ({
+  .defineError("custom error", {
     name: "123",
     details: "Some details"
-  }), {})
+  })
   .defineError("123", ({ input, meta }) => {
     // errpr.
 

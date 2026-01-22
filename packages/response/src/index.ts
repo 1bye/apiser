@@ -234,11 +234,11 @@ export class ResponseHandler<
    */
   defineError<
     TName extends string,
-    THandlerOptions extends ErrorHandlerOptions
+    THandlerOptions extends ErrorHandlerOptions | undefined
   >(
     name: TName,
     handler: ErrorHandler<TOptions, THandlerOptions> | ErrorOptions.InferedSchema<TOptions>,
-    options: THandlerOptions
+    options?: THandlerOptions
   ): ResponseHandler<
     TMeta,
     TOptions,

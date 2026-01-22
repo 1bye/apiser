@@ -14,11 +14,11 @@ export type DefaultError = {
   stack?: string[];
 };
 
-export type ErrorHandler<TOptions extends Options, THandlerOptions extends ErrorHandlerOptions> = (data: {
+export type ErrorHandler<TOptions extends Options, THandlerOptions extends ErrorHandlerOptions | undefined> = (data: {
   meta: (TOptions["meta"] extends undefined
     ? never
     : Infer<ExtractSchema<TOptions["meta"]>>);
-  input: Infer<THandlerOptions["input"]>;
+  input: THandlerOptions extends undefined ? never : Infer<Exclude<THandlerOptions, undefined>["input"]>;
 }) => PromiseOr<
   ErrorOptions.InferedSchema<TOptions>
 >;
@@ -28,7 +28,7 @@ export interface ErrorHandlerOptions<TSchema extends Schema = Schema> {
   validationType?: ValidationType;
 }
 
-export type ErrorDefinition<TOptions extends Options, THandlerOptions extends ErrorHandlerOptions> = {
+export type ErrorDefinition<TOptions extends Options, THandlerOptions extends ErrorHandlerOptions | undefined> = {
   handler: ErrorHandler<TOptions, THandlerOptions> | ErrorOptions.InferedSchema<TOptions>;
   options: THandlerOptions;
 };

@@ -5,6 +5,6 @@ export namespace BinaryOptions {
   export interface Base {
     headers?: Headers<Binary>;
 
-    onData: (data: Binary) => Binary;
+    onData?: (data: Binary) => Binary;
   }
 }
