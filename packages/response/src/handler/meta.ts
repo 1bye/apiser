@@ -1,5 +1,5 @@
 import type { Options } from "./options";
-import type { ExtractSchema, InferOr } from "./schema";
+import type { ExtractSchema, InferOr } from "@apiser/schema";
 
 export type DefaultMeta = {
   requestId: string;

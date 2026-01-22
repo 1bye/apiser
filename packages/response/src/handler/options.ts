@@ -5,7 +5,7 @@ import type { Binary } from "./binary";
 import type { z } from "zod";
 import type { ResponseTypes } from "./response";
 import type { DefaultError } from "./error";
-import type { ExtractSchema, InferOr, Schema } from "./schema";
+import type { ExtractSchema, InferOr, Schema } from "@apiser/schema";
 
 export interface MetaOptions<TSchema extends Schema = Schema> {
   schema?: TSchema;

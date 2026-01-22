@@ -1,7 +1,7 @@
 import { ResponseError, type DefaultErrorTypes, type ErrorDefinition, type ErrorHandler, type ErrorHandlerOptions, type ErrorRegistry } from "./error";
 import type { MetaOptionsInferedSchema } from "./meta";
 import type { Options, MetaOptions, ErrorOptionsInferedSchema } from "./options";
-import type { Infer } from "./schema";
+import type { Infer } from "@apiser/schema";
 
 export function createResponseHandler<
   TMeta extends MetaOptions,

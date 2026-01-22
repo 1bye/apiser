@@ -336,6 +336,13 @@ const options = controller.options({
   
   bindings: {
     User: userModel,
+    
+    userModel: bindings.model(userModel, {
+      primaryKey?: "id",
+      from: "params",
+      // path: /api/user/:userId
+      fromKey: "userId"
+    }),
 
     auth: (enabled: boolean) => ({
       payload: z.object({ 

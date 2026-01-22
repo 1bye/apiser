@@ -10,7 +10,10 @@
     "dotenv": "^17.2.3",
     "eslint": "^9.39.1",
     "typescript": "5.9.2",
-    "zod": "^4.3.5"
+    "zod": "catalog:"
+  },
+  "dependencies": {
+    "@apiser/schema": "workspace:"
   },
   "private": true,
   "scripts": {

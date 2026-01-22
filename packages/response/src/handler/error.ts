@@ -1,6 +1,6 @@
 import type { PromiseOr } from "@/types";
 import type { ErrorOptionsInferedSchema, MetaOptions, Options } from "./options";
-import type { ExtractSchema, Infer, Schema } from "./schema";
+import type { ExtractSchema, Infer, Schema } from "@apiser/schema";
 
 // Start of types ------------------
 

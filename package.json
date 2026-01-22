@@ -17,8 +17,13 @@
     "node": ">=18"
   },
   "packageManager": "bun@1.3.0",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ]
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "catalog": {
+      "zod": "^4.3.5"
+    }
+  }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@apiser/zod",
+  "name": "@apiser/schema",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -23,6 +23,7 @@
       "default": "./dist/index.mjs"
     }
   },
+  "module": "src/index.ts",
   "type": "module",
   "dependencies": {
     "zod": "catalog:"
