@@ -1,5 +1,5 @@
 import type { PromiseOr } from "@/types";
-import type { ErrorOptionsInferedSchema, Options } from "./options";
+import type { ErrorOptions, Options } from "@/options";
 import type { ExtractSchema, Infer, Schema, ValidationType } from "@apiser/schema";
 
 // Start of types ------------------
@@ -20,7 +20,7 @@ export type ErrorHandler<TOptions extends Options, THandlerOptions extends Error
     : Infer<ExtractSchema<TOptions["meta"]>>);
   input: Infer<THandlerOptions["input"]>;
 }) => PromiseOr<
-  ErrorOptionsInferedSchema<TOptions>
+  ErrorOptions.InferedSchema<TOptions>
 >;
 
 export interface ErrorHandlerOptions<TSchema extends Schema = Schema> {
@@ -29,40 +29,10 @@ export interface ErrorHandlerOptions<TSchema extends Schema = Schema> {
 }
 
 export type ErrorDefinition<TOptions extends Options, THandlerOptions extends ErrorHandlerOptions> = {
-  handler: ErrorHandler<TOptions, THandlerOptions> | ErrorOptionsInferedSchema<TOptions>;
+  handler: ErrorHandler<TOptions, THandlerOptions> | ErrorOptions.InferedSchema<TOptions>;
   options: THandlerOptions;
 };
 
 export type ErrorRegistry<TOptions extends Options> = Record<string, ErrorDefinition<TOptions, any>>;
 
 // End of types ------------------
-
-/**
- *
- */
-export class ResponseError<
-  TName extends string,
-  TMeta extends Record<string, any>,
-  TOutput extends Record<string, any>
-> extends Error {
-  public override name: TName;
-  public meta: TMeta;
-  public output: TOutput;
-
-  constructor({ meta, name, output }: {
-    // Name of error in response handler
-    name: TName;
-
-    // Meta of response
-    meta: TMeta;
-
-    // Output of handler
-    output: TOutput;
-  }) {
-    super();
-
-    this.name = name;
-    this.meta = meta;
-    this.output = output;
-  }
-}

@@ -1,5 +1,7 @@
+import type { DefaultMeta } from "@/response/meta";
 import type { FunctionObject } from "@/types";
-import type { Infer, Schema, ValidationType } from "@apiser/schema";
+import type { ExtractSchema, Infer, InferOr, Schema, ValidationType } from "@apiser/schema";
+import type { Options } from "./base";
 
 export namespace MetaOptions {
   export interface Base<TSchema extends Schema = Schema> {
@@ -8,4 +10,8 @@ export namespace MetaOptions {
     default?: FunctionObject<Infer<TSchema>, never>;
     validationType?: ValidationType;
   }
+
+  export type InferedSchema<TOptions extends Options> = (TOptions["meta"] extends undefined
+    ? DefaultMeta
+    : InferOr<ExtractSchema<TOptions["meta"]>, DefaultMeta>);
 }

@@ -1,4 +1,4 @@
-import type { RawHeaders } from "@/headers";
+import type { BaseResponse } from "../base";
 
 export namespace JsonResponse {
   export class Base<TInput, TOutput> extends Response {
@@ -29,10 +29,7 @@ export namespace JsonResponse {
   //   [responseSymbol]: () => Response;
   // }
 
-  export interface Options {
-    status?: number;
-    statusText?: string;
-    headers?: RawHeaders;
+  export interface Options extends BaseResponse.Options {
   }
 
   export type DefaultInputSchema = Record<string, any>;

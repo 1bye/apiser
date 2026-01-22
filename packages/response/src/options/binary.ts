@@ -1,5 +1,5 @@
-import type { Binary } from "@/binary";
 import type { Headers } from "@/headers";
+import type { Binary } from "@/response/binary";
 
 export namespace BinaryOptions {
   export interface Base {

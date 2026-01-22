@@ -1,4 +1,4 @@
-import type { FunctionObject, PromiseOr } from "@/types";
+import type { FunctionObject } from "@/types";
 
 export type RawHeaders = Record<string, string>;
 export type Headers<T> = FunctionObject<RawHeaders, T>;
