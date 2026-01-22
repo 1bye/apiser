@@ -1,8 +1,8 @@
 export type AnyObject = Record<string, any>;
-export type FunctionObject<T extends any, TFnArg = never> = T | (
+export type FunctionObject<TResult extends any, TFnArg = never> = TResult | (
   (TFnArg extends never
-    ? (() => T)
-    : ((arg: TFnArg) => T))
+    ? (() => TResult)
+    : ((arg: TFnArg) => TResult))
 );
 
 export type PromiseOr<T> = PromiseLike<T> | T;

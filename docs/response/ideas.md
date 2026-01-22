@@ -22,13 +22,15 @@ const response = createResponseHandler({
     
     validate?: "parse" | "safeParse",
       
-    schema: z.object({
+    outputSchema: z.object({
       data: z.any(),
       success: z.boolean()
     }),
     
-    onData: (data) => ({
-      data,
+    inputSchema: z.any(),
+    
+    onInput: (input) => ({
+      data: input,
       success: true
     }),
   },

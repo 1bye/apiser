@@ -1,4 +1,4 @@
-import { createResponseHandler } from "@/handler";
+import { createResponseHandler } from "@/index";
 import { z } from "zod";
 
 const response = createResponseHandler({
@@ -16,6 +16,12 @@ const response = createResponseHandler({
     // onError: ({ meta }) => {
 
     // }
+  },
+
+  json: {
+    outputSchema: z.object({
+      msg: z.string()
+    })
   }
 })
   .defineError("custom error", ({
@@ -41,7 +47,7 @@ const response = createResponseHandler({
     })
   });
 
-response.json();
+const res = response.json({});
 
 const error = response.fail("123", {
   raw2: true

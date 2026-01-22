@@ -9,11 +9,11 @@
     "@types/node": "^22.15.3",
     "dotenv": "^17.2.3",
     "eslint": "^9.39.1",
-    "typescript": "5.9.2",
-    "zod": "catalog:"
+    "typescript": "5.9.2"
   },
   "dependencies": {
-    "@apiser/schema": "workspace:"
+    "@apiser/schema": "workspace:",
+    "@apiser/zod": "workspace:"
   },
   "private": true,
   "scripts": {

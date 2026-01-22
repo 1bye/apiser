@@ -1,6 +1,6 @@
 import type { PromiseOr } from "@/types";
-import type { ErrorOptionsInferedSchema, MetaOptions, Options } from "./options";
-import type { ExtractSchema, Infer, Schema } from "@apiser/schema";
+import type { ErrorOptionsInferedSchema, Options } from "./options";
+import type { ExtractSchema, Infer, Schema, ValidationType } from "@apiser/schema";
 
 // Start of types ------------------
 
@@ -25,6 +25,7 @@ export type ErrorHandler<TOptions extends Options, THandlerOptions extends Error
 
 export interface ErrorHandlerOptions<TSchema extends Schema = Schema> {
   input?: TSchema;
+  validationType?: ValidationType;
 }
 
 export type ErrorDefinition<TOptions extends Options, THandlerOptions extends ErrorHandlerOptions> = {
