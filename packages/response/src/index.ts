@@ -5,7 +5,7 @@ import { resolveHeaders } from "./headers";
 import { JsonResponse } from "./response/json";
 import { TextResponse } from "./response/text";
 import { ErrorResponse } from "./response/error";
-import type { Binary } from "./response/binary";
+import { BinaryResponse, type Binary } from "./response/binary";
 
 export function createResponseHandler<
   TMeta extends MetaOptions.Base,
@@ -28,6 +28,16 @@ export class ResponseHandler<
   private errors: TErrors;
   private preasignedMeta: Partial<MetaOptions.InferedSchema<TOptions>>;
 
+  /**
+   * Create a `ResponseHandler` instance.
+   *
+   * Prefer using {@link createResponseHandler} instead of calling this directly.
+   *
+   * @param params - Constructor params.
+   * @param params.options - Handler options.
+   * @param params.errors - Optional pre-defined error registry.
+   * @param params.preasignedMeta - Optional meta merged into each response.
+   */
   constructor({ options, errors, preasignedMeta }: {
     options: TOptions;
     errors?: TErrors;
@@ -49,10 +59,14 @@ export class ResponseHandler<
   ): ErrorResponse.Base<DefaultErrorTypes, MetaOptions.InferedSchema<TOptions>, Record<string, any>>;
 
   /**
+   * Create an `ErrorResponse` by name.
    *
-   * @param name
-   * @param _input
-   * @returns
+   * If the error has an `input` schema, the `input` is validated according to `validationType`.
+   * The resulting error response also includes prepared `meta`.
+   *
+   * @param name - Error name (registered via `defineError` or built-in default types).
+   * @param _input - Optional error payload to validate (if a schema exists).
+   * @returns Error response instance.
    */
   fail(name: string, _input?: unknown) {
     // TODO: validate zod schema (input)
@@ -83,10 +97,15 @@ export class ResponseHandler<
   }
 
   /**
+   * Create a JSON `Response`.
    *
-   * @param _input
-   * @param options
-   * @returns
+   * Validates input/output using configured schemas (if present), applies `onData` transformation,
+   * and resolves/merges headers.
+   *
+   * @typeParam IInput - Inferred input type for configured JSON input schema.
+   * @param _input - JSON input value.
+   * @param options - Optional response init options.
+   * @returns JSON response instance.
    */
   json<
     IInput extends JsonOptions.InferedInputSchema<TOptions>
@@ -138,10 +157,11 @@ export class ResponseHandler<
   }
 
   /**
+   * Create a plain text `Response`.
    *
-   * @param text
-   * @param options
-   * @returns
+   * @param text - Raw text response body.
+   * @param options - Optional response init options.
+   * @returns Text response instance.
    */
   text(text: string, options?: TextResponse.Options) {
     return new TextResponse.Base(text, {
@@ -149,14 +169,41 @@ export class ResponseHandler<
     })
   }
 
-  binary(binary: Binary) {
+  /**
+   * Create a binary `Response`.
+   *
+   * Applies optional `binary.onData` transformation and resolves/merges headers.
+   *
+   * @param binary - Binary payload (Blob/ArrayBuffer/Uint8Array/ReadableStream).
+   * @param options - Optional response init options.
+   * @returns Binary response instance.
+   */
+  binary(binary: Binary, options?: BinaryResponse.Options) {
+    const binaryOptions = this.options?.binary;
 
+    const data = binaryOptions?.onData
+      ? binaryOptions.onData(binary)
+      : binary;
+
+    const headers: Record<string, string> = {
+      ...options?.headers ?? {},
+      ...resolveHeaders(binaryOptions?.headers, data) ?? {}
+    }
+
+    return new BinaryResponse.Base(data as any, {
+      headers,
+      status: options?.status ?? 200,
+      statusText: options?.statusText
+    })
   }
 
   /**
-   * Create a new `ResponseHandler` from partial meta as a default preassigned meta for next responses
-   * @param _meta
-   * @returns
+   * Create a new `ResponseHandler` with preassigned meta.
+   *
+   * The provided meta is validated against the configured meta schema (if present).
+   *
+   * @param _meta - Partial meta that will be merged into each next response.
+   * @returns New `ResponseHandler` instance.
    */
   withMeta(_meta: Partial<MetaOptions.InferedSchema<TOptions>>): ResponseHandler<TMeta, TOptions, TErrors> {
     const metaOptions = this.options.meta;
@@ -174,11 +221,16 @@ export class ResponseHandler<
   }
 
   /**
+   * Define a named error handler.
    *
-   * @param name
-   * @param handler
-   * @param options
-   * @returns ResponseHandler
+   * Returns a new `ResponseHandler` instance with the extended error registry.
+   *
+   * @typeParam TName - Error name.
+   * @typeParam THandlerOptions - Handler options type.
+   * @param name - Error name to register.
+   * @param handler - Error handler function or static error output.
+   * @param options - Error handler options (e.g. input schema).
+   * @returns New `ResponseHandler` instance with the new error registered.
    */
   defineError<
     TName extends string,
@@ -208,6 +260,11 @@ export class ResponseHandler<
     return instance;
   };
 
+  /**
+   * Prepare `meta` by merging preassigned meta (from `withMeta`) with default meta (if any).
+   *
+   * @returns Resolved meta object.
+   */
   private prepareMeta(): MetaOptions.InferedSchema<TOptions> {
     const objOrFn = this.options.meta?.default;
 
