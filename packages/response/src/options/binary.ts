@@ -8,3 +8,7 @@ export namespace BinaryOptions {
     onData?: (data: Binary) => Binary;
   }
 }
+
+export function binary<T extends BinaryOptions.Base>(opts: T): T {
+  return opts;
+}

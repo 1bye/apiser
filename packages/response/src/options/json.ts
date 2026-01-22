@@ -21,9 +21,16 @@ export namespace JsonOptions {
 
   export type InferedInputSchema<TOptions extends Options> = (TOptions["json"] extends undefined
     ? JsonResponse.DefaultInputSchema
-    : InferOr<ExtractSchemaFromKey<TOptions["json"], "inputSchema">, JsonResponse.DefaultInputSchema>);
+    : InferOr<Exclude<ExtractSchemaFromKey<TOptions["json"], "inputSchema">, undefined>, JsonResponse.DefaultInputSchema>);
 
   export type InferedOutputSchema<TOptions extends Options> = (TOptions["json"] extends undefined
     ? JsonResponse.DefaultOutputSchema
-    : InferOr<ExtractSchemaFromKey<TOptions["json"], "outputSchema">, JsonResponse.DefaultOutputSchema>);
+    : InferOr<Exclude<ExtractSchemaFromKey<TOptions["json"], "outputSchema">, undefined>, JsonResponse.DefaultOutputSchema>);
+}
+
+export function json<
+  TIn extends Schema,
+  TOut extends Schema
+>(opts: JsonOptions.Base<TIn, TOut>): JsonOptions.Base<TIn, TOut> {
+  return opts;
 }

@@ -6,12 +6,18 @@ import { JsonResponse } from "./response/json";
 import { TextResponse } from "./response/text";
 import { ErrorResponse } from "./response/error";
 import { BinaryResponse, type Binary } from "./response/binary";
+import type { BinaryOptions } from "./options";
+
+export { options } from "./options";
 
 export function createResponseHandler<
   TMeta extends MetaOptions.Base,
-  TOptions extends Options<TMeta>
+  TError extends ErrorOptions.Base,
+  TJson extends JsonOptions.Base,
+  TBinary extends BinaryOptions.Base,
+  TOptions extends Options<TMeta, TError, TJson, TBinary> = Options<TMeta, TError, TJson, TBinary>
 >(options: TOptions) {
-  return new ResponseHandler<TMeta, TOptions>({ options });
+  return new ResponseHandler<TMeta, TError, TJson, TBinary, TOptions>({ options });
 }
 
 export type ResolveOptionsMeta<TOptions extends Options> = TOptions["meta"] extends undefined
@@ -20,7 +26,10 @@ export type ResolveOptionsMeta<TOptions extends Options> = TOptions["meta"] exte
 
 export class ResponseHandler<
   TMeta extends MetaOptions.Base,
-  TOptions extends Options<TMeta>,
+  TError extends ErrorOptions.Base,
+  TJson extends JsonOptions.Base,
+  TBinary extends BinaryOptions.Base,
+  TOptions extends Options<TMeta, TError, TJson, TBinary>,
   TErrors extends ErrorRegistry<TOptions> = {}
 > {
   public options: TOptions;
@@ -205,7 +214,7 @@ export class ResponseHandler<
    * @param _meta - Partial meta that will be merged into each next response.
    * @returns New `ResponseHandler` instance.
    */
-  withMeta(_meta: Partial<MetaOptions.InferedSchema<TOptions>>): ResponseHandler<TMeta, TOptions, TErrors> {
+  withMeta(_meta: Partial<MetaOptions.InferedSchema<TOptions>>): ResponseHandler<TMeta, TError, TJson, TBinary, TOptions, TErrors> {
     const metaOptions = this.options.meta;
     const meta = metaOptions?.schema
       ? checkSchema(metaOptions.schema.partial(), _meta, {
@@ -213,7 +222,7 @@ export class ResponseHandler<
       })
       : _meta;
 
-    return new ResponseHandler<TMeta, TOptions, TErrors>({
+    return new ResponseHandler<TMeta, TError, TJson, TBinary, TOptions, TErrors>({
       options: this.options,
       errors: this.errors,
       preasignedMeta: meta
@@ -240,7 +249,7 @@ export class ResponseHandler<
     handler: ErrorHandler<TOptions, THandlerOptions> | ErrorOptions.InferedSchema<TOptions>,
     options?: THandlerOptions
   ): ResponseHandler<
-    TMeta,
+    TMeta, TError, TJson, TBinary,
     TOptions,
     TErrors & Record<TName, ErrorDefinition<TOptions, THandlerOptions>>
   > {
@@ -269,8 +278,8 @@ export class ResponseHandler<
     const objOrFn = this.options.meta?.default;
 
     return {
+      ...typeof objOrFn === "function" ? objOrFn() : objOrFn,
       ...(this.preasignedMeta ?? {}),
-      ...typeof objOrFn === "function" ? objOrFn() : objOrFn
     }
   }
 }

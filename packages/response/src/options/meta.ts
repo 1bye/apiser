@@ -15,3 +15,13 @@ export namespace MetaOptions {
     ? DefaultMeta
     : InferOr<ExtractSchema<TOptions["meta"]>, DefaultMeta>);
 }
+
+export function meta<
+  TSchema extends Schema
+>(opts: MetaOptions.Base<TSchema> & {
+  schema?: TSchema;
+}): MetaOptions.Base<TSchema> & {
+  schema?: TSchema;
+} {
+  return opts;
+}

@@ -5,15 +5,20 @@ import type { BinaryOptions } from "@/options/binary";
 import type { Headers } from "@/headers";
 import type { ResponseTypes } from "@/response/base";
 
-export interface Options<TMeta extends MetaOptions.Base = MetaOptions.Base> {
+export interface Options<
+  TMeta extends MetaOptions.Base = MetaOptions.Base,
+  TError extends ErrorOptions.Base = ErrorOptions.Base,
+  TJson extends JsonOptions.Base = JsonOptions.Base,
+  TBinary extends BinaryOptions.Base = BinaryOptions.Base
+> {
   headers?: Headers<{
     type: ResponseTypes;
     data: any;
   }>;
 
   meta?: TMeta;
-  error?: ErrorOptions.Base;
-  json?: JsonOptions.Base;
+  error?: TError;
+  json?: TJson;
 
-  binary?: BinaryOptions.Base;
+  binary?: TBinary;
 }

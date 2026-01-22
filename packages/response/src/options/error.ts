@@ -23,3 +23,13 @@ export namespace ErrorOptions {
     ? DefaultError
     : InferOr<ExtractSchema<TOptions["error"]>, DefaultError>);
 }
+
+export function error<
+  TSchema extends Schema
+>(opts: ErrorOptions.Base<TSchema> & {
+  schema?: TSchema;
+}): ErrorOptions.Base<TSchema> & {
+  schema?: TSchema;
+} {
+  return opts;
+}
