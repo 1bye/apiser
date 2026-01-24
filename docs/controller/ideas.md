@@ -334,15 +334,32 @@ await userController.index.raw({
 const options = controller.options({
   name: "user-controller",
   
-  bindings: {
+  bindings: (bindings) => ({
     User: userModel,
     
+    // path: /api/user/{user}
+    // userModel.bind("#id:params:user") 
     userModel: bindings.model(userModel, {
-      primaryKey?: "id",
-      from: "params",
-      // path: /api/user/:userId
-      fromKey: "userId"
-    }),
+      primaryKey?: "id", // default: id
+      from?: "params", // default: params
+      // path: /api/user/{userModel}
+      fromKey?: "user-model" // default: from model.name
+      
+      // Object used to expand where clause of model
+      where?: {},
+      
+      // Transform from value
+      transform?: () => any,
+      
+      // Used to return model, eg expand with custom shit
+      load?: ({ id, fail }) => Model,
+      
+      // either or keys from fail or function, default is not_found key
+      notFound: ({ id, fail }) => {
+        throw fail("user_not_found", { userId: id });
+      },
+      
+    } /*or array of options for multiple primary keys */),
 
     auth: (enabled: boolean) => ({
       payload: z.object({ 
@@ -368,7 +385,7 @@ const options = controller.options({
         };
       }
     })
-  },
+  }),
 });
 
 const userController = controller(options, (handle) => ({
@@ -397,11 +414,18 @@ const userController = controller(options, (handle) => ({
     payload: z.object({ 
       name: z.string().from("body")
     })
+  }),
+  
+  id: handle(async ({ userModel }) => {
+    return userModel.findFirst()
+  }, {
+    userModel: true
   })
 });
 
-app.get("/", ...userController.index.elysia());
-app.post("/by-name", ...userController.name.elysia());
+app.get("/", ...elysia(userController.index));
+app.post("/by-name", ...elysia(userController.name));
+app.post("/:user-model", ...elysia(userController.id));
 
 await userController.index({
   // merged
@@ -449,11 +473,11 @@ const userController = controller(options, (handle) => ({
   })
 });
 
-app.get("/", ...userController.index.elysia());
+app.get("/", ...elysia(userController.index));
 // OR
 app.use(
   // with `hello` only becuase `path` is set
-  userController.elysia()
+  elysia(userController)
 );
 
 await userController.index({

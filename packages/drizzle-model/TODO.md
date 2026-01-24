@@ -28,7 +28,7 @@ userModel.name({
   like: "A%"
 }).userId(userId).paginate(page)
 ```
-- Make built in `upsert`, as:
+* Make built in `upsert`, as:
 ```ts
 userModel.id(123).upsert({
   // create obj
@@ -37,7 +37,7 @@ userModel.id(123).upsert({
 }, /* options */)
 ```
 
-- Transactions:
+* Transactions:
 ```ts
 userModel.transaction(tx => ...);
 
