@@ -9,6 +9,7 @@ import { BinaryResponse, type Binary } from "./response/binary";
 import type { BinaryOptions } from "./options";
 
 export { options } from "./options";
+import { options as optionMethods } from "./options";
 
 export function createResponseHandler<
   TMeta extends MetaOptions.Base,
@@ -16,8 +17,12 @@ export function createResponseHandler<
   TJson extends JsonOptions.Base,
   TBinary extends BinaryOptions.Base,
   TOptions extends Options<TMeta, TError, TJson, TBinary> = Options<TMeta, TError, TJson, TBinary>
->(options: TOptions) {
-  return new ResponseHandler<TMeta, TError, TJson, TBinary, TOptions>({ options });
+>(opts: TOptions | ((options: typeof optionMethods) => TOptions)) {
+  const _options = typeof opts === "function"
+    ? opts(optionMethods)
+    : opts;
+
+  return new ResponseHandler<TMeta, TError, TJson, TBinary, TOptions>({ options: _options });
 }
 
 export type ResolveOptionsMeta<TOptions extends Options> = TOptions["meta"] extends undefined

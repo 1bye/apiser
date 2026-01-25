@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createResponseHandler, options } from "@/index";
+import { createResponseHandler } from "@/index";
 import { z } from "zod";
 
 type TestErrorOutput = {
@@ -9,7 +9,7 @@ type TestErrorOutput = {
 
 describe("@apiser/response ResponseHandler", () => {
   test("json() validates output schema, sets content-type and merges headers", () => {
-    const handler = createResponseHandler({
+    const handler = createResponseHandler((options) => ({
       json: options.json({
         outputSchema: z.object({
           msg: z.string(),
@@ -22,7 +22,7 @@ describe("@apiser/response ResponseHandler", () => {
           "x-out": output.msg,
         }),
       })
-    });
+    }));
 
     const res = handler.json({ msg: "hello" }, { headers: { "x-opt": "1" } });
 
