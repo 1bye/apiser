@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { createResponseHandler } from "@/index";
-import { z } from "zod";
+import { z } from "@apiser/zod";
 
 type TestErrorOutput = {
   name: string;

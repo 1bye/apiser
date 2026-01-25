@@ -22,5 +22,11 @@
     "check-types": "tsc --noEmit",
     "test": "bun test"
   },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
   "type": "module"
 }
