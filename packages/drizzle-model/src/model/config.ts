@@ -2,6 +2,8 @@ import type { TableRelationalConfig, TablesRelationalConfig } from "drizzle-orm/
 import type { ModelDialect } from "./dialect.ts";
 import type { ModelOptions, ResolveOptionsFormat } from "./options.ts";
 import type { IsTable, TableOutput } from "./table.ts";
+import type { GetPrimarySerialOrDefaultKeys } from "./methods/return.ts";
+import type { MethodWhereValue } from "./methods/query/where.ts";
 
 export type ModelConfig<
   TSchema extends TablesRelationalConfig = TablesRelationalConfig,
@@ -19,4 +21,9 @@ export type ModelConfig<
   tableColumns: IsTable<TTable["table"]>["_"]["columns"];
 
   optionsFormat: ResolveOptionsFormat<TOptions["format"]>;
+
+  primaryKeys: keyof GetPrimarySerialOrDefaultKeys<
+    IsTable<TTable["table"]>["_"]["columns"]
+  >
+  whereValue: MethodWhereValue<TSchema, TTable>;
 };

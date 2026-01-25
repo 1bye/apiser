@@ -18,14 +18,10 @@ export type MethodUpsertValue<
   update: MethodUpsertUpdate<TTable>;
 
   target?:
-    | (keyof GetPrimarySerialOrDefaultKeys<
-      IsTable<TTable["table"]>["_"]["columns"]
-    >)
-    | (keyof GetPrimarySerialOrDefaultKeys<
-      IsTable<TTable["table"]>["_"]["columns"]
-    >)[]
-    | Column
-    | Column[];
+  | (TConfig["primaryKeys"])
+  | (TConfig["primaryKeys"])[]
+  | Column
+  | Column[];
   updateWhere?: MethodUpsertUpdateWhere<TSchema, TTable>;
 };
 
