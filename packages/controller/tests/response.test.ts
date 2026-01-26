@@ -1,4 +1,4 @@
-import { createOptions, bindings, type HandlerBindings } from "@/index";
+import { createOptions, bindings, type HandlerBindings, createHandler } from "@/index";
 import { createResponseHandler } from "@apiser/response";
 import { z } from "@apiser/zod";
 
@@ -33,10 +33,23 @@ const options = createOptions({
       })
     })),
 
-    model: bindings.model(123)
+    // model: bindings.model(123)
   }
 });
 
 type Bindings = HandlerBindings<typeof options>;
 
+const handler = createHandler(options);
+
 // options.responseHandler?.fail("custom")
+
+const main = handler(({ fail, payload, userModel }) => {
+  return 123;
+}, {
+  payload: z.object({
+    name: z.string()
+  }),
+  userModel: true
+});
+
+const { data, error } = main()

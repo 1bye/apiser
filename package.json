@@ -23,7 +23,8 @@
       "packages/*"
     ],
     "catalog": {
-      "zod": "^4.3.5"
+      "zod": "^4.3.5",
+      "type-fest": "^5.4.1"
     }
   }
 }

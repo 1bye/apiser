@@ -7,6 +7,7 @@ export type Infer<TSchema extends Schema> = z.infer<TSchema>;
 export type InferOr<TSchema extends Schema, TOr> = Infer<TSchema> extends Record<string, any>
   ? Infer<TSchema>
   : TOr;
+export type InferUndefined<TSchema extends Schema | undefined> = TSchema extends undefined ? never : Infer<TSchema>
 
 export type ExtractSchema<From extends Record<string, any> | undefined> = Exclude<From, undefined>["schema"];
 export type ExtractSchemaFromKey<From extends Record<string, any> | undefined, Key extends string> = Exclude<From, undefined>[Key];

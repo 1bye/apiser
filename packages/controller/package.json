@@ -19,9 +19,10 @@
   },
   "type": "module",
   "dependencies": {
-    "@typeschema/main": "^0.14.1",
     "@apiser/response": "workspace:",
     "@apiser/schema": "workspace:",
-    "@apiser/zod": "workspace:"
+    "@apiser/zod": "workspace:",
+    "@typeschema/main": "^0.14.1",
+    "type-fest": "^5.4.1"
   }
 }
