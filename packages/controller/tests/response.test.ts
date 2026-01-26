@@ -29,7 +29,8 @@ const options = createOptions({
         name: z.string()
       }),
       resolve: ({ bindingName }) => ({
-        [bindingName]: "ddqwd"
+        [bindingName]: "ddqwd",
+        test: "123"
       })
     })),
 

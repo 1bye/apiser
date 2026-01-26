@@ -1,17 +1,38 @@
 import type { Infer, InferUndefined, Schema } from "@apiser/schema";
 import type { HandlerOptions } from "./options";
-import type { HandlerBindings } from "./bindings";
+import type { BindingDefinition, HandlerBindings } from "./bindings";
 
 export namespace HandlerFn {
+  export type UnionToIntersection<T> = (
+    T extends any ? (k: T) => void : never
+  ) extends (k: infer I) => void
+    ? I
+    : never;
+
+  export type ExpandBindingResult<TKey extends string, TResult> = TResult extends object
+    ? TResult
+    : Record<TKey, TResult>;
+
   export type InferedBindingValue<TKey extends string, THandlerOptions extends HandlerOptions>
-    = (THandlerOptions["bindings"] extends undefined
-      ? never
-      : Exclude<THandlerOptions["bindings"], undefined>);
+    = (TKey extends keyof HandlerBindings<THandlerOptions>
+      ? (HandlerBindings<THandlerOptions>[TKey] extends BindingDefinition<any, infer TResult, any, any>
+        ? TResult
+        : (HandlerBindings<THandlerOptions>[TKey] extends (...args: any[]) => BindingDefinition<any, infer TResult, any, any>
+          ? TResult
+          : never))
+      : never);
 
   export type InferedBindings<THandlerOptions extends HandlerOptions, TOptions extends Options<any, any>> =
-    TOptions extends Options<any, any, infer TBindings> ? {
-      [TKey in keyof TBindings as TBindings[TKey] extends undefined ? never : TKey & string]: InferedBindingValue<TKey & string, THandlerOptions>;
-    } : never;
+    TOptions extends Options<any, any, infer TBindings>
+      ? UnionToIntersection<{
+        [TKey in keyof TBindings as TBindings[TKey] extends undefined ? never : TKey & string]: ExpandBindingResult<
+          TKey & string,
+          InferedBindingValue<TKey & string, THandlerOptions>
+        >;
+      }[keyof {
+        [TKey in keyof TBindings as TBindings[TKey] extends undefined ? never : TKey & string]: any;
+      }]>
+      : never;
 
   export type OptionsBindings<
     THandlerOptions extends HandlerOptions,
