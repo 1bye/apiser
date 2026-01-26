@@ -1,5 +1,6 @@
 import type { Infer, Schema } from "@apiser/schema";
 import type { HandlerOptions } from "./options";
+import type { BindingModelOptions, ModelIdentifier } from "./bindings/model";
 
 /**
  * Schema type for a binding payload.
@@ -59,7 +60,7 @@ export interface BindingsHelpers {
   /**
    * Pass-through helper for model bindings.
    */
-  model<TModel>(model: TModel, _options?: unknown): TModel;
+  model<TModel extends ModelIdentifier>(model: TModel, _options?: BindingModelOptions<TModel>): TModel;
 
   /**
    * Wrap a binding factory so it is typed consistently.
@@ -94,12 +95,12 @@ export interface BindingsHelpers {
  */
 export type BindingsWithNames<TBindings> = {
   [TKey in keyof TBindings]: TKey extends string
-    ? TBindings[TKey] extends BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler, any>
-      ? BindingDefinition<TPayloadSchema, TResult, THandler, TKey>
-      : TBindings[TKey] extends (...args: infer TArgs) => BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler, any>
-        ? (...args: TArgs) => BindingDefinition<TPayloadSchema, TResult, THandler, TKey>
-        : TBindings[TKey]
-    : TBindings[TKey];
+  ? TBindings[TKey] extends BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler, any>
+  ? BindingDefinition<TPayloadSchema, TResult, THandler, TKey>
+  : TBindings[TKey] extends (...args: infer TArgs) => BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler, any>
+  ? (...args: TArgs) => BindingDefinition<TPayloadSchema, TResult, THandler, TKey>
+  : TBindings[TKey]
+  : TBindings[TKey];
 };
 
 /**

@@ -19,7 +19,12 @@
     "eslint": "^9.39.1",
     "typescript": "5.9.2"
   },
-  "module": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
   "type": "module",
   "dependencies": {
     "pg": "^8.16.3"

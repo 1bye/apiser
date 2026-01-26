@@ -1,6 +1,19 @@
-import { createOptions, type HandlerBindings, createHandler } from "@/index";
+import { createOptions, bindings, type HandlerBindings, createHandler } from "@/index";
 import { createResponseHandler } from "@apiser/response";
+import { modelBuilder } from "@apiser/drizzle-model";
 import { z } from "@apiser/zod";
+import { db } from "./db";
+import { relations } from "./relations";
+import * as schema from "./schema";
+
+const model = modelBuilder({
+  db,
+  schema,
+  relations,
+  dialect: "PostgreSQL"
+});
+
+// const userModel = model("")
 
 const responseHandler = createResponseHandler((options) => ({
   json: options.json({
@@ -23,7 +36,19 @@ const responseHandler = createResponseHandler((options) => ({
 const options = createOptions({
   name: "user-controller",
   responseHandler,
-  bindings: {}
+  bindings: {
+    // userModel: bindings.bind("userModel", (o: boolean) => ({
+    //   payload: z.object({
+    //     name: z.string()
+    //   }),
+    //   resolve: ({ bindingName }) => ({
+    //     [bindingName]: "ddqwd",
+    //     test: "123"
+    //   })
+    // })),
+
+    // model: bindings.model(123)
+  }
 });
 
 type Bindings = HandlerBindings<typeof options>;
