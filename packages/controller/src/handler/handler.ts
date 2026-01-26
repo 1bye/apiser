@@ -1,18 +1,20 @@
 import type { Infer, InferUndefined, Schema } from "@apiser/schema";
 import type { HandlerOptions } from "./options";
 import type { BindingDefinition, HandlerBindings } from "./bindings";
+import type { UnionToIntersection } from "../types";
 
 export namespace HandlerFn {
-  export type UnionToIntersection<T> = (
-    T extends any ? (k: T) => void : never
-  ) extends (k: infer I) => void
-    ? I
-    : never;
-
+  /**
+   * If a binding resolves to an object, spread its fields into the context.
+   * Otherwise, keep the result under the binding key.
+   */
   export type ExpandBindingResult<TKey extends string, TResult> = TResult extends object
     ? TResult
     : Record<TKey, TResult>;
 
+  /**
+   * Infer the resolved result type for a binding key from handler options.
+   */
   export type InferedBindingValue<TKey extends string, THandlerOptions extends HandlerOptions>
     = (TKey extends keyof HandlerBindings<THandlerOptions>
       ? (HandlerBindings<THandlerOptions>[TKey] extends BindingDefinition<any, infer TResult, any, any>
@@ -22,6 +24,10 @@ export namespace HandlerFn {
           : never))
       : never);
 
+  /**
+   * Infer the full bindings context shape for a given handler call.
+   * Binding results that are objects are merged together.
+   */
   export type InferedBindings<THandlerOptions extends HandlerOptions, TOptions extends Options<any, any>> =
     TOptions extends Options<any, any, infer TBindings>
       ? UnionToIntersection<{
@@ -34,6 +40,10 @@ export namespace HandlerFn {
       }]>
       : never;
 
+  /**
+   * Input options for a specific handler call.
+   * Each binding key accepts the first argument of the corresponding binding factory.
+   */
   export type OptionsBindings<
     THandlerOptions extends HandlerOptions,
     TBindings extends HandlerBindings<THandlerOptions> = HandlerBindings<THandlerOptions>
@@ -43,6 +53,9 @@ export namespace HandlerFn {
         : undefined);
     };
 
+  /**
+   * Per-invocation options passed to a handler call.
+   */
   export type Options<
     THandlerOptions extends HandlerOptions,
     TSchema extends Schema | undefined,
@@ -51,25 +64,44 @@ export namespace HandlerFn {
     payload: TSchema;
   } & TBindings;
 
+  /**
+   * Context object received by the handler callback.
+   */
   export type Context<THandlerOptions extends HandlerOptions, TOptions extends Options<any, any>> = {
     payload: InferUndefined<TOptions["payload"]>
   } & Pick<
     Exclude<THandlerOptions["responseHandler"], undefined>,
     "fail"
   > & InferedBindings<THandlerOptions, TOptions>;
+
+  /**
+   * Signature of the handler callback.
+   */
   export type Callback<
     THandlerOptions extends HandlerOptions,
     TOptions extends Options<any, any>
   > = (ctx: Context<THandlerOptions, TOptions>) => any;
 
+  /**
+   * Result of executing a handler component.
+   */
   export interface Result<T> { data: T; error: any; };
 
+  /**
+   * The data input shape of a handler component.
+   */
   export type ComponentValue<TOptions extends Options<any, any>> = InferUndefined<TOptions["payload"]>;
 
+  /**
+   * Compiled handler component.
+   */
   export interface Component<THandlerOptions extends HandlerOptions, TOptions extends Options<any, any>, TResult> {
     (data: ComponentValue<TOptions>): Result<TResult>;
   }
 
+  /**
+   * Base handler factory function.
+   */
   export interface Base<THandlerOptions extends HandlerOptions> {
     <
       //
