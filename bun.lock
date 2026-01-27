@@ -91,6 +91,9 @@
         "eslint": "^9.39.1",
         "typescript": "5.9.2",
       },
+      "peerDependencies": {
+        "drizzle-orm": "^1.0.0-beta.2-86f844e",
+      },
     },
     "packages/eslint-config": {
       "name": "@repo/eslint-config",

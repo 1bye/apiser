@@ -60,7 +60,12 @@ export interface BindingsHelpers {
   /**
    * Pass-through helper for model bindings.
    */
-  model<TModel extends ModelIdentifier>(model: TModel, _options?: BindingModelOptions<TModel>): TModel;
+  model<TModel extends ModelIdentifier>(model: TModel, _options?: BindingModelOptions<TModel>): BindingDefinition<
+    Schema,
+    TModel,
+    unknown,
+    TModel["$modelName"]
+  >;
 
   /**
    * Wrap a binding factory so it is typed consistently.
@@ -133,7 +138,9 @@ export type HandlerBindings<TOptions extends HandlerOptions<any, any>> = TOption
  * Runtime bindings helpers for use alongside createOptions.
  */
 export const bindings: BindingsHelpers = {
-  model: (model) => model,
+  model: (model) => ({
+    resolve: () => model
+  }),
   bind: (bindingOrFactory: any, maybeFactory?: any) => {
     if (typeof bindingOrFactory === "string") {
       return maybeFactory;

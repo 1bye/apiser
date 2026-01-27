@@ -1,19 +1,15 @@
+import type { FromKey } from "@apiser/zod";
+
 export interface ModelIdentifier {
   $model: any;
+  $modelName: any;
+  $$config: any;
 }
 
-export interface ModelConfig {
-  primaryKeys: string;
-};
-export type InferModelConfig<TModel extends Model<any>> =
-  TModel extends Model<infer TModelConfig>
-  ? (TModelConfig extends ModelConfig
-    ? TModelConfig
-    : never)
-  : never;
-
-export interface Model<TConfig extends ModelConfig> extends ModelIdentifier { }
-
-export interface BindingModelOptions<TModel extends Model<any>, TModelConfig extends InferModelConfig<TModel> = InferModelConfig<TModel>> {
-  primaryKey?: TModelConfig["primaryKeys"]
+export interface BindingModelOptions<TModel extends ModelIdentifier> {
+  primaryKey?: TModel["$$config"]["primaryKeys"];
+  from?: FromKey;
+  fromKey?: string | TModel["$modelName"];
+  where?: TModel["$$config"]["whereValue"];
+  transform?: () => any;
 }

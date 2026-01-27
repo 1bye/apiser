@@ -13,7 +13,7 @@ const model = modelBuilder({
   dialect: "PostgreSQL"
 });
 
-// const userModel = model("")
+const userModel = model("user", {})
 
 const responseHandler = createResponseHandler((options) => ({
   json: options.json({
@@ -37,6 +37,10 @@ const options = createOptions({
   name: "user-controller",
   responseHandler,
   bindings: {
+    userModel: bindings.model(userModel, {
+
+    })
+
     // userModel: bindings.bind("userModel", (o: boolean) => ({
     //   payload: z.object({
     //     name: z.string()
@@ -57,7 +61,7 @@ const handler = createHandler(options);
 
 // options.responseHandler?.fail("custom")
 
-const main = handler(({ fail, payload, userModel }) => {
+const main = handler(({ fail, payload, }) => {
   return 123;
 }, {
   payload: z.object({

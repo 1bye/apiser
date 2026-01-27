@@ -13,6 +13,8 @@
       "@/*": ["./src/*"]
     },
 
+    "preserveSymlinks": true,
+
     // Bundler mode
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,

@@ -138,6 +138,8 @@ export type Model<
   & {
     $format: TConfig["options"]["format"];
     $formatValue: ResolveOptionsFormat<TConfig["options"]["format"]>;
+
+    $$config: TConfig;
   };
 
 export type ModelIdentifier<ModelName> = {
