@@ -19,12 +19,11 @@ export type InferBindingPayload<TSchema> = TSchema extends Schema
  */
 export type BindingResolveContext<
   TPayloadSchema extends Schema | undefined = Schema | undefined,
-  THandler = unknown,
-  TBindingName extends string = string
+  THandler = unknown
 > = {
   payload: InferBindingPayload<TPayloadSchema>;
   handler: THandler;
-  bindingName: TBindingName;
+  bindingName: string;
 };
 
 /**
@@ -33,11 +32,10 @@ export type BindingResolveContext<
 export type BindingDefinition<
   TPayloadSchema extends Schema | undefined = Schema | undefined,
   TResult = unknown,
-  THandler = unknown,
-  TBindingName extends string = string
+  THandler = unknown
 > = {
   payload?: TPayloadSchema;
-  resolve: (ctx: BindingResolveContext<TPayloadSchema, THandler, TBindingName>) => TResult;
+  resolve: (ctx: BindingResolveContext<TPayloadSchema, THandler>) => TResult;
 };
 
 /**
@@ -47,11 +45,18 @@ export type BindingFactory<
   TArgs extends any[] = any[],
   TPayloadSchema extends Schema | undefined = Schema | undefined,
   TResult = unknown,
-  THandler = unknown,
-  TBindingName extends string = string
+  THandler = unknown
 > = (
   ...args: TArgs
-) => BindingDefinition<TPayloadSchema, TResult, THandler, TBindingName>;
+) => BindingDefinition<TPayloadSchema, TResult, THandler>;
+
+export declare const bindingInstanceSymbol: unique symbol;
+/**
+ * Unique type, to not destructorize object in handler function
+ */
+export type BindingInstance<T> = T & {
+  [bindingInstanceSymbol]: never;
+}
 
 /**
  * Helpers available inside the bindings factory.
@@ -60,11 +65,11 @@ export interface BindingsHelpers {
   /**
    * Pass-through helper for model bindings.
    */
-  model<TModel extends ModelIdentifier>(model: TModel, _options?: BindingModelOptions<TModel>): BindingDefinition<
+  model<TModel extends ModelIdentifier>(model: TModel, _options?: BindingModelOptions<TModel>): BindingFactory<
+    [boolean],
     Schema,
-    TModel,
-    unknown,
-    TModel["$modelName"]
+    BindingInstance<TModel>,
+    unknown
   >;
 
   /**
@@ -74,38 +79,37 @@ export interface BindingsHelpers {
     TArgs extends any[] = any[],
     TPayloadSchema extends Schema | undefined = Schema | undefined,
     TResult = unknown,
-    THandler = unknown,
-    TBindingName extends string = string
+    THandler = unknown
   >(
-    factory: BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TBindingName>
-  ): BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TBindingName>;
+    factory: BindingFactory<TArgs, TPayloadSchema, TResult, THandler>
+  ): BindingFactory<TArgs, TPayloadSchema, TResult, THandler>;
 
   /**
    * Provide a binding name explicitly to keep bindingName as a literal type.
    */
   bind<
-    TBindingName extends string,
+    TName extends string,
     TArgs extends any[] = any[],
     TPayloadSchema extends Schema | undefined = Schema | undefined,
     TResult = unknown,
     THandler = unknown
   >(
-    bindingName: TBindingName,
-    factory: BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TBindingName>
-  ): BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TBindingName>;
+    bindingName: TName,
+    factory: BindingFactory<TArgs, TPayloadSchema, TResult, THandler>
+  ): BindingFactory<TArgs, TPayloadSchema, TResult, THandler>;
 }
 
 /**
  * Map binding names into their resolver contexts.
  */
 export type BindingsWithNames<TBindings> = {
-  [TKey in keyof TBindings]: TKey extends string
-  ? TBindings[TKey] extends BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler, any>
-  ? BindingDefinition<TPayloadSchema, TResult, THandler, TKey>
-  : TBindings[TKey] extends (...args: infer TArgs) => BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler, any>
-  ? (...args: TArgs) => BindingDefinition<TPayloadSchema, TResult, THandler, TKey>
-  : TBindings[TKey]
-  : TBindings[TKey];
+  [TKey in keyof TBindings]: (TKey extends string
+    ? (TBindings[TKey] extends BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler>
+      ? BindingDefinition<TPayloadSchema, TResult, THandler>
+      : (TBindings[TKey] extends (...args: infer TArgs) => BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler>
+        ? (...args: TArgs) => BindingDefinition<TPayloadSchema, TResult, THandler>
+        : TBindings[TKey]))
+    : TBindings[TKey]);
 };
 
 /**
@@ -138,9 +142,11 @@ export type HandlerBindings<TOptions extends HandlerOptions<any, any>> = TOption
  * Runtime bindings helpers for use alongside createOptions.
  */
 export const bindings: BindingsHelpers = {
-  model: (model) => ({
-    resolve: () => model
-  }),
+  model: (model) => {
+    return () => ({
+      resolve: () => model as BindingInstance<typeof model>
+    })
+  },
   bind: (bindingOrFactory: any, maybeFactory?: any) => {
     if (typeof bindingOrFactory === "string") {
       return maybeFactory;

@@ -39,19 +39,17 @@ const options = createOptions({
   bindings: {
     userModel: bindings.model(userModel, {
 
-    })
+    }),
 
-    // userModel: bindings.bind("userModel", (o: boolean) => ({
-    //   payload: z.object({
-    //     name: z.string()
-    //   }),
-    //   resolve: ({ bindingName }) => ({
-    //     [bindingName]: "ddqwd",
-    //     test: "123"
-    //   })
-    // })),
-
-    // model: bindings.model(123)
+    userModel2: bindings.bind((o: boolean) => ({
+      payload: z.object({
+        name: z.string()
+      }),
+      resolve: ({ }) => ({
+        userModel2: "ddqwd",
+        test: "123"
+      })
+    })),
   }
 });
 
@@ -61,13 +59,15 @@ const handler = createHandler(options);
 
 // options.responseHandler?.fail("custom")
 
-const main = handler(({ fail, payload, }) => {
+const main = handler(({ fail, payload, userModel, userModel2, }) => {
+
   return 123;
 }, {
   payload: z.object({
     name: z.string()
   }),
-  userModel: true
+  userModel: true,
+  userModel2: true
 });
 
 const { data, error } = main()

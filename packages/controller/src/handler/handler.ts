@@ -1,6 +1,6 @@
 import type { Infer, InferUndefined, Schema } from "@apiser/schema";
 import type { HandlerOptions } from "./options";
-import type { BindingDefinition, HandlerBindings } from "./bindings";
+import type { BindingDefinition, HandlerBindings, bindingInstanceSymbol } from "./bindings";
 import type { UnionToIntersection } from "../types";
 
 export namespace HandlerFn {
@@ -8,18 +8,18 @@ export namespace HandlerFn {
    * If a binding resolves to an object, spread its fields into the context.
    * Otherwise, keep the result under the binding key.
    */
-  export type ExpandBindingResult<TKey extends string, TResult> = TResult extends object
-    ? TResult
-    : Record<TKey, TResult>;
+  export type ExpandBindingResult<TKey extends string, TResult> = TResult extends { [K in typeof bindingInstanceSymbol]: never }
+    ? Record<TKey, TResult>
+    : (TResult extends object ? TResult : Record<TKey, TResult>)
 
   /**
    * Infer the resolved result type for a binding key from handler options.
    */
   export type InferedBindingValue<TKey extends string, THandlerOptions extends HandlerOptions>
     = (TKey extends keyof HandlerBindings<THandlerOptions>
-      ? (HandlerBindings<THandlerOptions>[TKey] extends BindingDefinition<any, infer TResult, any, any>
+      ? (HandlerBindings<THandlerOptions>[TKey] extends { resolve: (...args: any[]) => infer TResult }
         ? TResult
-        : (HandlerBindings<THandlerOptions>[TKey] extends (...args: any[]) => BindingDefinition<any, infer TResult, any, any>
+        : (HandlerBindings<THandlerOptions>[TKey] extends (...args: any[]) => { resolve: (...args: any[]) => infer TResult }
           ? TResult
           : never))
       : never);
@@ -30,15 +30,15 @@ export namespace HandlerFn {
    */
   export type InferedBindings<THandlerOptions extends HandlerOptions, TOptions extends Options<any, any>> =
     TOptions extends Options<any, any, infer TBindings>
-      ? UnionToIntersection<{
-        [TKey in keyof TBindings as TBindings[TKey] extends undefined ? never : TKey & string]: ExpandBindingResult<
-          TKey & string,
-          InferedBindingValue<TKey & string, THandlerOptions>
-        >;
-      }[keyof {
-        [TKey in keyof TBindings as TBindings[TKey] extends undefined ? never : TKey & string]: any;
-      }]>
-      : never;
+    ? UnionToIntersection<{
+      [TKey in keyof TBindings as TBindings[TKey] extends undefined ? never : TKey & string]: ExpandBindingResult<
+        TKey & string,
+        InferedBindingValue<TKey & string, THandlerOptions>
+      >;
+    }[keyof {
+      [TKey in keyof TBindings as TBindings[TKey] extends undefined ? never : TKey & string]: any;
+    }]>
+    : never;
 
   /**
    * Input options for a specific handler call.
