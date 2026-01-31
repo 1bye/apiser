@@ -19,9 +19,7 @@ export type ErrorHandler<TOptions extends Options, THandlerOptions extends Error
     ? never
     : Infer<ExtractSchema<TOptions["meta"]>>);
   input: THandlerOptions extends undefined ? never : Infer<Exclude<THandlerOptions, undefined>["input"]>;
-}) => PromiseOr<
-  ErrorOptions.InferedSchema<TOptions>
->;
+}) => ErrorOptions.InferedSchema<TOptions>;
 
 export interface ErrorHandlerOptions<TSchema extends Schema = Schema> {
   input?: TSchema;

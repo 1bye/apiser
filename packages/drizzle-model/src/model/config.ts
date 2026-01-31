@@ -4,6 +4,7 @@ import type { ModelOptions, ResolveOptionsFormat } from "./options.ts";
 import type { IsTable, TableOutput } from "./table.ts";
 import type { GetPrimarySerialOrDefaultKeys } from "./methods/return.ts";
 import type { MethodWhereValue } from "./methods/query/where.ts";
+import type { DrizzleColumnDataType } from "./query/operations.ts";
 
 export type ModelConfig<
   TSchema extends TablesRelationalConfig = TablesRelationalConfig,
@@ -25,5 +26,10 @@ export type ModelConfig<
   primaryKeys: keyof GetPrimarySerialOrDefaultKeys<
     IsTable<TTable["table"]>["_"]["columns"]
   >
+  primaryKeysWithDataType: {
+    [TKey in keyof GetPrimarySerialOrDefaultKeys<
+      IsTable<TTable["table"]>["_"]["columns"]
+    >]: DrizzleColumnDataType<IsTable<TTable["table"]>["_"]["columns"][TKey]>
+  }
   whereValue: MethodWhereValue<TSchema, TTable>;
 };

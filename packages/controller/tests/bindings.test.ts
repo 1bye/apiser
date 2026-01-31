@@ -1,4 +1,4 @@
-import { createOptions, bindings, type HandlerBindings, createHandler } from "@/index";
+import { createOptions, type HandlerBindings, createHandler, bindingInstanceSymbol } from "@/index";
 import { createResponseHandler } from "@apiser/response";
 import { modelBuilder } from "@apiser/drizzle-model";
 import { z } from "@apiser/zod";
@@ -28,15 +28,28 @@ const responseHandler = createResponseHandler((options) => ({
       details: z.string(),
     }),
   }
-})).defineError("custom", {
-  details: "Custom error occured",
-  name: "custom"
-})
+}))
+  .defineError("custom", {
+    details: "Custom error occured",
+    name: "custom"
+  })
+  .defineError("test", {
+    details: "123",
+    name: "09876756"
+  })
+  .defineError("INPUT", ({ input }) => ({
+    details: input.name,
+    name: "09890-"
+  }), {
+    input: z.object({
+      name: z.string()
+    })
+  })
 
 const options = createOptions({
   name: "user-controller",
   responseHandler,
-  bindings: {
+  bindings: (bindings) => ({
     userModel: bindings.model(userModel, {
 
     }),
@@ -45,21 +58,21 @@ const options = createOptions({
       payload: z.object({
         name: z.string()
       }),
-      resolve: ({ }) => ({
-        userModel2: "ddqwd",
-        test: "123"
-      })
+      resolve: ({ fail }) => {
+        return {
+          userModel2: "ddqwd",
+          test: "123"
+        }
+      }
     })),
-  }
-});
 
-type Bindings = HandlerBindings<typeof options>;
+    version: bindings.value(123)
+  })
+});
 
 const handler = createHandler(options);
 
-// options.responseHandler?.fail("custom")
-
-const main = handler(({ fail, payload, userModel, userModel2, }) => {
+const main = handler(({ fail, payload, userModel, userModel2 }) => {
 
   return 123;
 }, {

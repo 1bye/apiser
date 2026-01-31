@@ -29,6 +29,8 @@ export type ResolveOptionsMeta<TOptions extends Options> = TOptions["meta"] exte
   ? never
   : Exclude<TOptions["meta"], undefined>;
 
+export type AnyResponseHandler = ResponseHandler<any, any, any, any, any>;
+
 export class ResponseHandler<
   TMeta extends MetaOptions.Base,
   TError extends ErrorOptions.Base,

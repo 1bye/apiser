@@ -1,6 +1,7 @@
 import type { Infer, Schema } from "@apiser/schema";
 import type { HandlerOptions } from "./options";
 import type { BindingModelOptions, ModelIdentifier } from "./bindings/model";
+import type { AnyResponseHandler } from "@apiser/response";
 
 /**
  * Schema type for a binding payload.
@@ -19,12 +20,16 @@ export type InferBindingPayload<TSchema> = TSchema extends Schema
  */
 export type BindingResolveContext<
   TPayloadSchema extends Schema | undefined = Schema | undefined,
-  THandler = unknown
+  THandler = unknown,
+  TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined
 > = {
   payload: InferBindingPayload<TPayloadSchema>;
   handler: THandler;
   bindingName: string;
-};
+} & Pick<
+  Exclude<TResponseHandler, undefined>,
+  "fail"
+>;
 
 /**
  * Definition of a binding.
@@ -32,10 +37,11 @@ export type BindingResolveContext<
 export type BindingDefinition<
   TPayloadSchema extends Schema | undefined = Schema | undefined,
   TResult = unknown,
-  THandler = unknown
+  THandler = unknown,
+  TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined
 > = {
   payload?: TPayloadSchema;
-  resolve: (ctx: BindingResolveContext<TPayloadSchema, THandler>) => TResult;
+  resolve: (ctx: BindingResolveContext<TPayloadSchema, THandler, TResponseHandler>) => TResult;
 };
 
 /**
@@ -45,10 +51,11 @@ export type BindingFactory<
   TArgs extends any[] = any[],
   TPayloadSchema extends Schema | undefined = Schema | undefined,
   TResult = unknown,
-  THandler = unknown
+  THandler = unknown,
+  TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined
 > = (
   ...args: TArgs
-) => BindingDefinition<TPayloadSchema, TResult, THandler>;
+) => BindingDefinition<TPayloadSchema, TResult, THandler, TResponseHandler>;
 
 export declare const bindingInstanceSymbol: unique symbol;
 /**
@@ -61,15 +68,18 @@ export type BindingInstance<T> = T & {
 /**
  * Helpers available inside the bindings factory.
  */
-export interface BindingsHelpers {
+export interface BindingsHelpers<
+  TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined
+> {
   /**
    * Pass-through helper for model bindings.
    */
-  model<TModel extends ModelIdentifier>(model: TModel, _options?: BindingModelOptions<TModel>): BindingFactory<
+  model<TModel extends ModelIdentifier>(model: TModel, _options?: BindingModelOptions<TModel, TResponseHandler> | BindingModelOptions<TModel, TResponseHandler>[]): BindingFactory<
     [boolean],
     Schema,
     BindingInstance<TModel>,
-    unknown
+    unknown,
+    TResponseHandler
   >;
 
   /**
@@ -81,8 +91,8 @@ export interface BindingsHelpers {
     TResult = unknown,
     THandler = unknown
   >(
-    factory: BindingFactory<TArgs, TPayloadSchema, TResult, THandler>
-  ): BindingFactory<TArgs, TPayloadSchema, TResult, THandler>;
+    factory: BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TResponseHandler>
+  ): BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TResponseHandler>;
 
   /**
    * Provide a binding name explicitly to keep bindingName as a literal type.
@@ -95,8 +105,16 @@ export interface BindingsHelpers {
     THandler = unknown
   >(
     bindingName: TName,
-    factory: BindingFactory<TArgs, TPayloadSchema, TResult, THandler>
-  ): BindingFactory<TArgs, TPayloadSchema, TResult, THandler>;
+    factory: BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TResponseHandler>
+  ): BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TResponseHandler>;
+
+  value<TValue>(value: TValue): BindingFactory<
+    [boolean],
+    Schema,
+    BindingInstance<TValue>,
+    unknown,
+    TResponseHandler
+  >
 }
 
 /**
@@ -104,10 +122,10 @@ export interface BindingsHelpers {
  */
 export type BindingsWithNames<TBindings> = {
   [TKey in keyof TBindings]: (TKey extends string
-    ? (TBindings[TKey] extends BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler>
-      ? BindingDefinition<TPayloadSchema, TResult, THandler>
-      : (TBindings[TKey] extends (...args: infer TArgs) => BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler>
-        ? (...args: TArgs) => BindingDefinition<TPayloadSchema, TResult, THandler>
+    ? (TBindings[TKey] extends BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler, infer TResponseHandler>
+      ? BindingDefinition<TPayloadSchema, TResult, THandler, TResponseHandler>
+      : (TBindings[TKey] extends (...args: infer TArgs) => BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler, infer TResponseHandler>
+        ? (...args: TArgs) => BindingDefinition<TPayloadSchema, TResult, THandler, TResponseHandler>
         : TBindings[TKey]))
     : TBindings[TKey]);
 };
@@ -136,7 +154,7 @@ export type ResolveBindings<TBindings> = TBindings extends (...args: any[]) => i
  */
 export type HandlerBindings<TOptions extends HandlerOptions<any, any>> = TOptions["bindings"] extends undefined
   ? {}
-  : ResolveBindings<Exclude<TOptions["bindings"], undefined>>;
+  : ResolveBindings<ReturnType<Exclude<TOptions["bindings"], undefined>>>;
 
 /**
  * Runtime bindings helpers for use alongside createOptions.
@@ -153,5 +171,10 @@ export const bindings: BindingsHelpers = {
     }
 
     return bindingOrFactory;
+  },
+  value: (value) => {
+    return () => ({
+      resolve: () => value as BindingInstance<typeof value>
+    })
   }
 };

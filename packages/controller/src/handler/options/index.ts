@@ -1,5 +1,5 @@
-import type { ResponseHandler } from "@apiser/response";
-import type { BindingsFactory, BindingsInput, BindingsWithNames } from "../bindings";
+import type { AnyResponseHandler } from "@apiser/response";
+import type { BindingsFactory, BindingsHelpers, BindingsInput, BindingsWithNames } from "../bindings";
 
 /**
  * Infer the response handler type from handler options.
@@ -10,7 +10,7 @@ export type HandlerResponseHandler<TOptions extends HandlerOptions<any, any>> = 
  * Options used to configure a controller handler.
  */
 export interface HandlerOptions<
-  TResponseHandler extends ResponseHandler<any, any, any, any, any> | undefined = ResponseHandler<any, any, any, any, any> | undefined,
+  TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined,
   TBindings extends Record<string, any> = Record<string, any>
 > {
   /**
@@ -21,7 +21,7 @@ export interface HandlerOptions<
   /**
    * Bindings object or factory.
    */
-  bindings?: BindingsInput<TBindings>;
+  bindings?: (bindings: BindingsHelpers<TResponseHandler>) => BindingsInput<TBindings>;
 
   /**
    * Response handler instance.
@@ -40,7 +40,7 @@ export type ExtendedHandlerOptions<TOptions extends HandlerOptions<any, any>> = 
  * Create handler options with type inference.
  */
 export function createOptions<
-  TResponseHandler extends ResponseHandler<any, any, any, any, any> | undefined = ResponseHandler<any, any, any, any, any> | undefined,
+  TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined,
   TBindings extends Record<string, any> = Record<string, any>
 >(options: HandlerOptions<TResponseHandler, TBindings> & {
   bindings: BindingsWithNames<TBindings>;
@@ -50,7 +50,7 @@ export function createOptions<
  * Create handler options with type inference (bindings factory).
  */
 export function createOptions<
-  TResponseHandler extends ResponseHandler<any, any, any, any, any> | undefined = ResponseHandler<any, any, any, any, any> | undefined,
+  TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined,
   TBindings extends Record<string, any> = Record<string, any>
 >(options: HandlerOptions<TResponseHandler, TBindings> & {
   bindings: BindingsFactory<BindingsWithNames<TBindings>>;
@@ -60,7 +60,7 @@ export function createOptions<
  * Create handler options with type inference.
  */
 export function createOptions<
-  TResponseHandler extends ResponseHandler<any, any, any, any, any> | undefined = ResponseHandler<any, any, any, any, any> | undefined,
+  TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined,
   TBindings extends Record<string, any> = Record<string, any>
 >(options: HandlerOptions<TResponseHandler, TBindings>): ExtendedHandlerOptions<HandlerOptions<TResponseHandler, TBindings>> {
   return ({
