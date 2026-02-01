@@ -5,7 +5,8 @@
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "generate:component": "turbo gen react-component",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "bun test"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
@@ -30,6 +31,7 @@
   "type": "module",
   "dependencies": {
     "colorette": "^2.0.20",
-    "json-colorizer": "^3.0.1"
+    "json-colorizer": "^3.0.1",
+    "stacktrace-parser": "^0.1.11"
   }
 }

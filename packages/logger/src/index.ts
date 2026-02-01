@@ -3,6 +3,7 @@ import type { Log } from "./log";
 import type { LoggerOptions } from "./options";
 import type { AnyTransport } from "./transport";
 import type { TransportFlushFn, TransportLogFnContext } from "./transport";
+import * as stackTraceParser from "stacktrace-parser";
 
 export { createTransport } from "./transport";
 export type {
@@ -50,25 +51,11 @@ function getCallerFile(): { path: string; codeLine: string } {
     return { path: "unknown", codeLine: "0" };
   }
 
-  const lines = stack.split("\n").slice(1);
+  const lines = stackTraceParser.parse(stack);
+  const pwd = process?.env?.PWD ?? process.cwd() ?? "";
+  const path = lines.at(-1)?.file ?? "unknown";
 
-  for (const line of lines) {
-    // Skip logger internals
-    if (line.includes("/packages/logger/") || line.includes("@apiser/logger")) {
-      continue;
-    }
-
-    // Example formats:
-    //  at /path/to/file.ts:10:5
-    //  at fn (/path/to/file.ts:10:5)
-    const match = line.match(/\(?(.+):(\d+):(\d+)\)?$/);
-
-    if (match) {
-      return { path: match[1] ?? "unknown", codeLine: match[2] ?? "0" };
-    }
-  }
-
-  return { path: "unknown", codeLine: "0" };
+  return { path: path.replace(pwd, ""), codeLine: String(lines.at(-1)?.lineNumber) ?? "0" };
 }
 
 export function createLogger<
@@ -202,5 +189,73 @@ export function createLogger<
     return logger;
   };
 
-  return buildLogger();
+  const logger = buildLogger();
+
+  const autoFlush = options.autoFlush;
+  if (autoFlush) {
+    let timer: ReturnType<typeof setInterval> | undefined;
+
+    if (typeof autoFlush.intervalMs === "number" && autoFlush.intervalMs > 0) {
+      timer = setInterval(() => {
+        logger.flush();
+      }, autoFlush.intervalMs);
+    }
+
+    const events = autoFlush.on ?? [];
+    const listeners: Array<{ event: string; handler: () => void }> = [];
+
+    const attach = (event: string, handler: () => void) => {
+      try {
+        process.on(event as any, handler);
+        listeners.push({ event, handler });
+      } catch {
+        // ignore (non-node env)
+      }
+    };
+
+    if (events.includes("beforeExit")) {
+      attach("beforeExit", () => {
+        logger.flush();
+      });
+    }
+
+    if (events.includes("SIGINT")) {
+      attach("SIGINT", () => {
+        logger.flush();
+      });
+    }
+
+    if (events.includes("SIGTERM")) {
+      attach("SIGTERM", () => {
+        logger.flush();
+      });
+    }
+
+    const cleanup = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = undefined;
+      }
+
+      for (const { event, handler } of listeners) {
+        try {
+          process.off(event as any, handler);
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    // If process is exiting anyway, avoid leaving intervals/handlers behind.
+    // Note: cleanup doesn't call flush; handlers already do.
+    if (events.length > 0 || timer) {
+      try {
+        process.on("exit", cleanup);
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  return logger;
 }

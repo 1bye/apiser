@@ -47,22 +47,28 @@ export function createConsole(options?: ConsoleTransportOptions) {
       } else {
         const paintLevel = levelColor[level] ?? ((s: string) => s);
 
-        const header =
-          dim("[") +
-          // cyanBright(name) +
-          // dim("/") +
-          gray(file.path) +
-          dim(":") +
-          magentaBright(String(file.codeLine)) +
-          dim("]");
-
-        const levelTag = paintLevel(level.toUpperCase().padEnd(5));
-        const msg = whiteBright(bold(message));
-
+        const dataAvailable = data && Object.keys(data).length > 0;
         const dataString =
           data && Object.keys(data).length > 0
-            ? "\n" + dim("↳ data:\n") + colorize(data)
+            ? "\n" + (() => {
+              const json = colorize(data);
+              const lines = json.split("\n");
+
+              return lines
+                .map((item, index) => `${gray((lines.length - 1) === index ? "└" : "│")} ${item}`)
+                .join("\n")
+            })()
             : "";
+
+        const header =
+          (dataAvailable ? gray("┌") : dim("[")) +
+          dim(file.path) +
+          dim(":") +
+          dim(String(file.codeLine)) +
+          dim("]");
+
+        const levelTag = paintLevel(level.toUpperCase().padEnd(5).trim());
+        const msg = whiteBright(bold(message));
 
         line = format ? format() : `${header} ${levelTag} ${msg}${dataString}`;
       }
