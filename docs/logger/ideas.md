@@ -68,11 +68,3 @@ const log = logger.extend({
   } 
 });
 ```
-
-```ts
-interface Logger {
-  // Level info
-  info(message: string, relatedData?: Record<string, any>): void;
-}
-
-```

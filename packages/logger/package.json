@@ -21,6 +21,10 @@
     ".": {
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
+    },
+    "./console": {
+      "types": "./dist/console.d.mts",
+      "default": "./dist/console.mjs"
     }
   },
   "type": "module",
