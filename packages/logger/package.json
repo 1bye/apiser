@@ -1,0 +1,31 @@
+{
+  "name": "@apiser/logger",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "generate:component": "turbo gen react-component",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
+    "@types/bun": "latest",
+    "@types/node": "^22.15.3",
+    "dotenv": "^17.2.3",
+    "eslint": "^9.39.1",
+    "tsdown": "^0.20.0-beta.4",
+    "typescript": "5.9.2"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "type": "module",
+  "dependencies": {
+    "colorette": "^2.0.20",
+    "json-colorizer": "^3.0.1"
+  }
+}
