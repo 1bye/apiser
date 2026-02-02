@@ -1,4 +1,5 @@
 import type { Infer, InferUndefined, Schema } from "@apiser/schema";
+import type * as ApiserResponse from "@apiser/response";
 import type { HandlerOptions } from "./options";
 import type { BindingDefinition, HandlerBindings, bindingInstanceSymbol } from "./bindings";
 import type { UnionToIntersection } from "../types";
@@ -85,18 +86,28 @@ export namespace HandlerFn {
   /**
    * Result of executing a handler component.
    */
-  export interface Result<T> { data: T; error: any; };
+  export interface Result<TData, TError> { data: TData; error: TError; };
 
   /**
    * The data input shape of a handler component.
    */
   export type ComponentValue<TOptions extends Options<any, any>> = InferUndefined<TOptions["payload"]>;
 
+  export type ResolveResponseHandlerOptions<THandlerOptions extends HandlerOptions> = Exclude<THandlerOptions["responseHandler"], undefined>["options"];
+
   /**
    * Compiled handler component.
    */
   export interface Component<THandlerOptions extends HandlerOptions, TOptions extends Options<any, any>, TResult> {
-    (data: ComponentValue<TOptions>): Result<TResult>;
+    (data: ComponentValue<TOptions>): Result<
+      TResult,
+      Exclude<THandlerOptions["responseHandler"], undefined> extends ApiserResponse.AnyResponseHandler ? true : false
+    // ResolveResponseHandlerOptions<THandlerOptions> extends ApiserResponse.Options
+    // ? ApiserResponse.ErrorOptions.InferedSchema<
+    //   ResolveResponseHandlerOptions<THandlerOptions>
+    // >
+    // : ApiserResponse.DefaultError
+    >;
   }
 
   /**

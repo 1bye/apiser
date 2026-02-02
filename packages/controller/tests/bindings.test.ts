@@ -1,4 +1,4 @@
-import { createOptions, type HandlerBindings, createHandler, bindingInstanceSymbol } from "@/index";
+import { createOptions, createHandler } from "@/index";
 import { createResponseHandler } from "@apiser/response";
 import { modelBuilder } from "@apiser/drizzle-model";
 import { z } from "@apiser/zod";
@@ -46,9 +46,11 @@ const responseHandler = createResponseHandler((options) => ({
     })
   })
 
+// responseHandler.options.error.schema
+
 const options = createOptions({
   name: "user-controller",
-  responseHandler,
+  // responseHandler,
   bindings: (bindings) => ({
     userModel: bindings.model(userModel, {
 

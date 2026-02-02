@@ -7,9 +7,14 @@ import { TextResponse } from "./response/text";
 import { ErrorResponse } from "./response/error";
 import { BinaryResponse, type Binary } from "./response/binary";
 import type { BinaryOptions } from "./options";
-
-export { options } from "./options";
 import { options as optionMethods } from "./options";
+
+export type { DefaultError } from "./error";
+export { options, type ErrorOptions } from "./options";
+
+export type {
+  Options
+}
 
 export function createResponseHandler<
   TMeta extends MetaOptions.Base,

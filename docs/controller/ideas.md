@@ -448,9 +448,9 @@ const userController = controller(options, (handle) => ({
     this.hello("World")
   }),
   
-  hello: handle(async ({ log, payload }) => {
+  hello: handle(async ({ logger, payload }) => {
     // Prints: [user-controller:419] World
-    log(payload);
+    logger.info(payload);
     
     
     // Prints (Just red): [user-controller:423] World
