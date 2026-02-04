@@ -1,46 +1,48 @@
 import { BaseTag, type Tag } from "./tags";
 
 export namespace Registry {
-  export type Data<TTags extends Tags> = (tag: RegistryTag<TTags>) => Tags;
+  export type Data = (tag: BaseTag) => any;
 
   export type Tags = Record<string, BaseTag>;
 
-  export type Collection<TTags extends Record<string, any>> = <TKey extends keyof TTags>(name: TKey) => TTags[TKey];
+  export interface Collection<TTags extends Record<string, any>> {
+    <TKey extends keyof TTags>(name: TKey): TTags[TKey];
 
-  export type DeriveTags<TTags extends Tags> = {
+    derive<
+      TName extends string,
+      TTagValues extends DeriveTagsValues<TTags>,
+      TCallback extends Derive.Callback<TName, TTagValues>
+    >(name: TName, cb: TCallback, options?: Derive.Options): Collection<TTags & {
+      [TKey in TName]: BaseTag<ReturnType<TCallback>>
+    }>;
+  }
+
+  export type DeriveTagsValues<TTags extends Tags> = {
     [TKey in keyof TTags]: TTags[TKey]["_dataType"];
   }
 
-  export interface TagConfig extends Tag.Config {
-    deriveCallback?: Tag.Derive.Callback<DeriveTags<any>, any>;
-  }
-}
+  export namespace Derive {
+    export interface Callback<TName extends string, TData extends Record<string, any>> {
+      (tags: TData): TData[TName];
+    }
 
-export class RegistryTag<TTags extends Record<string, any>, TDataType extends any = any> extends BaseTag<TDataType> {
-  constructor(config?: Registry.TagConfig) {
-    super(config)
-  }
-
-  override derive(callback: Tag.Derive.Callback<Registry.DeriveTags<TTags>, TDataType>, options?: Tag.Derive.Options): RegistryTag<TTags, TDataType> {
-    return new RegistryTag<TTags, TDataType>({
-      ...this._config,
-      deriveCallback: callback,
-      deriveOptions: options
-    });
+    export interface Options {
+      when: "always" | "missing";
+    }
   }
 }
 
 export function registry<
-  TRawData extends Registry.Data<TTags>,
-  TTags extends ReturnType<TRawData>
+  TRawData extends Registry.Data,
+  TTags extends ReturnType<TRawData>,
 >(
   data: TRawData
 ): Registry.Collection<TTags> {
   const _data = typeof data === "function"
-    ? data(new RegistryTag())
+    ? data(new BaseTag())
     : data;
 
-  return <TKey extends keyof TTags>(name: TKey) => {
+  const collection: Omit<Registry.Collection<TTags>, "derive"> = function <TKey extends keyof TTags>(name: TKey) {
     const baseTag = (_data as TTags)[name];
 
     if (!baseTag) {
@@ -48,5 +50,12 @@ export function registry<
     }
 
     return baseTag;
+  };
+
+  // @ts-ignore
+  collection.prototype.derive = function (name, callback) {
+    throw new Error("Derive is still not developed.")
   }
+
+  return collection as Registry.Collection<TTags>;
 }

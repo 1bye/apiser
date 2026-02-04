@@ -1,36 +1,24 @@
-import type { Schema } from "@apiser/schema";
+import type { Infer, Schema } from "@apiser/schema";
 import { z } from "@apiser/zod";
 
 export namespace Tag {
-  export interface Config {
+  export interface Config<
+    TDataType extends any = any,
+  > {
     schema: Schema;
-    deriveData?: Record<string, unknown>;
-    deriveCallback?: Derive.Callback<Record<string, unknown>, unknown>;
-    deriveOptions?: Derive.Options;
-  }
-
-  export namespace Derive {
-    export interface Callback<TData, TDataType> {
-      (tags: TData): TDataType;
-    }
-
-    export interface Options {
-      when: "always" | "missing";
-    }
+    required?: boolean;
   }
 }
 
 export class BaseTag<
   TDataType extends any = any,
 > {
-  _config: Tag.Config;
+  _config: Tag.Config<TDataType>;
   _dataType: TDataType;
 
-  constructor(config?: Tag.Config) {
+  constructor(config?: Tag.Config<TDataType>) {
     this._config = config ?? {
       schema: z.unknown(),
-      deriveCallback: undefined,
-      deriveData: {},
     };
 
     // Only used for easier inferrence in types.
@@ -49,11 +37,16 @@ export class BaseTag<
     });
   }
 
-  derive(callback: Tag.Derive.Callback<Record<string, unknown>, TDataType>, options?: Tag.Derive.Options): BaseTag {
-    return new BaseTag({
+  required(): BaseTag<TDataType> {
+    return new BaseTag<TDataType>({
       ...this._config,
-      deriveCallback: callback,
-      deriveOptions: options
+      required: true
+    });
+  }
+
+  schema<TSchema extends Schema>(schema: TSchema): BaseTag<Infer<TSchema>> {
+    return new BaseTag<Infer<TSchema>>({
+      ...this._config,
     });
   }
 }
