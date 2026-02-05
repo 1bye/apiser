@@ -8,6 +8,18 @@ export namespace Tag {
     schema: Schema;
     required?: boolean;
   }
+
+  /**
+   * StringTag namespace
+   */
+  export namespace String {
+    export interface Config<
+      TDataType extends string = string,
+    > extends Tag.Config<TDataType> {
+      maxLength?: number;
+      minLength?: number;
+    }
+  }
 }
 
 export class BaseTag<
@@ -25,8 +37,8 @@ export class BaseTag<
     this._dataType = undefined as TDataType;
   }
 
-  string(): BaseTag<string> {
-    return new BaseTag<string>({
+  string(): StringTag<string> {
+    return new StringTag<string>({
       schema: z.string()
     });
   }
@@ -47,6 +59,26 @@ export class BaseTag<
   schema<TSchema extends Schema>(schema: TSchema): BaseTag<Infer<TSchema>> {
     return new BaseTag<Infer<TSchema>>({
       ...this._config,
+    });
+  }
+}
+
+export class StringTag<TDataType extends string = string> extends BaseTag<TDataType> {
+  constructor(config: Tag.String.Config<TDataType>) {
+    super(config);
+  }
+
+  max(length: number): StringTag<TDataType> {
+    return new StringTag({
+      ...this._config,
+      maxLength: length
+    });
+  }
+
+  min(length: number): StringTag<TDataType> {
+    return new StringTag({
+      ...this._config,
+      minLength: length
     });
   }
 }
