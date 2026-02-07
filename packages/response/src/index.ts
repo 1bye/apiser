@@ -17,6 +17,13 @@ export type {
   Options
 }
 
+export {
+  JsonResponse,
+  TextResponse,
+  ErrorResponse,
+  BinaryResponse
+}
+
 export function createResponseHandler<
   TMeta extends MetaOptions.Base,
   TError extends ErrorOptions.Base,
@@ -144,8 +151,8 @@ export class ResponseHandler<
     //   : _input;
 
     // Get raw output from input
-    const _output = this.options?.json?.mapData
-      ? this.options.json.mapData(_input)
+    const _output = jsonOptions?.mapData
+      ? jsonOptions.mapData(_input)
       : JsonResponse.defaultOnDataOutput(_input);
 
     // Check output by schema
@@ -160,7 +167,7 @@ export class ResponseHandler<
       "Content-Type": "application/json",
       ...options?.headers ?? {},
       ...resolveHeaders(
-        this.options.json?.headers,
+        jsonOptions?.headers,
         {
           output: _output
         }

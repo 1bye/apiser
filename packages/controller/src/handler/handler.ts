@@ -3,8 +3,8 @@ import type * as ApiserResponse from "@apiser/response";
 import type { HandlerOptions } from "./options";
 import { bindingInstanceSymbol, bindingsHelpers, type BindingDefinition, type BindingFactory, type BindingInstance, type HandlerBindings } from "./bindings";
 import type { UnionToIntersection } from "../types";
-import type { IsAny, Simplify } from "type-fest";
-import { createResponseHandler } from "@apiser/response";
+import type { IsAny, MergeExclusive, Simplify } from "type-fest";
+import { createResponseHandler, ErrorResponse } from "@apiser/response";
 import omit from "es-toolkit/compat/omit";
 import type { HandlerRequest } from "./request";
 
@@ -92,7 +92,10 @@ export namespace HandlerFn {
   /**
    * Result of executing a handler component.
    */
-  export interface Result<TData, TError> { data: TData; error: TError; };
+  export interface Result<TData, TError> {
+    data: TData;
+    error: TError;
+  };
 
   /**
    * The data input shape of a handler component.
@@ -223,6 +226,13 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
           error: null
         }
       } catch (e) {
+        if (e instanceof ErrorResponse.Base) {
+          return {
+            data: null,
+            error: e.output
+          }
+        }
+
         return {
           data: null,
           error: e
