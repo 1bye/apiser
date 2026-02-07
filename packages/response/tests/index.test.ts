@@ -11,15 +11,14 @@ describe("@apiser/response ResponseHandler", () => {
   test("json() validates output schema, sets content-type and merges headers", () => {
     const handler = createResponseHandler((options) => ({
       json: options.json({
-        outputSchema: z.object({
+        schema: z.object({
           msg: z.string(),
         }),
-        onData: (input) => ({
+        mapData: (input) => ({
           msg: input?.msg,
         }),
-        headers: ({ input, output }) => ({
-          "x-in": input?.msg,
-          "x-out": output.msg,
+        headers: (data) => ({
+          "x-data": data?.msg,
         }),
       })
     }));
@@ -30,8 +29,7 @@ describe("@apiser/response ResponseHandler", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toBe("application/json");
     expect(res.headers.get("x-opt")).toBe("1");
-    expect(res.headers.get("x-in")).toBe("hello");
-    expect(res.headers.get("x-out")).toBe("hello");
+    expect(res.headers.get("x-data")).toBe("hello");
   });
 
   test("text() returns Response with provided body and init options", async () => {
@@ -47,7 +45,7 @@ describe("@apiser/response ResponseHandler", () => {
   test("binary() applies onData, merges headers and returns Response", async () => {
     const handler = createResponseHandler({
       binary: {
-        onData: (data) => data,
+        mapData: (data) => data,
         headers: () => ({
           "content-type": "application/octet-stream",
           "x-bin": "1",

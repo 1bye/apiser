@@ -12,11 +12,17 @@ export namespace ErrorOptions {
     schema?: TSchema;
     validationType?: ValidationType;
 
-    onError?: (ctx: {
+    mapError?: (ctx: {
       error: Error;
       meta: unknown;
       parsedError?: TSchema extends undefined ? DefaultError : Infer<TSchema>;
     }) => PromiseOr<TSchema extends undefined ? DefaultError : Infer<TSchema>>;
+
+    mapDefaultError?: (error: DefaultError) => TSchema extends undefined ? DefaultError : Infer<TSchema>;
+
+    onFailedSchemaValidation?: (ctx: {
+      data: unknown;
+    }) => PromiseOr<TSchema extends undefined ? DefaultError : Infer<TSchema>>
   }
 
   export type InferedSchema<TOptions extends Options> = (TOptions["error"] extends undefined

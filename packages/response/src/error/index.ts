@@ -24,6 +24,9 @@ export type ErrorHandler<TOptions extends Options, THandlerOptions extends Error
 export interface ErrorHandlerOptions<TSchema extends Schema = Schema> {
   input?: TSchema;
   validationType?: ValidationType;
+
+  status?: number;
+  statusText?: string;
 }
 
 export type ErrorDefinition<TOptions extends Options, THandlerOptions extends ErrorHandlerOptions | undefined> = {

@@ -1,36 +1,30 @@
-import type { ExtractSchemaFromKey, Infer, InferOr, Schema, ValidationType } from "@apiser/schema";
+import type { ExtractSchema, Infer, InferOr, Schema, ValidationType } from "@apiser/schema";
 import type { Headers } from "@/headers";
 import type { PromiseOr } from "@/types";
 import type { Options } from "./base";
 import type { JsonResponse } from "@/response/json";
 
 export namespace JsonOptions {
-  export interface Base<TInputSchema extends Schema = Schema, TOutputSchema extends Schema = Schema> {
-    headers?: Headers<{
-      input: Infer<TInputSchema>,
-      output: Infer<TOutputSchema>
-    }>;
+  export interface Base<TSchema extends Schema = Schema> {
+    headers?: Headers<Infer<TSchema>>;
 
-    inputSchema?: TInputSchema;
-    outputSchema?: TOutputSchema;
-
+    schema?: TSchema;
     validationType?: ValidationType;
 
-    onData?: (data: Infer<TInputSchema>) => PromiseOr<Infer<TOutputSchema>>;
+    mapData?: (data: Infer<TSchema>) => PromiseOr<Infer<TSchema>>;
   }
 
-  export type InferedInputSchema<TOptions extends Options> = (TOptions["json"] extends undefined
-    ? JsonResponse.DefaultInputSchema
-    : InferOr<Exclude<ExtractSchemaFromKey<TOptions["json"], "inputSchema">, undefined>, JsonResponse.DefaultInputSchema>);
+  // export type InferedInputSchema<TOptions extends Options> = (TOptions["json"] extends undefined
+  //   ? JsonResponse.DefaultInputSchema
+  //   : InferOr<Exclude<ExtractSchemaFromKey<TOptions["json"], "inputSchema">, undefined>, JsonResponse.DefaultInputSchema>);
 
-  export type InferedOutputSchema<TOptions extends Options> = (TOptions["json"] extends undefined
-    ? JsonResponse.DefaultOutputSchema
-    : InferOr<Exclude<ExtractSchemaFromKey<TOptions["json"], "outputSchema">, undefined>, JsonResponse.DefaultOutputSchema>);
+  export type InferedSchema<TOptions extends Options> = (TOptions["json"] extends undefined
+    ? JsonResponse.DefaultSchema
+    : InferOr<Exclude<ExtractSchema<TOptions["json"]>, undefined>, JsonResponse.DefaultSchema>);
 }
 
 export function json<
-  TIn extends Schema,
-  TOut extends Schema
->(opts: JsonOptions.Base<TIn, TOut>): JsonOptions.Base<TIn, TOut> {
+  TSchema extends Schema,
+>(opts: JsonOptions.Base<TSchema>): JsonOptions.Base<TSchema> {
   return opts;
 }

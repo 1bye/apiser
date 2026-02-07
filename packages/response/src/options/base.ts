@@ -2,8 +2,9 @@ import type { MetaOptions } from "@/options/meta";
 import type { ErrorOptions } from "@/options/error";
 import type { JsonOptions } from "@/options/json";
 import type { BinaryOptions } from "@/options/binary";
-import type { Headers } from "@/headers";
+import type { Headers, RawHeaders } from "@/headers";
 import type { ResponseTypes } from "@/response/base";
+import type { Binary } from "@/response/binary";
 
 export interface Options<
   TMeta extends MetaOptions.Base = MetaOptions.Base,
@@ -21,4 +22,13 @@ export interface Options<
   json?: TJson;
 
   binary?: TBinary;
+
+  mapResponse?(data: {
+    data: JsonOptions.InferedSchema<TJson> | Binary | string;
+    error: ErrorOptions.InferedSchema<TError>;
+    headers: RawHeaders;
+    status: number | undefined;
+    statusText: string | undefined;
+    response: Response;
+  }): Response;
 }

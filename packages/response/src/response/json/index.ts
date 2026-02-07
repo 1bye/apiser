@@ -1,24 +1,17 @@
 import type { BaseResponse } from "../base";
 
 export namespace JsonResponse {
-  export class Base<TInput, TOutput> extends Response {
-    private _input: TInput | undefined;
+  export class Base<TOutput> extends Response {
     private _output: TOutput | undefined;
 
     constructor(body: ConstructorParameters<typeof Response>[0], _init?: ConstructorParameters<typeof Response>[1] & {
-      input: TInput;
       output: TOutput;
     }) {
-      const { input, output, ...init } = _init ?? {};
+      const { output, ...init } = _init ?? {};
 
       super(body, init);
 
-      this._input = input;
       this._output = output;
-    }
-
-    get input(): TInput | undefined {
-      return this._input;
     }
 
     get output(): TOutput | undefined {
@@ -37,12 +30,12 @@ export namespace JsonResponse {
   }
 
   export type DefaultInputSchema = Record<string, any>;
-  export type DefaultOutputSchema = {
+  export type DefaultSchema = {
     data: Record<string, any>;
     success: boolean;
   };
 
-  export function defaultOnDataOutput(input: DefaultInputSchema): DefaultOutputSchema {
+  export function defaultOnDataOutput(input: DefaultInputSchema): DefaultSchema {
     return {
       data: input,
       success: true

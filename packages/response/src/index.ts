@@ -8,6 +8,7 @@ import { ErrorResponse } from "./response/error";
 import { BinaryResponse, type Binary } from "./response/binary";
 import type { BinaryOptions } from "./options";
 import { options as optionMethods } from "./options";
+import { generateDefaultErrors } from "./error/default";
 
 export type { DefaultError } from "./error";
 export { options, type ErrorOptions } from "./options";
@@ -65,7 +66,7 @@ export class ResponseHandler<
     preasignedMeta?: Partial<MetaOptions.InferedSchema<TOptions>>;
   }) {
     this.options = options;
-    this.errors = errors ?? ({} as TErrors);
+    this.errors = errors ?? generateDefaultErrors<TOptions>(options?.error?.mapDefaultError) as TErrors ?? ({} as TErrors);
     this.preasignedMeta = preasignedMeta ?? {};
   }
 
@@ -129,41 +130,39 @@ export class ResponseHandler<
    * @returns JSON response instance.
    */
   json<
-    IInput extends JsonOptions.InferedInputSchema<TOptions>
+    IInput extends JsonOptions.InferedSchema<TOptions>
   >(_input: IInput, options?: JsonResponse.Options): JsonResponse.Base<
-    IInput,
-    JsonOptions.InferedOutputSchema<TOptions>
+    IInput
   > {
     const jsonOptions = this.options?.json;
 
     // Check input by schema
-    const input = jsonOptions?.inputSchema
-      ? checkSchema(jsonOptions.inputSchema, _input, {
-        validationType: jsonOptions.validationType ?? "parse"
-      })
-      : _input;
+    // const input = jsonOptions?.inputSchema
+    //   ? checkSchema(jsonOptions.inputSchema, _input, {
+    //     validationType: jsonOptions.validationType ?? "parse"
+    //   })
+    //   : _input;
 
     // Get raw output from input
-    const _output = this.options?.json?.onData
-      ? this.options.json.onData(input)
-      : JsonResponse.defaultOnDataOutput(input);
+    const _output = this.options?.json?.mapData
+      ? this.options.json.mapData(_input)
+      : JsonResponse.defaultOnDataOutput(_input);
 
     // Check output by schema
-    const output = jsonOptions?.outputSchema
-      ? checkSchema(jsonOptions.outputSchema, _output, {
-        validationType: jsonOptions.validationType ?? "parse"
-      })
-      : _output;
+    // const output = jsonOptions?.outputSchema
+    //   ? checkSchema(jsonOptions.outputSchema, _output, {
+    //     validationType: jsonOptions.validationType ?? "parse"
+    //   })
+    //   : _output;
 
-    const str = JSON.stringify(output, null, 2);
+    const str = JSON.stringify(_output, null, 2);
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       ...options?.headers ?? {},
       ...resolveHeaders(
         this.options.json?.headers,
         {
-          input,
-          output
+          output: _output
         }
       ) ?? {}
     }
@@ -172,8 +171,7 @@ export class ResponseHandler<
       headers,
       status: options?.status ?? 200,
       statusText: options?.statusText,
-      input,
-      output
+      output: _output
     })
   }
 
@@ -202,8 +200,8 @@ export class ResponseHandler<
   binary(binary: Binary, options?: BinaryResponse.Options) {
     const binaryOptions = this.options?.binary;
 
-    const data = binaryOptions?.onData
-      ? binaryOptions.onData(binary)
+    const data = binaryOptions?.mapData
+      ? binaryOptions.mapData(binary)
       : binary;
 
     const headers: Record<string, string> = {

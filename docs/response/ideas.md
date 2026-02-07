@@ -31,13 +31,18 @@ const response = createResponseHandler({
       message: z.string(),
       details: z.string(),
     }),
+    
+    onFailedSchemaValidation?: ({ data }) => {
+      
+    }
   },
   
   // maps data and error into response
-  mapResponse({ data, error }) {
-    return {
-      
-    }
+  mapResponse({ data, error, headers, status, statusText, response }) {
+    // response <- already mapped response
+    // data <- is Json nor binary nor text
+    
+    return response;
   }
 }).defineError("custom", {
   message: "custom",
