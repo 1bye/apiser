@@ -18,51 +18,33 @@ const response = createResponseHandler({
   },
   
   json: {
-    headers: {},
-    
+    headers?: {},
     validate?: "parse" | "safeParse",
-      
-    outputSchema: z.object({
-      data: z.any(),
-      success: z.boolean()
-    }),
     
-    inputSchema: z.any(),
-    
-    onInput: (input) => ({
-      data: input,
-      success: true
-    }),
-  },
-  
-  errors: {
-    unauthorized: {
-      handler: ({ meta, input }) => ({
-        success: false,
-        error: input?.localize ? t[meta.locale]("unauthorized") : "Unauthorized",
-      }),
-      input: z.object({
-        localize: z.boolean().default(true)
-      }).optional()
-    }
+    schema: z.any(),
   },
   
   error: {
-    headers: {},
-    
-    // error: "json" | "problem+json",
+    headers?: {},
     
     schema: z.object({
-      error: z.string(),
-      success: z.boolean()
+      message: z.string(),
+      details: z.string(),
     }),
-    
-    onError: ({ error }) => ({
-      error: error.message,
-      success: false
-    })
+  },
+  
+  // maps data and error into response
+  mapResponse({ data, error }) {
+    return {
+      
+    }
   }
-}); // ResponseHandler<Options>
+}).defineError("custom", {
+  message: "custom",
+  details: "custom details"
+}, {
+  status: 400
+})
 
 response.withMeta({
   locale: "pt"

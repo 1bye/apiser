@@ -148,9 +148,10 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
   // Excluded keys, used by library -> so any "interrupt" from bindings, will be excluded.
   const excludedKeys = ["payload", "fail"]
 
-  const fail = handlerOptions.responseHandler
-    ? handlerOptions.responseHandler.fail
-    : anyResponseHandler.fail;
+  const responseHandler = handlerOptions.responseHandler ? handlerOptions.responseHandler : anyResponseHandler;
+  const fail: typeof responseHandler.fail = (name: any, input: any) => {
+    return responseHandler.fail(name, input);
+  };
 
   const bindings = handlerOptions?.bindings?.(bindingsHelpers) ?? {};
 
@@ -161,9 +162,9 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
 
     // handler() -> returns function(...payload) -> Result
     return async function (rawPayload) {
-      const self = this as unknown as HandlerFn.ComponentSelf;
+      // const self = this as unknown as HandlerFn.ComponentSelf;
 
-      const request = self.request;
+      // const request = self.request;
 
       // Payload mapping
       const payloadSchema = baseOptions?.payload ?? null;

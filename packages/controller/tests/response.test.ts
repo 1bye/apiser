@@ -23,7 +23,7 @@ const responseHandler = createResponseHandler((options) => ({
 const options = createOptions({
   name: "user-controller",
   responseHandler,
-  bindings: {}
+  bindings: () => ({})
 });
 
 type Bindings = HandlerBindings<typeof options>;
