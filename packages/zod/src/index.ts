@@ -2,7 +2,7 @@ import z from "zod";
 
 export type FromKey = "query" | "params" | "body" | "headers";
 export interface FromOptions {
-  key: string;
+  key: string | string[];
 }
 export type FromResult = ReturnType<(typeof z)["meta"]>;
 

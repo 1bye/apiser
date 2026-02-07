@@ -28,6 +28,7 @@
     "@apiser/schema": "workspace:",
     "@apiser/zod": "workspace:",
     "@typeschema/main": "^0.14.1",
+    "es-toolkit": "^1.44.0",
     "type-fest": "^5.4.1"
   }
 }

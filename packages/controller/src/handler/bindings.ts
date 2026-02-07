@@ -41,7 +41,7 @@ export type BindingDefinition<
   TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined
 > = {
   payload?: TPayloadSchema;
-  resolve: (ctx: BindingResolveContext<TPayloadSchema, THandler, TResponseHandler>) => TResult;
+  resolve: (ctx: BindingResolveContext<TPayloadSchema, THandler, TResponseHandler>) => Promise<TResult>;
 };
 
 /**
@@ -57,7 +57,7 @@ export type BindingFactory<
   ...args: TArgs
 ) => BindingDefinition<TPayloadSchema, TResult, THandler, TResponseHandler>;
 
-export declare const bindingInstanceSymbol: unique symbol;
+export const bindingInstanceSymbol = Symbol("handler_binding_instance");
 /**
  * Unique type, to not destructorize object in handler function
  */
@@ -140,7 +140,7 @@ export type BindingsFactory<TBindings> = (bindings: BindingsHelpers) => TBinding
  */
 export type BindingsInput<TBindings> =
   | BindingsWithNames<TBindings>
-  | BindingsFactory<BindingsWithNames<TBindings>>;
+// | BindingsFactory<BindingsWithNames<TBindings>>;
 
 /**
  * Resolve bindings from a factory or object.
@@ -162,7 +162,7 @@ export type HandlerBindings<TOptions extends HandlerOptions<any, any>> = TOption
 export const bindings: BindingsHelpers = {
   model: (model) => {
     return () => ({
-      resolve: () => model as BindingInstance<typeof model>
+      resolve: async () => model as BindingInstance<typeof model>
     })
   },
   bind: (bindingOrFactory: any, maybeFactory?: any) => {
@@ -174,7 +174,9 @@ export const bindings: BindingsHelpers = {
   },
   value: (value) => {
     return () => ({
-      resolve: () => value as BindingInstance<typeof value>
+      resolve: async () => value as BindingInstance<typeof value>
     })
   }
 };
+
+export const bindingsHelpers = bindings;

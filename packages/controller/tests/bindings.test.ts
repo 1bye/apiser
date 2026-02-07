@@ -58,9 +58,9 @@ const options = createOptions({
 
     userModel2: bindings.bind((o: boolean) => ({
       payload: z.object({
-        name: z.string()
+        name: z.string().from("handler.payload").optional()
       }),
-      resolve: ({ fail }) => {
+      resolve: async ({ fail }) => {
         return {
           userModel2: "ddqwd",
           test: "123"
@@ -68,21 +68,30 @@ const options = createOptions({
       }
     })),
 
-    version: bindings.value(123)
+    version: bindings.value(123),
+
+    openapi: bindings.bind((options: {
+      summary: string;
+      path: string;
+    }) => ({
+      resolve: async ({ }) => {
+        return {};
+      }
+    }))
   })
 });
 
 const handler = createHandler(options);
 
-const main = handler(({ fail, payload, userModel, userModel2 }) => {
+const main = handler(({ fail, payload, userModel, userModel2, test, }) => {
 
   return 123;
 }, {
   payload: z.object({
-    name: z.string()
+    name: z.string().from("body")
   }),
   userModel: true,
   userModel2: true
 });
 
-const { data, error } = main()
+const { data, error } = await main()

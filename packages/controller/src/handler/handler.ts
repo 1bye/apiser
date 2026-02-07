@@ -1,8 +1,12 @@
-import type { Infer, InferUndefined, Schema } from "@apiser/schema";
+import { type InferUndefined, type Schema, checkSchema } from "@apiser/schema";
 import type * as ApiserResponse from "@apiser/response";
 import type { HandlerOptions } from "./options";
-import type { BindingDefinition, HandlerBindings, bindingInstanceSymbol } from "./bindings";
+import { bindingInstanceSymbol, bindingsHelpers, type BindingDefinition, type BindingFactory, type BindingInstance, type HandlerBindings } from "./bindings";
 import type { UnionToIntersection } from "../types";
+import type { IsAny, Simplify } from "type-fest";
+import { createResponseHandler } from "@apiser/response";
+import omit from "es-toolkit/compat/omit";
+import type { HandlerRequest } from "./request";
 
 export namespace HandlerFn {
   /**
@@ -13,15 +17,17 @@ export namespace HandlerFn {
     ? Record<TKey, TResult>
     : (TResult extends object ? TResult : Record<TKey, TResult>)
 
+  export type UnwrapBindingValueResult<T, A extends Awaited<T> = Awaited<T>> = A;
+
   /**
    * Infer the resolved result type for a binding key from handler options.
    */
   export type InferedBindingValue<TKey extends string, THandlerOptions extends HandlerOptions>
     = (TKey extends keyof HandlerBindings<THandlerOptions>
       ? (HandlerBindings<THandlerOptions>[TKey] extends { resolve: (...args: any[]) => infer TResult }
-        ? TResult
+        ? UnwrapBindingValueResult<TResult>
         : (HandlerBindings<THandlerOptions>[TKey] extends (...args: any[]) => { resolve: (...args: any[]) => infer TResult }
-          ? TResult
+          ? UnwrapBindingValueResult<TResult>
           : never))
       : never);
 
@@ -99,15 +105,21 @@ export namespace HandlerFn {
    * Compiled handler component.
    */
   export interface Component<THandlerOptions extends HandlerOptions, TOptions extends Options<any, any>, TResult> {
-    (data: ComponentValue<TOptions>): Result<
-      TResult,
-      Exclude<THandlerOptions["responseHandler"], undefined> extends ApiserResponse.AnyResponseHandler ? true : false
-    // ResolveResponseHandlerOptions<THandlerOptions> extends ApiserResponse.Options
-    // ? ApiserResponse.ErrorOptions.InferedSchema<
-    //   ResolveResponseHandlerOptions<THandlerOptions>
-    // >
-    // : ApiserResponse.DefaultError
+    (data: ComponentValue<TOptions>): Promise<
+      Result<
+        TResult,
+        // IsAny<Exclude<THandlerOptions["responseHandler"], undefined>["options"]> extends true
+        IsAny<ResolveResponseHandlerOptions<THandlerOptions>> extends false
+        ? ApiserResponse.ErrorOptions.InferedSchema<
+          ResolveResponseHandlerOptions<THandlerOptions>
+        >
+        : Simplify<ApiserResponse.DefaultError>
+      >
     >;
+  }
+
+  export interface ComponentSelf {
+    request: HandlerRequest | null;
   }
 
   /**
@@ -130,8 +142,91 @@ export namespace HandlerFn {
   }
 }
 
-export function createHandler<THandlerOptions extends HandlerOptions>(options: THandlerOptions): HandlerFn.Base<THandlerOptions> {
-  return () => {
+export function createHandler<THandlerOptions extends HandlerOptions>(handlerOptions: THandlerOptions): HandlerFn.Base<THandlerOptions> {
+  const anyResponseHandler = createResponseHandler({});
 
+  // Excluded keys, used by library -> so any "interrupt" from bindings, will be excluded.
+  const excludedKeys = ["payload", "fail"]
+
+  const fail = handlerOptions.responseHandler
+    ? handlerOptions.responseHandler.fail
+    : anyResponseHandler.fail;
+
+  const bindings = handlerOptions?.bindings?.(bindingsHelpers) ?? {};
+
+  // @ts-ignore
+  // createHandler() -> handler(() => {...}, { ...options })
+  return (cb, baseOptions) => {
+    const optionsBindings = omit(baseOptions, excludedKeys) as Record<string, unknown | null | undefined>;
+
+    // handler() -> returns function(...payload) -> Result
+    return async function (rawPayload) {
+      const self = this as unknown as HandlerFn.ComponentSelf;
+
+      const request = self.request;
+
+      // Payload mapping
+      const payloadSchema = baseOptions?.payload ?? null;
+      let payload = rawPayload;
+
+      if (payloadSchema) {
+        payload = checkSchema(payloadSchema, rawPayload);
+      }
+
+      // Bindings mapping
+      const bindingsToInclude = Object.entries(optionsBindings)
+        .filter(([, value]) => value !== undefined && value !== null)
+        .map(async ([bindingName, bindingPayload]) => {
+          const binding = bindings[bindingName] as BindingFactory | undefined;
+
+          if (!binding) return undefined;
+
+          const definition = binding(bindingPayload);
+
+          // TODO: take values from req/handler
+          const definitionPayload = {};
+          const definitionPayloadSchema = definition.payload;
+
+          const definitionResolveResult = await definition.resolve({
+            bindingName,
+            payload: definitionPayload,
+            fail,
+            handler: {
+              payload
+            }
+          });
+
+          // If it's instance, then we just avoid destructorization
+          if (definitionResolveResult && typeof definitionResolveResult === "object" && bindingInstanceSymbol in definitionResolveResult) {
+            return {
+              [bindingName]: definitionResolveResult
+            };
+          }
+
+          // Otherwise we destructorize...
+          return definitionResolveResult;
+        })
+        .filter(binding => binding !== undefined && binding !== null);
+
+      try {
+        // @ts-ignore
+        const data = await cb({
+          ...await Promise.all(bindingsToInclude),
+
+          payload,
+          fail,
+        });
+
+        return {
+          data,
+          error: null
+        }
+      } catch (e) {
+        return {
+          data: null,
+          error: e
+        }
+      }
+    }
   };
 }
