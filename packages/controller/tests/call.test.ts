@@ -10,19 +10,19 @@ const responseHandler = createResponseHandler((options) => ({
       type: z.string()
     })
   }),
-  error: options.error({
-    schema: z.object({
-      name: z.string(),
-      details: z.string(),
-    }),
+  // error: options.error({
+  //   schema: z.object({
+  //     name: z.string(),
+  //     details: z.string(),
+  //   }),
 
-    mapDefaultError(error) {
-      return {
-        name: error.name,
-        details: error.message
-      }
-    },
-  })
+  //   mapDefaultError(error) {
+  //     return {
+  //       name: error.name,
+  //       details: error.message
+  //     }
+  //   },
+  // })
 }))
   .defineError("custom", {
     details: "Custom error occured",
@@ -40,8 +40,8 @@ const handler = createHandler(options);
 
 describe("@apiser/controller call check", () => {
   test("handler return data", async () => {
-    const main = handler(() => {
-      return 123;
+    const main = handler(({ payload }) => {
+      return payload.name;
     }, {
       payload: z.object({
         name: z.string()
@@ -57,7 +57,7 @@ describe("@apiser/controller call check", () => {
       error
     });
 
-    expect(data).toBe(123);
+    expect(data).toBe("Hello World");
     expect(error).toBeNull();
   });
 
@@ -125,7 +125,7 @@ describe("@apiser/controller call check", () => {
       error
     });
 
-    expect(error).toBeNull();
-    expect(data).toBeDefined();
+    expect(error).toBeDefined();
+    expect(data).toBeNull();
   });
 })

@@ -4,7 +4,7 @@ import { z } from "@apiser/zod";
 
 const responseHandler = createResponseHandler((options) => ({
   json: options.json({
-    outputSchema: z.object({
+    schema: z.object({
       data: z.any(),
       type: z.string()
     })
@@ -41,4 +41,4 @@ const main = handler(({ fail, payload, userModel }) => {
   userModel: true
 });
 
-const { data, error } = main()
+const { data, error } = await main({ name: "" })

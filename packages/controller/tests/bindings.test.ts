@@ -2,9 +2,9 @@ import { createOptions, createHandler } from "@/index";
 import { createResponseHandler } from "@apiser/response";
 import { modelBuilder } from "@apiser/drizzle-model";
 import { z } from "@apiser/zod";
-import { db } from "./db";
-import { relations } from "./relations";
-import * as schema from "./schema";
+import { db } from "./__internal/db";
+import { relations } from "./__internal/relations";
+import * as schema from "./__internal/schema";
 
 const model = modelBuilder({
   db,
@@ -94,4 +94,4 @@ const main = handler(({ fail, payload, userModel, userModel2, test, }) => {
   userModel2: true
 });
 
-const { data, error } = await main()
+const { data, error } = await main();

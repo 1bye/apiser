@@ -7,6 +7,7 @@ import type { IsAny, MergeExclusive, Simplify } from "type-fest";
 import { createResponseHandler, ErrorResponse } from "@apiser/response";
 import omit from "es-toolkit/compat/omit";
 import type { HandlerRequest } from "./request";
+import { transformBodyIntoObject } from "./body";
 
 export namespace HandlerFn {
   /**
@@ -164,55 +165,69 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
     const optionsBindings = omit(baseOptions, excludedKeys) as Record<string, unknown | null | undefined>;
 
     // handler() -> returns function(...payload) -> Result
-    return async function (rawPayload) {
-      const self = this as unknown as HandlerFn.ComponentSelf;
-
-      const request = self.request;
-
-      // Payload mapping
-      const payloadSchema = baseOptions?.payload ?? null;
-      let payload = rawPayload;
-
-      if (payloadSchema) {
-        payload = checkSchema(payloadSchema, rawPayload);
-      }
-
-      // Bindings mapping
-      const bindingsToInclude = Object.entries(optionsBindings)
-        .filter(([, value]) => value !== undefined && value !== null)
-        .map(async ([bindingName, bindingPayload]) => {
-          const binding = bindings[bindingName] as BindingFactory | undefined;
-
-          if (!binding) return undefined;
-
-          const definition = binding(bindingPayload);
-
-          // TODO: take values from req/handler
-          const definitionPayload = {};
-          const definitionPayloadSchema = definition.payload;
-
-          const definitionResolveResult = await definition.resolve({
-            bindingName,
-            payload: definitionPayload,
-            fail,
-            handler: {
-              payload
-            }
-          });
-
-          // If it's instance, then we just avoid destructorization
-          if (definitionResolveResult && typeof definitionResolveResult === "object" && bindingInstanceSymbol in definitionResolveResult) {
-            return {
-              [bindingName]: definitionResolveResult
-            };
-          }
-
-          // Otherwise we destructorize...
-          return definitionResolveResult;
-        })
-        .filter(binding => binding !== undefined && binding !== null);
+    return async function (this: HandlerFn.ComponentSelf, rawPayload) {
+      let self: HandlerFn.ComponentSelf | undefined = undefined;
 
       try {
+        self = this as unknown as HandlerFn.ComponentSelf;
+      } catch (e) {
+        // pass
+      }
+
+      const request = self?.request;
+
+      try {
+        // Payload mapping
+        const payloadSchema = baseOptions?.payload ?? null;
+        let payload = rawPayload;
+
+        if (payloadSchema) {
+          payload = checkSchema(payloadSchema, rawPayload, {
+            sources: {
+              params: request?.params ?? {},
+              body: transformBodyIntoObject(request?.body ?? {}),
+              headers: request?.headers ?? {},
+              query: request?.query ?? {},
+              "handler.payload": {},
+            }
+          }) as typeof rawPayload;
+        }
+
+        // Bindings mapping
+        const bindingsToInclude = Object.entries(optionsBindings)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(async ([bindingName, bindingPayload]) => {
+            const binding = bindings[bindingName] as BindingFactory | undefined;
+
+            if (!binding) return undefined;
+
+            const definition = binding(bindingPayload);
+
+            // TODO: take values from req/handler
+            const definitionPayload = {};
+            const definitionPayloadSchema = definition.payload;
+
+            const definitionResolveResult = await definition.resolve({
+              bindingName,
+              payload: definitionPayload,
+              fail,
+              handler: {
+                payload
+              }
+            });
+
+            // If it's instance, then we just avoid destructorization
+            if (definitionResolveResult && typeof definitionResolveResult === "object" && bindingInstanceSymbol in definitionResolveResult) {
+              return {
+                [bindingName]: definitionResolveResult
+              };
+            }
+
+            // Otherwise we destructorize...
+            return definitionResolveResult;
+          })
+          .filter(binding => binding !== undefined && binding !== null);
+
         // @ts-ignore
         const data = await cb({
           ...await Promise.all(bindingsToInclude),
