@@ -1,4 +1,4 @@
-import { type DefaultErrorTypes, type ErrorDefinition, type ErrorHandler, type ErrorHandlerOptions, type ErrorRegistry } from "./error";
+import { type DefaultError, type DefaultErrorTypes, type ErrorDefinition, type ErrorHandler, type ErrorHandlerOptions, type ErrorRegistry } from "./error";
 import type { Options, MetaOptions, ErrorOptions, JsonOptions } from "./options";
 import { type Infer, checkSchema } from "@apiser/schema";
 import { resolveHeaders } from "./headers";
@@ -108,7 +108,7 @@ export class ResponseHandler<
           validationType: error?.options?.validationType ?? "parse"
         }
       )
-      : null;
+      : _input;
 
     const meta = this.prepareMeta();
 

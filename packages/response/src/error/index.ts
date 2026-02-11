@@ -11,6 +11,7 @@ export type DefaultError = {
   code: string;
   name: string;
 
+  cause?: unknown;
   stack?: string[];
 };
 

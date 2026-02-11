@@ -233,9 +233,16 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
           }
         }
 
-        return {
-          data: null,
-          error: e
+        // weird, but...
+        try {
+          throw responseHandler.fail("internal", {
+            cause: e
+          });
+        } catch (e) {
+          return {
+            data: null,
+            error: (e as ErrorResponse.Base<any, any, any>).output
+          }
         }
       }
     }
