@@ -1,6 +1,6 @@
 declare module "zod" {
   interface GlobalMeta {
-    from?: "query" | "params" | "body" | "headers";
+    from?: "query" | "params" | "body" | "headers" | "handler.payload";
     fromKey?: string | string[];
   }
 

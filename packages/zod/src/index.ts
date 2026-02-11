@@ -1,5 +1,8 @@
 import z from "zod";
 
+export { resolveZodSchemaMeta, resolveZodSchemaFromSources } from "./resolve-meta";
+export type { FieldMeta, SchemaFieldsMeta } from "./resolve-meta";
+
 export type FromKey = "query" | "params" | "body" | "headers";
 export interface FromOptions {
   key: string | string[];
