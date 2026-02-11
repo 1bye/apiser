@@ -66,7 +66,12 @@ const zod = extendZod(z);
 
 export {
   zod,
-  zod as z
+  zod as z,
+
+  /**
+   * Original zod
+   */
+  z as _z
 };
 
 export default zod;

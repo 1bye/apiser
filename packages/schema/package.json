@@ -26,6 +26,6 @@
   "module": "src/index.ts",
   "type": "module",
   "dependencies": {
-    "zod": "catalog:"
+    "@apiser/zod": "workspace:"
   }
 }

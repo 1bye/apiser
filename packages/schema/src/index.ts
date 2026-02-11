@@ -1,9 +1,10 @@
-import type z from "zod";
+import type { _z } from "@apiser/zod";
+import { checkSchema as _checkSchema } from "@apiser/zod";
 
 export type ValidationType = "parse" | "safeParse";
 
 export type Schema = any;
-export type Infer<TSchema extends Schema> = z.infer<TSchema>;
+export type Infer<TSchema extends Schema> = _z.infer<TSchema>;
 export type InferOr<TSchema extends Schema, TOr> = Infer<TSchema> extends Record<string, any>
   ? Infer<TSchema>
   : TOr;
@@ -14,16 +15,18 @@ export type ExtractSchemaFromKey<From extends Record<string, any> | undefined, K
 
 export interface CheckSchemaOptions {
   validationType?: ValidationType;
+  sources?: Record<string, Record<string, unknown>>;
 }
 
 export function checkSchema(schema: Schema, input: unknown, options?: CheckSchemaOptions) {
-  const validationType = options?.validationType ?? "parse";
+  return _checkSchema(schema, input, options);
+  // const validationType = options?.validationType ?? "parse";
 
-  if (validationType === "parse") {
-    return schema.parse(input);
-  } else if (validationType === "safeParse") {
-    const { data } = schema.safeParse(input);
+  // if (validationType === "parse") {
+  //   return schema.parse(input);
+  // } else if (validationType === "safeParse") {
+  //   const { data } = schema.safeParse(input);
 
-    return data;
-  }
+  //   return data;
+  // }
 }

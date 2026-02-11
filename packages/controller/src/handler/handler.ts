@@ -165,9 +165,9 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
 
     // handler() -> returns function(...payload) -> Result
     return async function (rawPayload) {
-      // const self = this as unknown as HandlerFn.ComponentSelf;
+      const self = this as unknown as HandlerFn.ComponentSelf;
 
-      // const request = self.request;
+      const request = self.request;
 
       // Payload mapping
       const payloadSchema = baseOptions?.payload ?? null;
