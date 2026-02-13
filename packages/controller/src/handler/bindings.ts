@@ -3,6 +3,26 @@ import type { HandlerOptions } from "./options";
 import type { BindingModelOptions, ModelIdentifier } from "./bindings/model";
 import type { AnyResponseHandler } from "@apiser/response";
 import type { HandlerRequest } from "./request";
+import { transformBodyIntoObject } from "./body";
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> => {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+};
+
+const getNestedValue = (source: Record<string, unknown>, key: string): unknown => {
+  if (!key) return undefined;
+  if (!key.includes(".")) return source[key];
+
+  const parts = key.split(".");
+  let current: unknown = source;
+
+  for (const part of parts) {
+    if (!current || typeof current !== "object") return undefined;
+    current = (current as Record<string, unknown>)[part];
+  }
+
+  return current;
+};
 
 /**
  * Schema type for a binding payload.
@@ -163,11 +183,92 @@ export type HandlerBindings<TOptions extends HandlerOptions<any, any>> = TOption
  */
 export const bindings: BindingsHelpers = {
   model: (model, options) => {
+    const normalizedOptions = Array.isArray(options) ? options : (options ? [options] : [{}]);
     return () => ({
-      resolve: async ({ request }) => {
-        const url = request?.url;
+      resolve: async ({ request, fail }) => {
+        const sources = {
+          params: request?.params ?? {},
+          query: request?.query ?? {},
+          headers: request?.headers ?? {},
+          body: request?.body ? transformBodyIntoObject(request.body) : {},
+        };
 
-        return ({ ...model, [bindingInstanceSymbol]: "" }) as BindingInstance<typeof model>
+        const keyValues: Record<string, unknown> = {};
+        let combinedWhere: Record<string, unknown> | undefined;
+        let hasWhere = false;
+        let loadHandler: BindingModelOptions<ModelIdentifier, AnyResponseHandler>["load"] | undefined;
+        let notFoundHandler: BindingModelOptions<ModelIdentifier, AnyResponseHandler>["notFound"] | undefined;
+
+        for (const option of normalizedOptions) {
+          const primaryKey = option?.primaryKey ?? "id";
+          const from = option?.from ?? "params";
+          const defaultFromKey = (model as ModelIdentifier).$modelName;
+          const fromKey = option?.fromKey ?? (typeof defaultFromKey === "string" ? defaultFromKey : primaryKey);
+          const source = sources[from] ?? {};
+          const rawValue = typeof fromKey === "string" ? getNestedValue(source, fromKey) : undefined;
+          const transformedValue = option?.transform ? option.transform() : rawValue;
+
+          if (option?.load) loadHandler = option.load;
+          if (option?.notFound) notFoundHandler = option.notFound;
+
+          keyValues[primaryKey as string] = transformedValue;
+
+          if (isPlainObject(option?.where)) {
+            combinedWhere = {
+              ...(combinedWhere ?? {}),
+              ...option.where,
+            };
+            hasWhere = true;
+          }
+
+          if (typeof primaryKey === "string") {
+            combinedWhere = {
+              ...(combinedWhere ?? {}),
+              [primaryKey]: transformedValue,
+            };
+            hasWhere = true;
+          }
+        }
+
+        let resolvedModel: unknown = model;
+        if (hasWhere && combinedWhere && typeof (resolvedModel as { where?: (value: unknown) => unknown }).where === "function") {
+          resolvedModel = (resolvedModel as { where: (value: unknown) => unknown }).where(combinedWhere);
+        }
+
+        let result = resolvedModel;
+
+        if (loadHandler) {
+          result = await loadHandler({
+            ...(keyValues as Record<string, any>),
+            fail,
+          } as any);
+
+          if (result === undefined || result === null) {
+            if (notFoundHandler) {
+              const fallback = await notFoundHandler({
+                ...(keyValues as Record<string, any>),
+                fail,
+              } as any);
+
+              if (fallback !== undefined) {
+                result = fallback;
+              } else {
+                throw fail("notFound" as any, keyValues as any);
+              }
+            } else {
+              throw fail("notFound" as any, keyValues as any);
+            }
+          }
+        }
+
+        if (result && typeof result === "object") {
+          return ({
+            ...(result as Record<string, unknown>),
+            [bindingInstanceSymbol]: "",
+          }) as BindingInstance<typeof model>;
+        }
+
+        return result as BindingInstance<typeof model>;
       }
     })
   },
@@ -180,7 +281,16 @@ export const bindings: BindingsHelpers = {
   },
   value: (value) => {
     return () => ({
-      resolve: async () => value as BindingInstance<typeof value>
+      resolve: async () => {
+        if (typeof value === "object") {
+          return {
+            ...value,
+            [bindingInstanceSymbol]: "",
+          } as BindingInstance<typeof value>
+        }
+
+        return value as BindingInstance<typeof value>;
+      }
     })
   }
 };

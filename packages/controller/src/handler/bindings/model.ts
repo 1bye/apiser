@@ -1,3 +1,4 @@
+import type { PromiseOr } from "@/types";
 import type { AnyResponseHandler } from "@apiser/response";
 import type { FromKey } from "@apiser/zod";
 
@@ -60,11 +61,11 @@ export interface BindingModelOptions<
     TModel,
     TResponseHandler,
     TPrimaryKey
-  >) => TLoadModel;
+  >) => PromiseOr<TLoadModel>;
 
   notFound?: (ctx: BindingModelContext<
     TModel,
     TResponseHandler,
     TPrimaryKey
-  >) => void;
+  >) => PromiseOr<void>;
 }

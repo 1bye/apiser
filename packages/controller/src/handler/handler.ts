@@ -6,6 +6,7 @@ import type { UnionToIntersection } from "../types";
 import type { IsAny, MergeExclusive, Simplify } from "type-fest";
 import { createResponseHandler, ErrorResponse } from "@apiser/response";
 import omit from "es-toolkit/compat/omit";
+import merge from "es-toolkit/compat/merge";
 import type { HandlerRequest } from "./request";
 import { transformBodyIntoObject } from "./body";
 
@@ -217,8 +218,25 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
               request: request ?? null
             });
 
+            if (!definitionResolveResult || typeof definitionResolveResult === "undefined") {
+              console.warn(`While executing handler, binding ${bindingName}.resolve() result is undefined or null. Defaulting to {}`);
+
+              return {}
+            }
+
             // If it's instance, then we just avoid destructorization
             if (definitionResolveResult && typeof definitionResolveResult === "object" && bindingInstanceSymbol in definitionResolveResult) {
+              return {
+                [bindingName]: definitionResolveResult
+              };
+            } else if (
+              typeof definitionResolveResult === "bigint" ||
+              typeof definitionResolveResult === "boolean" ||
+              typeof definitionResolveResult === "function" ||
+              typeof definitionResolveResult === "number" ||
+              typeof definitionResolveResult === "string" ||
+              typeof definitionResolveResult === "symbol"
+            ) {
               return {
                 [bindingName]: definitionResolveResult
               };
@@ -229,9 +247,12 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
           })
           .filter(binding => binding !== undefined && binding !== null);
 
+        const resolvedPromise = await Promise.all(bindingsToInclude);
+        const resolved = resolvedPromise.reduce((acc, obj) => merge(acc, obj), {});
+
         // @ts-ignore
         const data = await cb({
-          ...await Promise.all(bindingsToInclude),
+          ...resolved,
 
           payload,
           fail,
