@@ -5,33 +5,6 @@ import { resolveZodSchemaFromSources, resolveZodSchemaMeta } from "./resolve-met
 export { resolveZodSchemaMeta, resolveZodSchemaFromSources };
 export type { FieldMeta, SchemaFieldsMeta } from "./resolve-meta";
 
-export type ValidationType = "parse" | "safeParse";
-
-export interface CheckSchemaOptions {
-  validationType?: ValidationType;
-  sources?: Record<string, Record<string, unknown>>;
-}
-
-export function checkSchema(schema: z.ZodType, input: unknown, options?: CheckSchemaOptions) {
-  const validationType = options?.validationType ?? "parse";
-
-  let resolved = input;
-
-  if (options?.sources && schema instanceof z.ZodObject) {
-    resolved = {
-      ...(typeof input === "object" && input !== null ? input : {}),
-      ...resolveZodSchemaFromSources(schema, options.sources),
-    };
-  }
-
-  if (validationType === "parse") {
-    return schema.parse(resolved);
-  } else if (validationType === "safeParse") {
-    const { data } = schema.safeParse(resolved);
-    return data;
-  }
-}
-
 export type FromKey = "query" | "params" | "body" | "headers";
 export interface FromOptions {
   key: string | string[];
