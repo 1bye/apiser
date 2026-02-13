@@ -25,6 +25,8 @@ export namespace ErrorOptions {
     }) => PromiseOr<TSchema extends undefined ? DefaultError : Infer<TSchema>>
   }
 
+  export type InferedSchemaFromBase<TError extends Base> = InferOr<ExtractSchema<TError>, DefaultError>;
+
   export type InferedSchema<TOptions extends Options> = (TOptions["error"] extends undefined
     ? DefaultError
     : InferOr<ExtractSchema<TOptions["error"]>, DefaultError>);

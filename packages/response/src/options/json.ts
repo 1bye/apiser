@@ -14,6 +14,8 @@ export namespace JsonOptions {
     mapData?: (data: Infer<TSchema>) => PromiseOr<Infer<TSchema>>;
   }
 
+  export type InferedSchemaFromBase<TJson extends Base> = InferOr<ExtractSchema<TJson>, JsonResponse.DefaultSchema>;
+
   // export type InferedInputSchema<TOptions extends Options> = (TOptions["json"] extends undefined
   //   ? JsonResponse.DefaultInputSchema
   //   : InferOr<Exclude<ExtractSchemaFromKey<TOptions["json"], "inputSchema">, undefined>, JsonResponse.DefaultInputSchema>);

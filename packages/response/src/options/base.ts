@@ -24,8 +24,8 @@ export interface Options<
   binary?: TBinary;
 
   mapResponse?(data: {
-    data: JsonOptions.InferedSchema<TJson> | Binary | string;
-    error: ErrorOptions.InferedSchema<TError>;
+    data: JsonOptions.InferedSchemaFromBase<TJson> | Binary | string;
+    error: ErrorOptions.InferedSchemaFromBase<TError>;
     headers: RawHeaders;
     status: number | undefined;
     statusText: string | undefined;

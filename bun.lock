@@ -172,10 +172,7 @@
       "name": "@apiser/schema",
       "version": "0.0.0",
       "dependencies": {
-        "@apiser/typebox": "workspace:",
         "@apiser/zod": "workspace:",
-        "@sinclair/typemap": "github:theshadow27/typemap#zod/v4",
-        "@sinclair/typemap": "git+https://github.com/theshadow27/typemap.git#zod/v4",
       },
       "devDependencies": {
         "@repo/eslint-config": "*",
@@ -545,8 +542,6 @@
     "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.0-beta.60", "", {}, "sha512-Jz4aqXRPVtqkH1E3jRDzLO5cgN5JwW+WG0wXGE4NiJd25nougv/AHzxmKCzmVQUYnxLmTM0M4wrZp+LlC2FKLg=="],
 
     "@sinclair/typebox": ["@sinclair/typebox@0.34.48", "", {}, "sha512-kKJTNuK3AQOrgjjotVxMrCn1sUJwM76wMszfq1kdU4uYVJjvEWuFQ6HgvLt4Xz3fSmZlTOxJ/Ie13KnIcWQXFA=="],
-
-    "@sinclair/typemap": ["@sinclair/typemap@github:theshadow27/typemap#7534273", { "peerDependencies": { "@sinclair/typebox": "^0.34.30", "valibot": "^1.0.0", "zod": "^3.25.0" } }, "theshadow27-typemap-7534273"],
 
     "@swc/helpers": ["@swc/helpers@0.5.15", "", { "dependencies": { "tslib": "^2.8.0" } }, "sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g=="],
 

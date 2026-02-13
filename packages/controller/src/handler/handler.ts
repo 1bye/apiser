@@ -213,7 +213,8 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
               fail,
               handler: {
                 payload
-              }
+              },
+              request: request ?? null
             });
 
             // If it's instance, then we just avoid destructorization

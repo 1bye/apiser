@@ -2,6 +2,7 @@ import type { Infer, Schema } from "@apiser/schema";
 import type { HandlerOptions } from "./options";
 import type { BindingModelOptions, ModelIdentifier } from "./bindings/model";
 import type { AnyResponseHandler } from "@apiser/response";
+import type { HandlerRequest } from "./request";
 
 /**
  * Schema type for a binding payload.
@@ -26,6 +27,7 @@ export type BindingResolveContext<
   payload: InferBindingPayload<TPayloadSchema>;
   handler: THandler;
   bindingName: string;
+  request: HandlerRequest | null;
 } & Pick<
   Exclude<TResponseHandler, undefined>,
   "fail"
@@ -160,9 +162,13 @@ export type HandlerBindings<TOptions extends HandlerOptions<any, any>> = TOption
  * Runtime bindings helpers for use alongside createOptions.
  */
 export const bindings: BindingsHelpers = {
-  model: (model) => {
+  model: (model, options) => {
     return () => ({
-      resolve: async () => model as BindingInstance<typeof model>
+      resolve: async ({ request }) => {
+        const url = request?.url;
+
+        return ({ ...model, [bindingInstanceSymbol]: "" }) as BindingInstance<typeof model>
+      }
     })
   },
   bind: (bindingOrFactory: any, maybeFactory?: any) => {
