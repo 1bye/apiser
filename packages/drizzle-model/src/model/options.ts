@@ -2,6 +2,7 @@ import type { TableRelationalConfig, TablesRelationalConfig } from "drizzle-orm/
 import type { ModelDialect } from "./dialect.ts";
 import type { TableOutput } from "./table.ts";
 import type { Fallback } from "../types.ts";
+import type { MethodWhereValue } from "./methods/query/where.ts";
 
 /**
  * Options to define a model
@@ -13,6 +14,7 @@ export interface ModelOptions<
   TSelf extends ModelOptions<any, any, any, TSelf> = ModelOptions<TSchema, TTable, TDialect, any>
 > {
   format?: ModelOptionFormat<TTable>;
+  where?: MethodWhereValue<TSchema, TTable>;
 
   // TODO: Make zod schemas
   // insertSchema?: any;

@@ -4,6 +4,7 @@ import type { MethodUpsertValue } from "../methods/upsert.ts";
 import type { MethodWhereValue } from "../methods/query/where.ts";
 import type { MethodWithValue } from "../methods/with.ts";
 
+import { and } from "drizzle-orm";
 import { MutateResult, QueryResult } from "./thenable.ts";
 import type { MutateState, QueryState } from "./thenable.ts";
 import { applyExclude, applyFormat, applySelect } from "./transform.ts";
@@ -20,6 +21,14 @@ type BaseState = {
   db: any;
   where: unknown;
 };
+
+// TODO: can be broken...
+function compileEffectiveWhere(table: AnyObj, optionsWhere: unknown, stateWhere: unknown) {
+  const base = compileWhere(table, optionsWhere);
+  const extra = compileWhere(table, stateWhere);
+  if (base && extra) return and(base as any, extra as any);
+  return (base ?? extra) as any;
+}
 
 function isReturningIdDialect(dialect: string): dialect is ReturningIdDialects {
   return dialect === "MySQL" || dialect === "SingleStore" || dialect === "CockroachDB";
@@ -102,7 +111,7 @@ export function makeModelRuntime(config: {
     modelObj.findMany = () => {
       const runner = async (qState: QueryState) => {
         const table = (config.schema as any)[config.tableName];
-        const whereSql = compileWhere(table as AnyObj, state.where);
+        const whereSql = compileEffectiveWhere(table as AnyObj, config.options.where, state.where);
 
         let result: any;
         if (qState.with) {
@@ -137,7 +146,7 @@ export function makeModelRuntime(config: {
     modelObj.findFirst = () => {
       const runner = async (qState: QueryState) => {
         const table = (config.schema as any)[config.tableName];
-        const whereSql = compileWhere(table as AnyObj, state.where);
+        const whereSql = compileEffectiveWhere(table as AnyObj, config.options.where, state.where);
 
         let result: any;
         if (qState.with) {
@@ -184,7 +193,7 @@ export function makeModelRuntime(config: {
     modelObj.update = (value: any) => {
       const runner = async (mState: MutateState) => {
         const table = (config.schema as any)[config.tableName];
-        const whereSql = compileWhere(table as AnyObj, state.where);
+        const whereSql = compileEffectiveWhere(table as AnyObj, config.options.where, state.where);
         let q = (config.db as any).update(table).set(mState.value);
         if (whereSql) q = q.where(whereSql);
         return await execReturn(q, mState, config.dialect);
@@ -196,7 +205,7 @@ export function makeModelRuntime(config: {
     modelObj.delete = () => {
       const runner = async (mState: MutateState) => {
         const table = (config.schema as any)[config.tableName];
-        const whereSql = compileWhere(table as AnyObj, state.where);
+        const whereSql = compileEffectiveWhere(table as AnyObj, config.options.where, state.where);
         let q = (config.db as any).delete(table);
         if (whereSql) q = q.where(whereSql);
         return await execReturn(q, mState, config.dialect);
