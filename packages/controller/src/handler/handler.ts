@@ -22,17 +22,52 @@ export namespace HandlerFn {
 
   export type UnwrapBindingValueResult<T, A extends Awaited<T> = Awaited<T>> = A;
 
+  export type InferedBindingDefinition<TKey extends string, THandlerOptions extends HandlerOptions>
+    = (TKey extends keyof HandlerBindings<THandlerOptions>
+      ? (HandlerBindings<THandlerOptions>[TKey] extends BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler, infer TResponseHandler, infer TMode>
+        ? BindingDefinition<TPayloadSchema, TResult, THandler, TResponseHandler, TMode>
+        : (HandlerBindings<THandlerOptions>[TKey] extends (...args: any[]) => BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler, infer TResponseHandler, infer TMode>
+          ? BindingDefinition<TPayloadSchema, TResult, THandler, TResponseHandler, TMode>
+          : never))
+      : never);
+
   /**
    * Infer the resolved result type for a binding key from handler options.
    */
   export type InferedBindingValue<TKey extends string, THandlerOptions extends HandlerOptions>
-    = (TKey extends keyof HandlerBindings<THandlerOptions>
-      ? (HandlerBindings<THandlerOptions>[TKey] extends { resolve: (...args: any[]) => infer TResult }
-        ? UnwrapBindingValueResult<TResult>
-        : (HandlerBindings<THandlerOptions>[TKey] extends (...args: any[]) => { resolve: (...args: any[]) => infer TResult }
-          ? UnwrapBindingValueResult<TResult>
-          : never))
-      : never);
+    = InferedBindingDefinition<TKey, THandlerOptions> extends BindingDefinition<any, infer TResult, any, any, any>
+      ? UnwrapBindingValueResult<TResult>
+      : never;
+
+  export type InferedBindingMode<TKey extends string, THandlerOptions extends HandlerOptions>
+    = InferedBindingDefinition<TKey, THandlerOptions> extends BindingDefinition<any, any, any, any, infer TMode>
+      ? TMode
+      : never;
+
+  export type VariativeBindingResult<TExpandedResult extends Record<string, any>> = {
+    [TField in keyof TExpandedResult]: TExpandedResult[TField] | undefined;
+  };
+
+  export type InferedBindingContextValue<TKey extends string, THandlerOptions extends HandlerOptions>
+    = InferedBindingMode<TKey, THandlerOptions> extends "variativeInject"
+      ? VariativeBindingResult<ExpandBindingResult<TKey, InferedBindingValue<TKey, THandlerOptions>>>
+      : ExpandBindingResult<TKey, InferedBindingValue<TKey, THandlerOptions>>;
+
+  export type InferedCallOptionBindingKeys<TBindings extends Record<string, any>> = keyof {
+    [TKey in keyof TBindings as ([TBindings[TKey]] extends [undefined]
+      ? never
+      : ([TBindings[TKey]] extends [false]
+        ? never
+        : TKey & string))
+    ]: any;
+  };
+
+  export type InferedAlwaysBindingKeys<THandlerOptions extends HandlerOptions> = {
+    [TKey in keyof HandlerBindings<THandlerOptions> as (InferedBindingMode<TKey & string, THandlerOptions> extends "alwaysInjected" | "variativeInject"
+      ? TKey & string
+      : never)
+    ]: any;
+  };
 
   /**
    * Infer the full bindings context shape for a given handler call.
@@ -41,30 +76,11 @@ export namespace HandlerFn {
   export type InferedBindings<THandlerOptions extends HandlerOptions, TOptions extends Options<any, any>> =
     TOptions extends Options<any, any, infer TBindings>
     ? UnionToIntersection<{
-      // TKey => binding name | TBindings => bindings from handler options
-      [TKey in keyof TBindings as (TBindings[TKey] extends undefined
-        // -- If undefined or false, don't include binding into context
-        ? (TBindings[TKey] extends false
-          ? never
-          : TKey & string)
-        : TKey & string)
-      // --
-      // Returns binding value
-      ]: ExpandBindingResult<
+      [TKey in (InferedCallOptionBindingKeys<TBindings> | keyof InferedAlwaysBindingKeys<THandlerOptions>)]: InferedBindingContextValue<
         TKey & string,
-        InferedBindingValue<TKey & string, THandlerOptions>
+        THandlerOptions
       >;
-      // Destructorize binding value
-    }[keyof {
-      [TKey in keyof TBindings as (TBindings[TKey] extends undefined
-        // -- If undefined or false, don't include binding into context
-        ? (TBindings[TKey] extends false
-          ? never
-          : TKey & string)
-        : TKey & string)
-      // --
-      ]: any;
-    }]>
+    }[(InferedCallOptionBindingKeys<TBindings> | keyof InferedAlwaysBindingKeys<THandlerOptions>)]>
     : never;
 
   /**
@@ -75,7 +91,10 @@ export namespace HandlerFn {
     THandlerOptions extends HandlerOptions,
     TBindings extends HandlerBindings<THandlerOptions> = HandlerBindings<THandlerOptions>
   > = {
-      [TKey in keyof TBindings]?: (TBindings[TKey] extends (...args: any) => any
+      [TKey in keyof TBindings as (InferedBindingMode<TKey & string, THandlerOptions> extends "toInject"
+        ? TKey
+        : never)
+      ]?: (TBindings[TKey] extends (...args: any) => any
         ? Parameters<TBindings[TKey]>[0]
         : undefined);
     };

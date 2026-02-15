@@ -57,7 +57,7 @@ const options = createOptions({
     }),
 
     userModel2: bindings.bind((o: boolean) => ({
-      mode: "alwaysInjected",
+      mode: "toInject",
       payload: z.object({
         name: z.string().from("handler.payload").optional()
       }),

@@ -61,6 +61,8 @@ export type BindingInjectContext<TPayloadSchema extends Schema | undefined = Sch
   handler: THandler;
 }
 
+export type BindingMode = "alwaysInjected" | "toInject" | "variativeInject";
+
 /**
  * Definition of a binding.
  */
@@ -68,7 +70,8 @@ export type BindingDefinition<
   TPayloadSchema extends Schema | undefined = Schema | undefined,
   TResult = unknown,
   THandler = unknown,
-  TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined
+  TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined,
+  TMode extends BindingMode = "toInject"
 > = {
   /**
    * Mode how binding is used.
@@ -77,7 +80,7 @@ export type BindingDefinition<
    * - "variativeInject": decides if binding should be injected based on result from `inject` function.
    * @default toInject
    */
-  mode?: "alwaysInjected" | "toInject" | "variativeInject";
+  mode?: TMode;
   inject?: (ctx: BindingInjectContext<TPayloadSchema, THandler>) => PromiseOr<boolean>;
   payload?: TPayloadSchema;
   resolve: (ctx: BindingResolveContext<TPayloadSchema, THandler, TResponseHandler>) => Promise<TResult>;
@@ -91,10 +94,11 @@ export type BindingFactory<
   TPayloadSchema extends Schema | undefined = Schema | undefined,
   TResult = unknown,
   THandler = unknown,
-  TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined
+  TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined,
+  TMode extends BindingMode = "toInject"
 > = (
   ...args: TArgs
-) => BindingDefinition<TPayloadSchema, TResult, THandler, TResponseHandler>;
+) => BindingDefinition<TPayloadSchema, TResult, THandler, TResponseHandler, TMode>;
 
 export const bindingInstanceSymbol = Symbol("handler_binding_instance");
 /**
@@ -118,7 +122,8 @@ export interface BindingsHelpers<
     Schema,
     BindingInstance<TModel>,
     unknown,
-    TResponseHandler
+    TResponseHandler,
+    "toInject"
   >;
 
   /**
@@ -128,10 +133,11 @@ export interface BindingsHelpers<
     TArgs extends any[] = any[],
     TPayloadSchema extends Schema | undefined = Schema | undefined,
     TResult = unknown,
-    THandler = unknown
+    THandler = unknown,
+    TMode extends BindingMode = "toInject"
   >(
-    factory: BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TResponseHandler>
-  ): BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TResponseHandler>;
+    factory: BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TResponseHandler, TMode>
+  ): BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TResponseHandler, TMode>;
 
   /**
    * Provide a binding name explicitly to keep bindingName as a literal type.
@@ -141,18 +147,20 @@ export interface BindingsHelpers<
     TArgs extends any[] = any[],
     TPayloadSchema extends Schema | undefined = Schema | undefined,
     TResult = unknown,
-    THandler = unknown
+    THandler = unknown,
+    TMode extends BindingMode = "toInject"
   >(
     bindingName: TName,
-    factory: BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TResponseHandler>
-  ): BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TResponseHandler>;
+    factory: BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TResponseHandler, TMode>
+  ): BindingFactory<TArgs, TPayloadSchema, TResult, THandler, TResponseHandler, TMode>;
 
   value<TValue>(value: TValue): BindingFactory<
     [boolean],
     Schema,
     BindingInstance<TValue>,
     unknown,
-    TResponseHandler
+    TResponseHandler,
+    "toInject"
   >
 }
 
@@ -161,10 +169,10 @@ export interface BindingsHelpers<
  */
 export type BindingsWithNames<TBindings> = {
   [TKey in keyof TBindings]: (TKey extends string
-    ? (TBindings[TKey] extends BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler, infer TResponseHandler>
-      ? BindingDefinition<TPayloadSchema, TResult, THandler, TResponseHandler>
-      : (TBindings[TKey] extends (...args: infer TArgs) => BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler, infer TResponseHandler>
-        ? (...args: TArgs) => BindingDefinition<TPayloadSchema, TResult, THandler, TResponseHandler>
+    ? (TBindings[TKey] extends BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler, infer TResponseHandler, infer TMode>
+      ? BindingDefinition<TPayloadSchema, TResult, THandler, TResponseHandler, TMode>
+      : (TBindings[TKey] extends (...args: infer TArgs) => BindingDefinition<infer TPayloadSchema, infer TResult, infer THandler, infer TResponseHandler, infer TMode>
+        ? (...args: TArgs) => BindingDefinition<TPayloadSchema, TResult, THandler, TResponseHandler, TMode>
         : TBindings[TKey]))
     : TBindings[TKey]);
 };
