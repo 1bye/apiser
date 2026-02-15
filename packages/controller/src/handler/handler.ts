@@ -41,12 +41,29 @@ export namespace HandlerFn {
   export type InferedBindings<THandlerOptions extends HandlerOptions, TOptions extends Options<any, any>> =
     TOptions extends Options<any, any, infer TBindings>
     ? UnionToIntersection<{
-      [TKey in keyof TBindings as TBindings[TKey] extends undefined ? never : TKey & string]: ExpandBindingResult<
+      // TKey => binding name | TBindings => bindings from handler options
+      [TKey in keyof TBindings as (TBindings[TKey] extends undefined
+        // -- If undefined or false, don't include binding into context
+        ? (TBindings[TKey] extends false
+          ? never
+          : TKey & string)
+        : TKey & string)
+      // --
+      // Returns binding value
+      ]: ExpandBindingResult<
         TKey & string,
         InferedBindingValue<TKey & string, THandlerOptions>
       >;
+      // Destructorize binding value
     }[keyof {
-      [TKey in keyof TBindings as TBindings[TKey] extends undefined ? never : TKey & string]: any;
+      [TKey in keyof TBindings as (TBindings[TKey] extends undefined
+        // -- If undefined or false, don't include binding into context
+        ? (TBindings[TKey] extends false
+          ? never
+          : TKey & string)
+        : TKey & string)
+      // --
+      ]: any;
     }]>
     : never;
 
@@ -79,12 +96,12 @@ export namespace HandlerFn {
    */
   export type ResolveResponseHandler<THandlerOptions extends HandlerOptions> =
     THandlerOptions extends { responseHandler?: infer TResponseHandler }
-      ? ([NonNullable<TResponseHandler>] extends [never]
-        ? ApiserResponse.AnyResponseHandler
-        : NonNullable<TResponseHandler> extends ApiserResponse.AnyResponseHandler
-          ? NonNullable<TResponseHandler>
-          : ApiserResponse.AnyResponseHandler)
-      : ApiserResponse.AnyResponseHandler;
+    ? ([NonNullable<TResponseHandler>] extends [never]
+      ? ApiserResponse.AnyResponseHandler
+      : NonNullable<TResponseHandler> extends ApiserResponse.AnyResponseHandler
+      ? NonNullable<TResponseHandler>
+      : ApiserResponse.AnyResponseHandler)
+    : ApiserResponse.AnyResponseHandler;
 
   export type Context<THandlerOptions extends HandlerOptions, TOptions extends Options<any, any>> = {
     payload: InferUndefined<TOptions["payload"]>;

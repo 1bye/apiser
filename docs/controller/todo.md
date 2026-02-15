@@ -2,3 +2,5 @@
 
 - Think about checkpoints
 - Working with files, see 6.3 in ideas.md
+- Always ON bindings.
+- Add cache to bindings.

@@ -4,6 +4,7 @@ import type { BindingModelOptions, ModelIdentifier } from "./bindings/model";
 import type { AnyResponseHandler } from "@apiser/response";
 import type { HandlerRequest } from "./request";
 import { transformBodyIntoObject } from "./body";
+import type { PromiseOr } from "@/types";
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> => {
   return !!value && typeof value === "object" && !Array.isArray(value);
@@ -53,6 +54,13 @@ export type BindingResolveContext<
   "fail"
 >;
 
+export type BindingInjectContext<TPayloadSchema extends Schema | undefined = Schema | undefined, THandler = unknown> = {
+  payload: InferBindingPayload<TPayloadSchema>;
+  request: HandlerRequest | null;
+  bindingName: string;
+  handler: THandler;
+}
+
 /**
  * Definition of a binding.
  */
@@ -62,6 +70,15 @@ export type BindingDefinition<
   THandler = unknown,
   TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined
 > = {
+  /**
+   * Mode how binding is used.
+   * - "toInject": expects user to pass `object` or `boolean` into handler options
+   * - "alwaysInjected": binding is always injected into handler callback
+   * - "variativeInject": decides if binding should be injected based on result from `inject` function.
+   * @default toInject
+   */
+  mode?: "alwaysInjected" | "toInject" | "variativeInject";
+  inject?: (ctx: BindingInjectContext<TPayloadSchema, THandler>) => PromiseOr<boolean>;
   payload?: TPayloadSchema;
   resolve: (ctx: BindingResolveContext<TPayloadSchema, THandler, TResponseHandler>) => Promise<TResult>;
 };

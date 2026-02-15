@@ -57,6 +57,7 @@ const options = createOptions({
     }),
 
     userModel2: bindings.bind((o: boolean) => ({
+      mode: "alwaysInjected",
       payload: z.object({
         name: z.string().from("handler.payload").optional()
       }),
@@ -90,8 +91,7 @@ const main = handler(({ fail, payload, userModel, userModel2, test, }) => {
   payload: z.object({
     name: z.string().from("body")
   }),
-  userModel: true,
-  userModel2: true
+  userModel: true
 });
 
 const { data, error } = await main();
