@@ -31,9 +31,7 @@ const responseHandler = createResponseHandler((options) => ({
 
 const options = createOptions({
   name: "user-controller",
-  responseHandler,
-  bindings: (bindings) => ({
-  })
+  responseHandler
 });
 
 const handler = createHandler(options);

@@ -8,4 +8,16 @@ export namespace BaseResponse {
     statusText?: string;
     headers?: RawHeaders;
   }
+
+  export class Base<TPayload> extends Response {
+    public payload: TPayload | undefined;
+
+    constructor(body?: ConstructorParameters<typeof Response>[0], init?: (ResponseInit & { payload: TPayload }) | undefined) {
+      const { payload, ..._init } = init ?? {};
+
+      super(body, _init);
+
+      this.payload = payload;
+    }
+  }
 }

@@ -7,6 +7,7 @@ import type { IsAny, MergeExclusive, Simplify } from "type-fest";
 import { createResponseHandler, ErrorResponse } from "@apiser/response";
 import omit from "es-toolkit/compat/omit";
 import merge from "es-toolkit/compat/merge";
+import assign from "es-toolkit/compat/assign";
 import type { HandlerRequest } from "./request";
 import { transformBodyIntoObject } from "./body";
 
@@ -77,7 +78,8 @@ export namespace HandlerFn {
    * Context object received by the handler callback.
    */
   export type Context<THandlerOptions extends HandlerOptions, TOptions extends Options<any, any>> = {
-    payload: InferUndefined<TOptions["payload"]>
+    payload: InferUndefined<TOptions["payload"]>;
+    redirect: <TReturnType extends any | undefined>(to: string, returnType: TReturnType) => TReturnType extends undefined ? {} : Exclude<TReturnType, undefined>;
   } & Pick<
     Exclude<THandlerOptions["responseHandler"], undefined>,
     "fail"
@@ -110,7 +112,7 @@ export namespace HandlerFn {
    * Compiled handler component.
    */
   export interface Component<THandlerOptions extends HandlerOptions, TOptions extends Options<any, any>, TResult> {
-    (data: ComponentValue<TOptions>): Promise<
+    (data: ComponentValue<TOptions>, opts?: ComponentOptions): Promise<
       Result<
         TResult,
         // IsAny<Exclude<THandlerOptions["responseHandler"], undefined>["options"]> extends true
@@ -121,6 +123,17 @@ export namespace HandlerFn {
         : Simplify<ApiserResponse.DefaultError>
       >
     >;
+
+    raw(data: {
+      request: HandlerRequest;
+    }): Promise<Response>;
+  }
+
+  export interface ComponentOptions {
+    /**
+     * @default direct
+     */
+    mode?: "raw" | "direct";
   }
 
   export interface ComponentSelf {
@@ -166,7 +179,12 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
     const optionsBindings = omit(baseOptions, excludedKeys) as Record<string, unknown | null | undefined>;
 
     // handler() -> returns function(...payload) -> Result
-    return async function (this: HandlerFn.ComponentSelf, rawPayload) {
+    // @ts-ignore
+    const componentFn: HandlerFn.Component<
+      THandlerOptions,
+      Exclude<typeof baseOptions, undefined>,
+      ReturnType<typeof cb>
+    > = async function (this: HandlerFn.ComponentSelf, rawPayload, componentOptions) {
       let self: HandlerFn.ComponentSelf | undefined = undefined;
 
       try {
@@ -283,5 +301,22 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
         }
       }
     }
+
+    assign(componentFn, {
+      raw: async (payload: Parameters<HandlerFn.Component<any, any, any>["raw"]>[0]) => {
+        const { data, error } = await componentFn.call({
+          request: payload.request
+        }, {}, {
+          mode: "raw"
+        });
+
+        return await responseHandler.mapResponse({
+          data,
+          error
+        });
+      }
+    });
+
+    return componentFn;
   };
 }

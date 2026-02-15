@@ -37,24 +37,12 @@ export type ExtendedHandlerOptions<TOptions extends HandlerOptions<any, any>> = 
 };
 
 /**
- * Create handler options with type inference.
- */
-export function createOptions<
-  TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined,
-  TBindings extends Record<string, any> = Record<string, any>
->(options: HandlerOptions<TResponseHandler, TBindings> & {
-  bindings: BindingsWithNames<TBindings>;
-}): ExtendedHandlerOptions<HandlerOptions<TResponseHandler, TBindings>>;
-
-/**
  * Create handler options with type inference (bindings factory).
  */
 export function createOptions<
   TResponseHandler extends AnyResponseHandler | undefined = AnyResponseHandler | undefined,
   TBindings extends Record<string, any> = Record<string, any>
->(options: HandlerOptions<TResponseHandler, TBindings> & {
-  bindings: BindingsFactory<BindingsWithNames<TBindings>>;
-}): ExtendedHandlerOptions<HandlerOptions<TResponseHandler, TBindings>>;
+>(options: HandlerOptions<TResponseHandler, TBindings>): ExtendedHandlerOptions<HandlerOptions<TResponseHandler, TBindings>>;
 
 /**
  * Create handler options with type inference.

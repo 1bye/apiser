@@ -13,7 +13,7 @@ export namespace ErrorOptions {
     validationType?: ValidationType;
 
     mapError?: (ctx: {
-      error: Error;
+      error: Error | null;
       meta: unknown;
       parsedError?: TSchema extends undefined ? DefaultError : Infer<TSchema>;
     }) => PromiseOr<TSchema extends undefined ? DefaultError : Infer<TSchema>>;

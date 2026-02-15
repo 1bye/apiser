@@ -9,8 +9,10 @@ export namespace ErrorResponse {
     public override name: TName;
     public meta: TMeta;
     public output: TOutput;
+    public status: number;
+    public statusText: string;
 
-    constructor({ meta, name, output }: {
+    constructor({ meta, name, output, status, statusText }: {
       // Name of error in response handler
       name: TName;
 
@@ -19,8 +21,14 @@ export namespace ErrorResponse {
 
       // Output of handler
       output: TOutput;
+
+      status: number;
+      statusText: string;
     }) {
       super();
+
+      this.status = status;
+      this.statusText = statusText;
 
       this.name = name;
       this.meta = meta;

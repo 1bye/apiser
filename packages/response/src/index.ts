@@ -1,4 +1,4 @@
-import { type DefaultError, type DefaultErrorTypes, type ErrorDefinition, type ErrorHandler, type ErrorHandlerOptions, type ErrorRegistry } from "./error";
+import { type DefaultErrorTypes, type ErrorDefinition, type ErrorHandler, type ErrorHandlerOptions, type ErrorRegistry } from "./error";
 import type { Options, MetaOptions, ErrorOptions, JsonOptions } from "./options";
 import { type Infer, checkSchema } from "@apiser/schema";
 import { resolveHeaders } from "./headers";
@@ -9,6 +9,9 @@ import { BinaryResponse, type Binary } from "./response/binary";
 import type { BinaryOptions } from "./options";
 import { options as optionMethods } from "./options";
 import { generateDefaultErrors } from "./error/default";
+import type { PromiseOr } from "./types";
+import { BaseResponse } from "./response/base";
+import type { DefaultResponse } from "./response/default";
 
 export type { DefaultError } from "./error";
 export { options, type ErrorOptions } from "./options";
@@ -100,12 +103,14 @@ export class ResponseHandler<
   fail(name: string, _input?: unknown) {
     // TODO: validate zod schema (input)
     const error = this.errors[name];
-    const input = error?.options?.input
+    const errorOptions = error?.options as ErrorHandlerOptions | undefined;
+
+    const input = errorOptions?.input
       ? checkSchema(
-        error?.options?.input,
+        errorOptions?.input,
         _input,
         {
-          validationType: error?.options?.validationType ?? "parse"
+          validationType: errorOptions?.validationType ?? "parse"
         }
       )
       : _input;
@@ -118,10 +123,16 @@ export class ResponseHandler<
       ? handler({ meta, input })
       : handler;
 
+    const status = errorOptions?.status ?? 500;
+    const statusText = errorOptions?.statusText ?? "Unknown";
+
     return new ErrorResponse.Base({
       meta,
       name,
-      output
+      output,
+
+      status,
+      statusText
     });
   }
 
@@ -242,7 +253,7 @@ export class ResponseHandler<
     return new ResponseHandler<TMeta, TError, TJson, TBinary, TOptions, TErrors>({
       options: this.options,
       errors: this.errors,
-      preasignedMeta: meta
+      preasignedMeta: meta as Partial<MetaOptions.InferedSchema<TOptions>>
     });
   }
 
@@ -286,6 +297,123 @@ export class ResponseHandler<
     return instance;
   };
 
+  mapResponse(raw: {
+    data: JsonOptions.InferedSchemaFromBase<TJson> | Binary | string | undefined;
+    error: ErrorOptions.InferedSchemaFromBase<TError> | undefined;
+  }): PromiseOr<Response> {
+    const mapResponse = this.options.mapResponse;
+    if (this.isBinaryData(raw.data)) {
+      return this.defaultMapResponse(raw);
+    }
+
+    const response = this.defaultMapResponse(raw) as BaseResponse.Base<DefaultResponse>;
+
+    return mapResponse
+      ? mapResponse({
+        data: raw.data as JsonOptions.InferedSchemaFromBase<TJson> | Binary | string,
+        error: raw.error as ErrorOptions.InferedSchemaFromBase<TError>,
+        response
+      })
+      : response;
+  }
+
+  /**
+   * Returns response that mapped into `DefaultResponse`:
+   * ```
+   * export interface DefaultResponse<TData = unknown> {
+   *   success: boolean;
+   *   error: ErrorResponse.Base<any, any, any> | null;
+   *   data: TData | null;
+   *   metadata: Record<string, unknown>;
+   * }
+   * ```
+   * @param raw
+   * @returns Response
+   */
+  defaultMapResponse(raw: {
+    data: JsonOptions.InferedSchemaFromBase<TJson> | Binary | string | undefined;
+    error: ErrorOptions.InferedSchemaFromBase<TError> | undefined;
+  }): BaseResponse.Base<DefaultResponse> | BaseResponse.Base<Binary> {
+    const options = this.options;
+    const meta = this.prepareMeta();
+    // DefaultError or CustomError (ErrorResponse.Base) or undefined.
+    const error = options.error?.mapError
+      ? options.error?.mapError?.({
+        error: raw.error && raw.error instanceof Error ? raw.error : null,
+        meta,
+        parsedError: raw.error instanceof ErrorResponse.Base ? raw.error : null
+      })
+      : raw.error;
+
+    if (error) {
+      const status = (error as ErrorResponse.Base<any, any, any>)?.status ?? 500;
+      const statusText = (error as ErrorResponse.Base<any, any, any>)?.statusText ?? "Internal Server Error"
+
+      const payload = {
+        error,
+        data: null,
+        success: false,
+        metadata: meta
+      } as DefaultResponse;
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...resolveHeaders(options.headers, {
+          type: "error",
+          data: error
+        }) ?? {},
+        ...resolveHeaders(options.error?.headers, error) ?? {}
+      };
+
+      return new BaseResponse.Base<DefaultResponse>(JSON.stringify(payload), {
+        status,
+        statusText,
+        headers,
+        payload
+      });
+    }
+
+    if (this.isBinaryData(raw.data)) {
+      const headers: Record<string, string> = {
+        ...resolveHeaders(options.headers, {
+          type: "binary",
+          data: raw.data
+        }) ?? {},
+        ...resolveHeaders(options.binary?.headers, raw.data) ?? {}
+      };
+
+      return new BaseResponse.Base<Binary>(raw.data as Binary, {
+        status: 200,
+        headers,
+        payload: raw.data as Binary
+      });
+    }
+
+    const payload = {
+      error: null,
+      data: raw.data ?? null,
+      success: true,
+      metadata: meta
+    } as DefaultResponse;
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...resolveHeaders(options.headers, {
+        type: "json",
+        data: raw.data
+      }) ?? {},
+      ...resolveHeaders(options.json?.headers, {
+        output: raw.data
+      }) ?? {}
+    };
+
+    return new BaseResponse.Base<DefaultResponse>(JSON.stringify(payload), {
+      status: 200,
+      headers,
+      payload
+    });
+  }
+
   /**
    * Prepare `meta` by merging preassigned meta (from `withMeta`) with default meta (if any).
    *
@@ -298,5 +426,14 @@ export class ResponseHandler<
       ...typeof objOrFn === "function" ? objOrFn() : objOrFn,
       ...(this.preasignedMeta ?? {}),
     }
+  }
+
+  private isBinaryData(data: unknown): data is Binary {
+    return (
+      data instanceof Blob ||
+      data instanceof ArrayBuffer ||
+      data instanceof Uint8Array ||
+      (typeof ReadableStream !== "undefined" && data instanceof ReadableStream)
+    );
   }
 }
