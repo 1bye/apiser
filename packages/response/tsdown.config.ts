@@ -8,4 +8,5 @@ export default defineConfig({
   clean: true,
   unbundle: true,
   noExternal: [/@apiser\/.*/],
+  external: ["zod"]
 });

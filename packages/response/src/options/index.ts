@@ -1,5 +1,5 @@
 export * from "./base";
-export type { JsonOptions } from "./json"
+export * from "./json"
 export * from "./meta"
 export * from "./error"
 export * from "./binary"

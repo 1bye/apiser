@@ -23,6 +23,9 @@
     "check-types": "tsc --noEmit"
   },
   "type": "module",
+  "peerDependencies": {
+    "elysia": "^1.4.25"
+  },
   "dependencies": {
     "@apiser/response": "workspace:",
     "@apiser/schema": "workspace:",

@@ -2,6 +2,8 @@ import type { PromiseOr } from "@/types";
 import type { ErrorOptions, Options } from "@/options";
 import type { ExtractSchema, Infer, Schema, ValidationType } from "@apiser/schema";
 
+export * from "./default";
+
 // Start of types ------------------
 
 export type DefaultErrorTypes = "unauthorized" | "forbidden" | "notFound" | "badRequest" | "conflict" | "tooMany" | "internal";

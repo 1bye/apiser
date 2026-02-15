@@ -10,7 +10,7 @@ export interface HandlerRequest {
   /**
    * Headers from request.
    */
-  headers: Record<string, string>;
+  headers: Record<string, string | undefined>;
 
   /**
    * Body from request. Depends on framework used,

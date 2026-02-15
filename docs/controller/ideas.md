@@ -548,3 +548,29 @@ const response = await hello.raw({
   headers: {}
 });
 ```
+
+
+### 6.3
+Working with files, via @fastify/busboy and stream
+
+```ts
+export const hello = handle(async ({ payload, fail }) => {
+  // payload now is stream
+  
+  // we wait for value.
+  const name = await payload.name.get();
+  
+  payload.image.on("data", () => {
+    // ex: push to s3 
+  });
+  
+  payload.image.on("end", () => {
+    // ex: end push to s3 OR save in db
+  });
+}, {
+  payload: z.stream({
+    image: z.file(),
+    name: z.string()
+  })
+})
+```

@@ -2,7 +2,7 @@ import type { MetaOptions } from "@/options/meta";
 import type { ErrorOptions } from "@/options/error";
 import type { JsonOptions } from "@/options/json";
 import type { BinaryOptions } from "@/options/binary";
-import type { Headers, RawHeaders } from "@/headers";
+import type { Headers } from "@/headers";
 import type { BaseResponse, ResponseTypes } from "@/response/base";
 import type { Binary } from "@/response/binary";
 import type { PromiseOr } from "@/types";

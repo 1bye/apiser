@@ -77,11 +77,20 @@ export namespace HandlerFn {
   /**
    * Context object received by the handler callback.
    */
+  export type ResolveResponseHandler<THandlerOptions extends HandlerOptions> =
+    THandlerOptions extends { responseHandler?: infer TResponseHandler }
+      ? ([NonNullable<TResponseHandler>] extends [never]
+        ? ApiserResponse.AnyResponseHandler
+        : NonNullable<TResponseHandler> extends ApiserResponse.AnyResponseHandler
+          ? NonNullable<TResponseHandler>
+          : ApiserResponse.AnyResponseHandler)
+      : ApiserResponse.AnyResponseHandler;
+
   export type Context<THandlerOptions extends HandlerOptions, TOptions extends Options<any, any>> = {
     payload: InferUndefined<TOptions["payload"]>;
     redirect: <TReturnType extends any | undefined>(to: string, returnType: TReturnType) => TReturnType extends undefined ? {} : Exclude<TReturnType, undefined>;
   } & Pick<
-    Exclude<THandlerOptions["responseHandler"], undefined>,
+    ResolveResponseHandler<THandlerOptions>,
     "fail"
   > & InferedBindings<THandlerOptions, TOptions>;
 
@@ -106,7 +115,7 @@ export namespace HandlerFn {
    */
   export type ComponentValue<TOptions extends Options<any, any>> = InferUndefined<TOptions["payload"]>;
 
-  export type ResolveResponseHandlerOptions<THandlerOptions extends HandlerOptions> = Exclude<THandlerOptions["responseHandler"], undefined>["options"];
+  export type ResolveResponseHandlerOptions<THandlerOptions extends HandlerOptions> = ResolveResponseHandler<THandlerOptions>["options"];
 
   /**
    * Compiled handler component.
@@ -304,9 +313,10 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
 
     assign(componentFn, {
       raw: async (payload: Parameters<HandlerFn.Component<any, any, any>["raw"]>[0]) => {
+        const emptyPayload = {} as InferUndefined<Exclude<typeof baseOptions, undefined>["payload"]>;
         const { data, error } = await componentFn.call({
           request: payload.request
-        }, {}, {
+        }, emptyPayload, {
           mode: "raw"
         });
 
