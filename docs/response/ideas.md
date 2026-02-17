@@ -1,6 +1,6 @@
 # Responses
 ```ts
-import { createResponseHandler } from "@apiser/response"
+import { createResponseHandler } from "@apisr/response"
 
 const response = createResponseHandler({
   headers: {},

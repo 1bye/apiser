@@ -1,7 +1,7 @@
 {
-  "name": "@apiser/zod",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@apisr/zod",
+  "version": "0.0.1",
+  "private": false,
   "scripts": {
     "build": "tsdown",
     "postbuild": "node ./scripts/postbuild-zod-types.mjs",

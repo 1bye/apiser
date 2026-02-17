@@ -1,2 +1,2 @@
-<!--- Main validation package is `zod`, as a fallback I will support TypeBox, but main package still remain `zod`. In case of `@apiser/controller` with elysia I will either use nothing if TypeBox was passed directly or if zod was passed I will use `typemap` to map zod into TypeBox-->
+<!--- Main validation package is `zod`, as a fallback I will support TypeBox, but main package still remain `zod`. In case of `@apisr/controller` with elysia I will either use nothing if TypeBox was passed directly or if zod was passed I will use `typemap` to map zod into TypeBox-->
 - Instead of making "custom" types for each validation package, just use `https://github.com/standard-schema/standard-schema` as Elysia DOES.

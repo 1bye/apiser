@@ -1,6 +1,6 @@
 ```ts
-import { defineConfig } from "@apiser/api-aggregator";
-import { z } from "@apiser/zod";
+import { defineConfig } from "@apisr/api-aggregator";
+import { z } from "@apisr/zod";
 
 export default defineConfig({
   baseUrl: "https://freguesiadealcantarilha.pt",
@@ -52,10 +52,10 @@ export default defineConfig({
 
 ```bash
 # Run aggregator
-bunx @apiser/api-aggregator
+bunx @apisr/api-aggregator
 
 # Run aggregator without cache
-bunx @apiser/api-aggregator --clean-cache
+bunx @apisr/api-aggregator --clean-cache
 
 # Fetching 0/1 endpoints
 # Done, fetched 1 endpoint successfully.
@@ -64,7 +64,7 @@ bunx @apiser/api-aggregator --clean-cache
 
 or run directly without CLI via code:
 ```ts
-import { aggregate } from "@apiser/api-aggregator";
+import { aggregate } from "@apisr/api-aggregator";
 
 const result = await aggregate({
   // ...options

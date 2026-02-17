@@ -3,8 +3,8 @@
 
 Basic usage:
 ```ts
-import { kv } from "@apiser/kv";
-import { cloudflare } from "@apiser/cloudflare-kv"
+import { kv } from "@apisr/kv";
+import { cloudflare } from "@apisr/cloudflare-kv"
 
 export default kv(cloudflare, {
   // extra options
@@ -40,8 +40,8 @@ const value = extended.getObject("key")
 
 KV with different types per key:
 ```ts
-import { kv, type KeyValueTypes } from "@apiser/kv";
-import { cloudflare } from "@apiser/cloudflare-kv"
+import { kv, type KeyValueTypes } from "@apisr/kv";
+import { cloudflare } from "@apisr/cloudflare-kv"
 
 type KeyTypes = KeyValueTypes<{
   "api:": boolean;
@@ -62,8 +62,8 @@ k.get("api:time")
 
 
 ```ts
-import { kv } from "@apiser/kv";
-import { upstash } from "@apiser/upstash-kv"
+import { kv } from "@apisr/kv";
+import { upstash } from "@apisr/upstash-kv"
 
 // Redis
 const k = kv(upstash)

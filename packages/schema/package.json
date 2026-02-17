@@ -1,7 +1,7 @@
 {
-  "name": "@apiser/schema",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@apisr/schema",
+  "version": "0.0.1",
+  "private": false,
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "generate:component": "turbo gen react-component",
@@ -26,6 +26,6 @@
   "module": "src/index.ts",
   "type": "module",
   "dependencies": {
-    "@apiser/zod": "workspace:"
+    "@apisr/zod": "workspace:"
   }
 }

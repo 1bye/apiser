@@ -1,5 +1,5 @@
 {
-  "name": "@apiser/api-aggregator",
+  "name": "@apisr/api-aggregator",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -16,7 +16,7 @@
     "eslint": "^9.39.1",
     "tsdown": "^0.20.0-beta.4",
     "typescript": "5.9.2",
-    "@apiser/zod": "workspace:*"
+    "@apisr/zod": "workspace:*"
   },
   "exports": {
     ".": {
@@ -26,7 +26,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@apiser/schema": "workspace:",
+    "@apisr/schema": "workspace:",
     "ky": "^1.14.3"
   }
 }

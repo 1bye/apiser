@@ -1,7 +1,7 @@
 {
-  "name": "@apiser/logger",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@apisr/logger",
+  "version": "0.0.1",
+  "private": false,
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "generate:component": "turbo gen react-component",

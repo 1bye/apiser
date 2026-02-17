@@ -1,5 +1,5 @@
 {
-  "name": "@apiser/transform",
+  "name": "@apisr/transform",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -16,7 +16,7 @@
     "eslint": "^9.39.1",
     "tsdown": "^0.20.0-beta.4",
     "typescript": "5.9.2",
-    "@apiser/zod": "workspace:*"
+    "@apisr/zod": "workspace:*"
   },
   "exports": {
     ".": {
@@ -26,7 +26,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@apiser/schema": "workspace:",
-    "@apiser/zod": "workspace:"
+    "@apisr/schema": "workspace:",
+    "@apisr/zod": "workspace:"
   }
 }

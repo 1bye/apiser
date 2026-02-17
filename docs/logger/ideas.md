@@ -1,7 +1,7 @@
 ### 1:
 ```ts
-import { createLogger, type Logger, createTransport } from "@apiser/logger";
-import { createConsole } from "@apiser/logger/console";
+import { createLogger, type Logger, createTransport } from "@apisr/logger";
+import { createConsole } from "@apisr/logger/console";
 
 export const logger: Logger = createLogger({
   name: "base-logger",

@@ -410,7 +410,7 @@ const userController = controller(options, (handle) => ({
     
     return user?.email;
   }, {
-    // Or import `zod` from `@apiser/zod` for `from` syntax
+    // Or import `zod` from `@apisr/zod` for `from` syntax
     payload: z.object({ 
       name: z.string().from("body")
     })
@@ -439,7 +439,7 @@ Examples of core principles
 const options = controller.options({
   name: "user-controller",
   
-  // @apiser/logger
+  // @apisr/logger
   logger: CustomLogger
 });
 
@@ -489,13 +489,13 @@ await userController.index({
 Seperated handlers
 
 ```ts
-import { createHandler, createController } from "@apiser/controller"
+import { createHandler, createController } from "@apisr/controller"
 
 // Only `this` is not available.
 const handle = createHandler({
   // More options:
   // 
-  // @apiser/response
+  // @apisr/response
   // responseHandler?: ResponseHandler | ({ handler, payload, request: RawRequest }) => PromiseOr<ResponseHandler>;
   // 
   // I: Takes output from handle and maps into response format for server
@@ -587,7 +587,7 @@ export const main = handle(async ({ cache }) => {
     // Allowed stores
     // - MemoryCache
     // - FileCache
-    // - Kv (from @apiser/kv)
+    // - Kv (from @apisr/kv)
     // - maybe some lib specific (not sure yet), ex: keyv
     store: {},
     // Used as prefix for cache, or if wrapHandler is set to true will be used as main key for cached function

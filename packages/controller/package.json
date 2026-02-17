@@ -1,16 +1,25 @@
 {
-  "name": "@apiser/controller",
-  "version": "0.0.0",
+  "name": "@apisr/controller",
+  "version": "0.0.1",
   "module": "src/index.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./cache": "./src/cache.ts",
-    "./cache/keyv": "./src/cache/keyv.ts"
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./elysia": {
+      "types": "./dist/elysia/index.d.mts",
+      "default": "./dist/elysia/index.mjs"
+    },
+    "./cache/keyv": {
+      "types": "./dist/cache/keyv/index.d.mts",
+      "default": "./dist/cache/keyv/index.mjs"
+    }
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
-    "@apiser/drizzle-model": "workspace:",
+    "@apisr/drizzle-model": "workspace:",
     "@types/bun": "latest",
     "@types/node": "^22.15.3",
     "@types/pg": "^8.16.0",
@@ -22,7 +31,7 @@
     "pg": "^8.17.2",
     "typescript": "5.9.2"
   },
-  "private": true,
+  "private": false,
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "generate:component": "turbo gen react-component",
@@ -34,9 +43,9 @@
     "elysia": "^1.4.25"
   },
   "dependencies": {
-    "@apiser/response": "workspace:",
-    "@apiser/schema": "workspace:",
-    "@apiser/zod": "workspace:",
+    "@apisr/response": "workspace:",
+    "@apisr/schema": "workspace:",
+    "@apisr/zod": "workspace:",
     "@typeschema/main": "^0.14.1",
     "es-toolkit": "^1.44.0",
     "type-fest": "^5.4.1"

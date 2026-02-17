@@ -1,8 +1,8 @@
 # Workers
 
 ```ts
-import { worker, hub as workerHub, processor } from "@apiser/workers";
-import { redis } from "@apiser/redis-workers";
+import { worker, hub as workerHub, processor } from "@apisr/workers";
+import { redis } from "@apisr/redis-workers";
 
 const helloWorld = worker(({ payload }) => {
   

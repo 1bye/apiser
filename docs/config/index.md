@@ -4,7 +4,7 @@ It's base function which allows to effortlessly use config on different runtimes
 Basic usage:
 ```ts
 // server.config.ts
-import { config } from "@apiser/config";
+import { config } from "@apisr/config";
 
 export default config({
   // Reads from process.env or Bun.env or Deno and etc...
@@ -15,7 +15,7 @@ export default config({
 
 ```ts
 // server.config.ts
-import { config } from "@apiser/config";
+import { config } from "@apisr/config";
 
 export default config({
   baseUrl: {

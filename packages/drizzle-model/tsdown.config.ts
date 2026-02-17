@@ -1,10 +1,12 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
-  entry: "./src/index.ts",
-  dts: true,
-  format: "esm",
-  outDir: "./dist",
-  clean: true,
-  noExternal: [/@apiser\/.*/],
+	entry: "./src/index.ts",
+	dts: true,
+	format: "esm",
+	outDir: "./dist",
+	clean: true,
+	unbundle: true,
+	noExternal: [/@apisr\/.*/],
+	external: ["drizzle-kit", "drizzle-orm"],
 });

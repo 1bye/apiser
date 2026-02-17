@@ -1,6 +1,6 @@
 {
-  "name": "@apiser/response",
-  "version": "0.0.0",
+  "name": "@apisr/response",
+  "version": "0.0.1",
   "module": "src/index.ts",
   "devDependencies": {
     "@repo/eslint-config": "*",
@@ -12,10 +12,10 @@
     "typescript": "5.9.2"
   },
   "dependencies": {
-    "@apiser/schema": "workspace:",
-    "@apiser/zod": "workspace:"
+    "@apisr/schema": "workspace:",
+    "@apisr/zod": "workspace:"
   },
-  "private": true,
+  "private": false,
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
@@ -25,10 +25,6 @@
     ".": {
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
-    },
-    "./elysia": {
-      "types": "./dist/elysia/index.d.mts",
-      "default": "./dist/elysia/index.mjs"
     }
   },
   "type": "module"
