@@ -1,17 +1,17 @@
 export * from "./base";
-export * from "./json"
-export * from "./meta"
-export * from "./error"
-export * from "./binary"
+export * from "./binary";
+export * from "./error";
+export * from "./json";
+export * from "./meta";
 
-import { json } from "./json"
-import { meta } from "./meta"
-import { error } from "./error"
-import { binary } from "./binary"
+import { binary } from "./binary";
+import { error } from "./error";
+import { json } from "./json";
+import { meta } from "./meta";
 
 export const options = {
-  json,
-  meta,
-  error,
-  binary
+	json,
+	meta,
+	error,
+	binary,
 };

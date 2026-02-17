@@ -1,4 +1,4 @@
 export type DefaultMeta = {
-  requestId: string;
-  timestamp: number;
-}
+	requestId: string;
+	timestamp: number;
+};

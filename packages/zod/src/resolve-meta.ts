@@ -1,8 +1,8 @@
 import z from "zod";
 
 export interface FieldMeta {
-  from: string;
-  key?: string | string[];
+	from: string;
+	key?: string | string[];
 }
 
 export type SchemaFieldsMeta = Record<string, FieldMeta>;
@@ -26,41 +26,45 @@ export type SchemaFieldsMeta = Record<string, FieldMeta>;
  * // }
  * ```
  */
-export function resolveZodSchemaMeta(schema: z.ZodObject<any>): SchemaFieldsMeta {
-  const shape = schema._zod.def.shape;
-  const result: SchemaFieldsMeta = {};
+export function resolveZodSchemaMeta(
+	schema: z.ZodObject<any>
+): SchemaFieldsMeta {
+	const shape = schema._zod.def.shape;
+	const result: SchemaFieldsMeta = {};
 
-  for (const fieldName in shape) {
-    const fieldSchema = shape[fieldName];
-    const meta = resolveFieldMeta(fieldSchema);
+	for (const fieldName in shape) {
+		const fieldSchema = shape[fieldName];
+		const meta = resolveFieldMeta(fieldSchema);
 
-    if (meta) {
-      result[fieldName] = meta;
-    }
-  }
+		if (meta) {
+			result[fieldName] = meta;
+		}
+	}
 
-  return result;
+	return result;
 }
 
 function resolveFieldMeta(schema: z.ZodType): FieldMeta | undefined {
-  const meta = z.globalRegistry.get(schema) as Record<string, unknown> | undefined;
+	const meta = z.globalRegistry.get(schema) as
+		| Record<string, unknown>
+		| undefined;
 
-  if (meta && typeof meta.from === "string") {
-    const key = meta.key ?? meta.fromKey;
+	if (meta && typeof meta.from === "string") {
+		const key = meta.key ?? meta.fromKey;
 
-    return {
-      from: meta.from,
-      ...(key !== undefined ? { key: key as string | string[] } : {}),
-    };
-  }
+		return {
+			from: meta.from,
+			...(key !== undefined ? { key: key as string | string[] } : {}),
+		};
+	}
 
-  // Unwrap wrapper types (optional, nullable, default, etc.)
-  const def = (schema as any)._zod?.def;
-  if (def?.innerType) {
-    return resolveFieldMeta(def.innerType);
-  }
+	// Unwrap wrapper types (optional, nullable, default, etc.)
+	const def = (schema as any)._zod?.def;
+	if (def?.innerType) {
+		return resolveFieldMeta(def.innerType);
+	}
 
-  return undefined;
+	return undefined;
 }
 
 /**
@@ -91,42 +95,50 @@ function resolveFieldMeta(schema: z.ZodType): FieldMeta | undefined {
  * ```
  */
 export function resolveZodSchemaFromSources(
-  schema: z.ZodObject<any>,
-  sources: Record<string, Record<string, unknown>>
+	schema: z.ZodObject<any>,
+	sources: Record<string, Record<string, unknown>>
 ): Record<string, unknown> {
-  const fieldsMeta = resolveZodSchemaMeta(schema);
-  const result: Record<string, unknown> = {};
+	const fieldsMeta = resolveZodSchemaMeta(schema);
+	const result: Record<string, unknown> = {};
 
-  for (const [fieldName, meta] of Object.entries(fieldsMeta)) {
-    const source = sources[meta.from];
-    if (!source) continue;
+	for (const [fieldName, meta] of Object.entries(fieldsMeta)) {
+		const source = sources[meta.from];
+		if (!source) {
+			continue;
+		}
 
-    const keys = meta.key
-      ? (Array.isArray(meta.key) ? meta.key : [meta.key])
-      : [fieldName];
+		const keys = meta.key
+			? Array.isArray(meta.key)
+				? meta.key
+				: [meta.key]
+			: [fieldName];
 
-    for (const k of keys) {
-      const value = getNestedValue(source, k);
-      if (value !== undefined) {
-        result[fieldName] = value;
-        break;
-      }
-    }
-  }
+		for (const k of keys) {
+			const value = getNestedValue(source, k);
+			if (value !== undefined) {
+				result[fieldName] = value;
+				break;
+			}
+		}
+	}
 
-  return result;
+	return result;
 }
 
 function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
-  const parts = path.split(".");
-  let current: unknown = obj;
+	const parts = path.split(".");
+	let current: unknown = obj;
 
-  for (const part of parts) {
-    if (current === null || current === undefined || typeof current !== "object") {
-      return undefined;
-    }
-    current = (current as Record<string, unknown>)[part];
-  }
+	for (const part of parts) {
+		if (
+			current === null ||
+			current === undefined ||
+			typeof current !== "object"
+		) {
+			return undefined;
+		}
+		current = (current as Record<string, unknown>)[part];
+	}
 
-  return current;
+	return current;
 }

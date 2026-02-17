@@ -1,7 +1,7 @@
 import { modelBuilder } from "../src";
-import * as schema from "./schema";
 import { db } from "./db";
 import { relations } from "./relations";
+import * as schema from "./schema";
 
 const model = modelBuilder({
 	schema,

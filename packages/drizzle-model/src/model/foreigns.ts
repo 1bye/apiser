@@ -1,10 +1,8 @@
 import type {
-  TableRelationalConfig,
-  TablesRelationalConfig,
+	TableRelationalConfig,
+	TablesRelationalConfig,
 } from "drizzle-orm/relations";
 import type { ModelDialect } from "./dialect.ts";
-import type { Model, ModelIdentifier } from "./model.ts";
-import type { ModelLevelMethods } from "./methods/levels.ts";
 
 // export type ModelForeignContext<TSchema extends TablesRelationalConfig, TTableName extends string, TDialect extends ModelDialect, ExcludedKeys extends string = string> = Omit<Model<TSchema, TSchema[TTableName], TDialect>, ModelLevelMethods | ExcludedKeys>;
 // export type ModelForeignField<TSchema extends TablesRelationalConfig, TTableName extends string, TDialect extends ModelDialect, ExcludedKeys extends string = string> = <TContext extends ModelForeignContext<TSchema, TTableName, TDialect, ExcludedKeys>>(c: TContext) => TContext | any;
@@ -23,9 +21,7 @@ import type { ModelLevelMethods } from "./methods/levels.ts";
 //   };
 
 export type ModelForegins<
-  TSchema extends TablesRelationalConfig,
-  TTable extends TableRelationalConfig,
-  TDialect extends ModelDialect,
-> = {
-
-  };
+	TSchema extends TablesRelationalConfig,
+	TTable extends TableRelationalConfig,
+	TDialect extends ModelDialect,
+> = {};

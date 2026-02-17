@@ -4,13 +4,13 @@ export type Replace<T, R> = Omit<T, keyof R> & R;
 export type UnwrapArray<T> = T extends (infer R)[] ? R : T;
 
 export type AddToValues<T extends Record<PropertyKey, any>, A> = {
-  [K in keyof T]: T[K] & A
+	[K in keyof T]: T[K] & A;
 };
 
 export type AddUnionToValues<T extends Record<PropertyKey, any>, A> = {
-  [K in keyof T]: T[K] | A
+	[K in keyof T]: T[K] | A;
 };
 
 export interface RecursiveBooleanRecord {
-  [key: string]: boolean | RecursiveBooleanRecord;
+	[key: string]: boolean | RecursiveBooleanRecord;
 }

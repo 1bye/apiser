@@ -1,96 +1,97 @@
 import type { Column, SQL } from "drizzle-orm";
 
-export type DrizzleColumnDataType<TColumn extends Column> = TColumn["_"]["data"];
+export type DrizzleColumnDataType<TColumn extends Column> =
+	TColumn["_"]["data"];
 
 export type EscapedValue<T> =
-  | {
-    equal: T;
-  }
-  | {
-    __kind: "esc-op";
-    op: {
-      bivarianceHack(column: any, value: T): any;
-    }["bivarianceHack"];
-    value: T;
-  };
+	| {
+			equal: T;
+	  }
+	| {
+			__kind: "esc-op";
+			op: {
+				bivarianceHack(column: any, value: T): any;
+			}["bivarianceHack"];
+			value: T;
+	  };
 
 type OpValue<T> = T | SQL | EscapedValue<T>;
 
 export type ColumnOpsBase<T> = {
-  eq?: OpValue<T>;
-  equal?: OpValue<T>;
-  not?: OpValue<T>;
-  in?: OpValue<T>[];
-  nin?: OpValue<T>[];
-  isNull?: boolean;
+	eq?: OpValue<T>;
+	equal?: OpValue<T>;
+	not?: OpValue<T>;
+	in?: OpValue<T>[];
+	nin?: OpValue<T>[];
+	isNull?: boolean;
 };
 
 export type NumberOps = {
-  gt?: OpValue<number>;
-  gte?: OpValue<number>;
-  lt?: OpValue<number>;
-  lte?: OpValue<number>;
-  between?: [OpValue<number>, OpValue<number>];
-  notBetween?: [OpValue<number>, OpValue<number>];
+	gt?: OpValue<number>;
+	gte?: OpValue<number>;
+	lt?: OpValue<number>;
+	lte?: OpValue<number>;
+	between?: [OpValue<number>, OpValue<number>];
+	notBetween?: [OpValue<number>, OpValue<number>];
 };
 
 export type StringOps = {
-  like?: OpValue<string>;
-  ilike?: OpValue<string>;
-  startsWith?: OpValue<string>;
-  endsWith?: OpValue<string>;
-  contains?: OpValue<string>;
-  regex?: OpValue<string>;
-  notRegex?: OpValue<string>;
-  length?: NumberOps;
+	like?: OpValue<string>;
+	ilike?: OpValue<string>;
+	startsWith?: OpValue<string>;
+	endsWith?: OpValue<string>;
+	contains?: OpValue<string>;
+	regex?: OpValue<string>;
+	notRegex?: OpValue<string>;
+	length?: NumberOps;
 };
 
 export type BoolOps = {
-  isTrue?: boolean;
-  isFalse?: boolean;
+	isTrue?: boolean;
+	isFalse?: boolean;
 };
 
 export type DateOps = {
-  before?: OpValue<Date | string>;
-  after?: OpValue<Date | string>;
-  on?: OpValue<Date | string>;
-  notOn?: OpValue<Date | string>;
-  between?: [OpValue<Date | string>, OpValue<Date | string>];
+	before?: OpValue<Date | string>;
+	after?: OpValue<Date | string>;
+	on?: OpValue<Date | string>;
+	notOn?: OpValue<Date | string>;
+	between?: [OpValue<Date | string>, OpValue<Date | string>];
 };
 
 export type JsonOps<T> = {
-  has?: T;
-  hasAny?: T[];
-  hasAll?: T[];
-  len?: NumberOps;
+	has?: T;
+	hasAny?: T[];
+	hasAll?: T[];
+	len?: NumberOps;
 };
 
 export type LogicalOps<TColumn extends Column> = {
-  or?: ColumnValue<TColumn>[];
-  and?: ColumnValue<TColumn>[];
+	or?: ColumnValue<TColumn>[];
+	and?: ColumnValue<TColumn>[];
 };
 
 export type TypeOps<T> = T extends number
-  ? NumberOps
-  : T extends string
-  ? StringOps
-  : T extends boolean
-  ? BoolOps
-  : T extends Date
-  ? DateOps
-  : T extends any[]
-  ? JsonOps<T[number]>
-  : {};
+	? NumberOps
+	: T extends string
+		? StringOps
+		: T extends boolean
+			? BoolOps
+			: T extends Date
+				? DateOps
+				: T extends any[]
+					? JsonOps<T[number]>
+					: {};
 
 export type ColumnOps<
-  TColumn extends Column,
-  TDataType extends DrizzleColumnDataType<TColumn>,
+	TColumn extends Column,
+	TDataType extends DrizzleColumnDataType<TColumn>,
 > = ColumnOpsBase<TDataType> & TypeOps<TDataType> & LogicalOps<TColumn>;
 
 export type ColumnValue<
-  TColumn extends Column,
-  TDataType extends
-  DrizzleColumnDataType<TColumn> = DrizzleColumnDataType<TColumn>,
+	TColumn extends Column,
+	TDataType extends
+		DrizzleColumnDataType<TColumn> = DrizzleColumnDataType<TColumn>,
 > = ColumnOps<TColumn, TDataType> | EscapedValue<TDataType>;
 
 /**
@@ -151,20 +152,20 @@ export function esc<T>(value: T): EscapedValue<T>;
  * @returns An internal escaped descriptor consumed by the query compiler
  */
 export function esc<T>(
-  op: (column: any, value: T) => any,
-  value: T
+	op: (column: any, value: T) => any,
+	value: T
 ): EscapedValue<T>;
 
 export function esc<T>(arg1: any, arg2?: any): EscapedValue<T> {
-  if (typeof arg1 === "function") {
-    return {
-      __kind: "esc-op",
-      op: arg1 as (column: any, value: T) => any,
-      value: arg2 as T,
-    };
-  }
+	if (typeof arg1 === "function") {
+		return {
+			__kind: "esc-op",
+			op: arg1 as (column: any, value: T) => any,
+			value: arg2 as T,
+		};
+	}
 
-  return {
-    equal: arg1,
-  };
+	return {
+		equal: arg1,
+	};
 }

@@ -11,25 +11,29 @@
  * @returns Plain object representation of the input body.
  * @throws If `body` is a string and is not valid JSON.
  */
-export function transformBodyIntoObject(body: FormData | object | string): Record<string, unknown> {
-  if (body instanceof FormData) {
-    const result: Record<string, unknown> = {};
+export function transformBodyIntoObject(
+	body: FormData | object | string
+): Record<string, unknown> {
+	if (body instanceof FormData) {
+		const result: Record<string, unknown> = {};
 
-    body.forEach((value, key) => {
-      if (key in result) {
-        const existing = result[key];
-        result[key] = Array.isArray(existing) ? [...existing, value] : [existing, value];
-      } else {
-        result[key] = value;
-      }
-    });
+		body.forEach((value, key) => {
+			if (key in result) {
+				const existing = result[key];
+				result[key] = Array.isArray(existing)
+					? [...existing, value]
+					: [existing, value];
+			} else {
+				result[key] = value;
+			}
+		});
 
-    return result;
-  }
+		return result;
+	}
 
-  if (typeof body === "string") {
-    return JSON.parse(body) as Record<string, unknown>;
-  }
+	if (typeof body === "string") {
+		return JSON.parse(body) as Record<string, unknown>;
+	}
 
-  return body as Record<string, unknown>;
+	return body as Record<string, unknown>;
 }

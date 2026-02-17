@@ -1,49 +1,46 @@
-import { createStore, type Store } from "./store";
 import type { Log } from "@/log";
+import { createStore, type Store } from "./store";
 
 export interface TransportLogFnContext extends Log {
-  file: {
-    path: string;
-    codeLine: string;
-  };
+	file: {
+		path: string;
+		codeLine: string;
+	};
 
-  store: Store;
+	store: Store;
 }
 
-export interface TransportLogFn {
-  (ctx: TransportLogFnContext): void;
-}
+export type TransportLogFn = (ctx: TransportLogFnContext) => void;
 
-export interface TransportFlushFn {
-  (ctx: Pick<TransportLogFnContext, "store"> & {
-    logs: Log[];
-  }): PromiseLike<void> | void;
-}
+export type TransportFlushFn = (
+	ctx: Pick<TransportLogFnContext, "store"> & {
+		logs: Log[];
+	}
+) => PromiseLike<void> | void;
 
 export interface TransportOptions {
-  log: TransportLogFn;
-
-  flush?: TransportFlushFn;
+	flush?: TransportFlushFn;
+	log: TransportLogFn;
 }
 
 export interface Transport<TOptions extends TransportOptions> {
-  store: Store;
+	flush: TOptions["flush"];
 
-  log: TOptions["log"];
-  flush: TOptions["flush"];
+	log: TOptions["log"];
+	store: Store;
 }
 
 export type AnyTransport = Transport<any>;
 
-export function createTransport<
-  TOptions extends TransportOptions
->(options: TOptions): Transport<TOptions> {
-  const store = createStore();
+export function createTransport<TOptions extends TransportOptions>(
+	options: TOptions
+): Transport<TOptions> {
+	const store = createStore();
 
-  return {
-    store,
+	return {
+		store,
 
-    log: options.log,
-    flush: options.flush
-  }
+		log: options.log,
+		flush: options.flush,
+	};
 }

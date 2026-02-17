@@ -14,35 +14,35 @@ const indexDts = path.join(distDir, "index.d.mts");
 const referenceLine = '/// <reference path="./zod.d.ts" />\n';
 
 async function fileExists(p) {
-  try {
-    await fs.access(p);
-    return true;
-  } catch {
-    return false;
-  }
+	try {
+		await fs.access(p);
+		return true;
+	} catch {
+		return false;
+	}
 }
 
 async function main() {
-  await fs.mkdir(distDir, { recursive: true });
+	await fs.mkdir(distDir, { recursive: true });
 
-  if (!(await fileExists(srcDts))) {
-    throw new Error(`Missing source declaration file: ${srcDts}`);
-  }
+	if (!(await fileExists(srcDts))) {
+		throw new Error(`Missing source declaration file: ${srcDts}`);
+	}
 
-  await fs.copyFile(srcDts, distDts);
+	await fs.copyFile(srcDts, distDts);
 
-  if (!(await fileExists(indexDts))) {
-    throw new Error(
-      `Missing generated declaration file: ${indexDts}. Did the build step generate declarations?`
-    );
-  }
+	if (!(await fileExists(indexDts))) {
+		throw new Error(
+			`Missing generated declaration file: ${indexDts}. Did the build step generate declarations?`
+		);
+	}
 
-  const current = await fs.readFile(indexDts, "utf8");
+	const current = await fs.readFile(indexDts, "utf8");
 
-  if (!current.startsWith(referenceLine)) {
-    const next = referenceLine + current;
-    await fs.writeFile(indexDts, next, "utf8");
-  }
+	if (!current.startsWith(referenceLine)) {
+		const next = referenceLine + current;
+		await fs.writeFile(indexDts, next, "utf8");
+	}
 }
 
 await main();

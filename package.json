@@ -8,7 +8,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "check": "ultracite check",
-    "fix": "ultracite fix"
+    "fix": "ultracite fix",
+    "publish:workspace": "node ./scripts/publish-workspace-package.mjs",
+    "publish:workspace:dry-run": "node ./scripts/publish-workspace-package.mjs --dry-run"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.0",

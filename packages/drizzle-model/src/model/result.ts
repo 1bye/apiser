@@ -1,19 +1,22 @@
 import type {
-  TableRelationalConfig,
-  TablesRelationalConfig,
+	TableRelationalConfig,
+	TablesRelationalConfig,
 } from "drizzle-orm/relations";
-import type { MethodWithResult, MethodWithValue } from "./methods/with.ts";
-import type { MethodSelectResult, MethodSelectValue } from "./methods/select.ts";
+import type { ModelConfig } from "./config.ts";
+import type { ReturningIdDialects } from "./dialect.ts";
+import type { ModelFormatValue } from "./format.ts";
 import type {
-  MethodExcludeResult,
-  MethodExcludeValue,
+	MethodExcludeResult,
+	MethodExcludeValue,
 } from "./methods/exclude.ts";
 import type { MethodReturnResult } from "./methods/return.ts";
-import type { ReturningIdDialects } from "./dialect.ts";
-import type { TableOutput } from "./table.ts";
-import type { ModelConfig } from "./config.ts";
+import type {
+	MethodSelectResult,
+	MethodSelectValue,
+} from "./methods/select.ts";
+import type { MethodWithResult, MethodWithValue } from "./methods/with.ts";
 import type { ResolveOptionsFormat } from "./options.ts";
-import type { ModelFormatValue } from "./format.ts";
+import type { TableOutput } from "./table.ts";
 
 /**
  * Represents the result of a model operation (like findMany or findFirst).
@@ -26,66 +29,79 @@ import type { ModelFormatValue } from "./format.ts";
  * @typeParam TTable - Relational configuration for the current table
  */
 export interface ModelQueryResult<
-  TResult extends Record<string, any>,
-  TConfig extends ModelConfig,
-  TExcludedKeys extends string = string,
-  TSchema extends TablesRelationalConfig = TConfig["schema"],
-  TTable extends TableRelationalConfig = TConfig["table"],
-  TFormat extends Record<string, any> | undefined = ResolveOptionsFormat<TConfig["options"]["format"]>
+	TResult extends Record<string, any>,
+	TConfig extends ModelConfig,
+	TExcludedKeys extends string = string,
+	TSchema extends TablesRelationalConfig = TConfig["schema"],
+	TTable extends TableRelationalConfig = TConfig["table"],
+	TFormat extends Record<string, any> | undefined = ResolveOptionsFormat<
+		TConfig["options"]["format"]
+	>,
 > extends Promise<ModelFormatValue<TResult, TFormat>> {
-  with<TValue extends MethodWithValue<TSchema, TTable["relations"]>, TExcludeKeys extends string = TExcludedKeys | "with">(
-    value: TValue,
-  ): ModelQueryResult<
-    MethodWithResult<TValue, TResult, TSchema, TTable>,
-    TConfig,
-    TExcludeKeys
-  >,
+	debug(): any;
 
-  select<TValue extends MethodSelectValue<TResult>, TExcludeKeys extends string = TExcludedKeys | "select">(
-    value: TValue,
-  ): ModelQueryResult<
-    MethodSelectResult<TValue, TResult>,
-    TConfig,
-    TExcludeKeys
-  >,
+	exclude<
+		TValue extends MethodExcludeValue<TResult>,
+		TExcludeKeys extends string = TExcludedKeys | "exclude",
+	>(
+		value: TValue
+	): ModelQueryResult<
+		MethodExcludeResult<TValue, TResult>,
+		TConfig,
+		TExcludeKeys
+	>;
 
-  exclude<TValue extends MethodExcludeValue<TResult>, TExcludeKeys extends string = TExcludedKeys | "exclude">(
-    value: TValue,
-  ): ModelQueryResult<
-    MethodExcludeResult<TValue, TResult>,
-    TConfig,
-    TExcludeKeys
-  >,
+	raw<TExcludeKeys extends string = TExcludedKeys | "raw">(): ModelQueryResult<
+		TResult,
+		TConfig,
+		TExcludeKeys,
+		TSchema,
+		TTable,
+		undefined
+	>;
 
-  raw<TExcludeKeys extends string = TExcludedKeys | "raw">(): ModelQueryResult<TResult, TConfig, TExcludeKeys, TSchema, TTable, undefined>;
-
-  debug(): any;
+	select<
+		TValue extends MethodSelectValue<TResult>,
+		TExcludeKeys extends string = TExcludedKeys | "select",
+	>(
+		value: TValue
+	): ModelQueryResult<
+		MethodSelectResult<TValue, TResult>,
+		TConfig,
+		TExcludeKeys
+	>;
+	with<
+		TValue extends MethodWithValue<TSchema, TTable["relations"]>,
+		TExcludeKeys extends string = TExcludedKeys | "with",
+	>(
+		value: TValue
+	): ModelQueryResult<
+		MethodWithResult<TValue, TResult, TSchema, TTable>,
+		TConfig,
+		TExcludeKeys
+	>;
 }
 
 export interface ModelMutateResult<
-  TBaseResult extends Record<string, any> | void,
-  TConfig extends ModelConfig,
-  TResultType extends string = "one"
+	TBaseResult extends Record<string, any> | void,
+	TConfig extends ModelConfig,
+	TResultType extends string = "one",
 > extends Promise<TBaseResult> {
-  // TODO: Planned for future
-  // with<TValue extends MethodWithInsertValue<TSchema, TTable["relations"]>>(
-  //   value: TValue,
-  // ): void;
+	// TODO: Planned for future
+	// with<TValue extends MethodWithInsertValue<TSchema, TTable["relations"]>>(
+	//   value: TValue,
+	// ): void;
 
-  return<
-    TValue extends MethodSelectValue<TableOutput<TConfig["table"]>> | undefined,
-    TReturnResult extends MethodReturnResult<TResultType, TConfig> = MethodReturnResult<TResultType, TConfig>,
-    TResult extends Record<string, any> = TValue extends undefined ? TReturnResult : MethodSelectResult<Exclude<TValue, undefined>, TReturnResult>,
-  >(
-    value?: TConfig["dialect"] extends ReturningIdDialects
-      ? never
-      : TValue,
-  ): Omit<
-    ModelMutateResult<
-      TResult,
-      TConfig,
-      TResultType
-    >,
-    "with"
-  >;
+	return<
+		TValue extends MethodSelectValue<TableOutput<TConfig["table"]>> | undefined,
+		TReturnResult extends MethodReturnResult<
+			TResultType,
+			TConfig
+		> = MethodReturnResult<TResultType, TConfig>,
+		TResult extends Record<string, any> = TValue extends undefined
+			? TReturnResult
+			: MethodSelectResult<Exclude<TValue, undefined>, TReturnResult>,
+	>(
+		value?: TConfig["dialect"] extends ReturningIdDialects ? never : TValue
+	): Omit<ModelMutateResult<TResult, TConfig, TResultType>, "with">;
 }

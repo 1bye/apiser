@@ -1,8 +1,8 @@
 import type { ErrorResponse } from "./error";
 
 export interface DefaultResponse<TData = unknown> {
-  success: boolean;
-  error: ErrorResponse.Base<any, any, any> | null;
-  data: TData | null;
-  metadata: Record<string, unknown>;
+	data: TData | null;
+	error: ErrorResponse.Base<any, any, any> | null;
+	metadata: Record<string, unknown>;
+	success: boolean;
 }

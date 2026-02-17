@@ -1,8 +1,8 @@
 import type { LogLevels } from "./level";
 
 export interface Log {
-  timestamp: number;
-  level: LogLevels;
-  message: string;
-  data: Record<string, unknown>;
+	data: Record<string, unknown>;
+	level: LogLevels;
+	message: string;
+	timestamp: number;
 }
