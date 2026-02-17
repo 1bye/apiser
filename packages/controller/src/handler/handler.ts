@@ -10,6 +10,7 @@ import merge from "es-toolkit/compat/merge";
 import assign from "es-toolkit/compat/assign";
 import type { HandlerRequest } from "./request";
 import { transformBodyIntoObject } from "./body";
+import { createCache, resolveCacheOptions, type CacheFn, type CacheOptions, type CacheStore } from "../cache";
 
 export namespace HandlerFn {
   /**
@@ -36,13 +37,13 @@ export namespace HandlerFn {
    */
   export type InferedBindingValue<TKey extends string, THandlerOptions extends HandlerOptions>
     = InferedBindingDefinition<TKey, THandlerOptions> extends BindingDefinition<any, infer TResult, any, any, any>
-      ? UnwrapBindingValueResult<TResult>
-      : never;
+    ? UnwrapBindingValueResult<TResult>
+    : never;
 
   export type InferedBindingMode<TKey extends string, THandlerOptions extends HandlerOptions>
     = InferedBindingDefinition<TKey, THandlerOptions> extends BindingDefinition<any, any, any, any, infer TMode>
-      ? TMode
-      : never;
+    ? TMode
+    : never;
 
   export type VariativeBindingResult<TExpandedResult extends Record<string, any>> = {
     [TField in keyof TExpandedResult]: TExpandedResult[TField] | undefined;
@@ -50,8 +51,8 @@ export namespace HandlerFn {
 
   export type InferedBindingContextValue<TKey extends string, THandlerOptions extends HandlerOptions>
     = InferedBindingMode<TKey, THandlerOptions> extends "variativeInject"
-      ? VariativeBindingResult<ExpandBindingResult<TKey, InferedBindingValue<TKey, THandlerOptions>>>
-      : ExpandBindingResult<TKey, InferedBindingValue<TKey, THandlerOptions>>;
+    ? VariativeBindingResult<ExpandBindingResult<TKey, InferedBindingValue<TKey, THandlerOptions>>>
+    : ExpandBindingResult<TKey, InferedBindingValue<TKey, THandlerOptions>>;
 
   export type InferedCallOptionBindingKeys<TBindings extends Record<string, any>> = keyof {
     [TKey in keyof TBindings as ([TBindings[TKey]] extends [undefined]
@@ -99,6 +100,14 @@ export namespace HandlerFn {
         : undefined);
     };
 
+  export type InferedCacheStore<THandlerOptions extends HandlerOptions>
+    = THandlerOptions extends HandlerOptions<any, any, infer TCacheStore>
+    ? TCacheStore
+    : CacheStore;
+
+  export type InferedCacheOptions<THandlerOptions extends HandlerOptions, TPayload>
+    = CacheOptions<TPayload, InferedCacheStore<THandlerOptions>>;
+
   /**
    * Per-invocation options passed to a handler call.
    */
@@ -108,6 +117,7 @@ export namespace HandlerFn {
     TBindings extends OptionsBindings<THandlerOptions> = OptionsBindings<THandlerOptions>
   > = {
     payload: TSchema;
+    cache?: InferedCacheOptions<THandlerOptions, InferUndefined<TSchema>>;
   } & TBindings;
 
   /**
@@ -117,13 +127,14 @@ export namespace HandlerFn {
     THandlerOptions extends { responseHandler?: infer TResponseHandler }
     ? ([NonNullable<TResponseHandler>] extends [never]
       ? ApiserResponse.AnyResponseHandler
-      : NonNullable<TResponseHandler> extends ApiserResponse.AnyResponseHandler
-      ? NonNullable<TResponseHandler>
-      : ApiserResponse.AnyResponseHandler)
+      : (NonNullable<TResponseHandler> extends ApiserResponse.AnyResponseHandler
+        ? NonNullable<TResponseHandler>
+        : ApiserResponse.AnyResponseHandler))
     : ApiserResponse.AnyResponseHandler;
 
   export type Context<THandlerOptions extends HandlerOptions, TOptions extends Options<any, any>> = {
     payload: InferUndefined<TOptions["payload"]>;
+    cache: CacheFn;
     redirect: <TReturnType extends any | undefined>(to: string, returnType: TReturnType) => TReturnType extends undefined ? {} : Exclude<TReturnType, undefined>;
   } & Pick<
     ResolveResponseHandler<THandlerOptions>,
@@ -209,7 +220,7 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
   const anyResponseHandler = createResponseHandler({});
 
   // Excluded keys, used by library -> so any "interrupt" from bindings, will be excluded.
-  const excludedKeys = ["payload", "fail"]
+  const excludedKeys = ["payload", "fail", "cache"]
 
   const responseHandler = handlerOptions.responseHandler ? handlerOptions.responseHandler : anyResponseHandler;
   const fail: typeof responseHandler.fail = (name: any, input: any) => {
@@ -256,6 +267,17 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
             }
           }) as typeof rawPayload;
         }
+
+        const cache = createCache({
+          payload,
+          handlerCache: handlerOptions.cache as CacheOptions<typeof payload> | undefined,
+          callCache: baseOptions?.cache as CacheOptions<typeof payload> | undefined,
+        });
+
+        const resolvedCacheOptions = resolveCacheOptions({
+          handlerCache: handlerOptions.cache as CacheOptions<typeof payload> | undefined,
+          callCache: baseOptions?.cache as CacheOptions<typeof payload> | undefined,
+        });
 
         // Bindings mapping
         const bindingsToInclude = Object.entries(optionsBindings)
@@ -313,13 +335,23 @@ export function createHandler<THandlerOptions extends HandlerOptions>(handlerOpt
         const resolvedPromise = await Promise.all(bindingsToInclude);
         const resolved = resolvedPromise.reduce((acc, obj) => merge(acc, obj), {});
 
-        // @ts-ignore
-        const data = await cb({
-          ...resolved,
+        const executeCallback = async () => {
+          // @ts-ignore
+          return await cb({
+            ...resolved,
 
-          payload,
-          fail,
-        });
+            payload,
+            cache,
+            fail,
+          });
+        };
+
+        const data = (resolvedCacheOptions?.wrapHandler)
+          ? await cache(
+            resolvedCacheOptions.key ? "handler:wrap" : [handlerOptions.name ?? "handler"],
+            executeCallback
+          )
+          : await executeCallback();
 
         return {
           data,

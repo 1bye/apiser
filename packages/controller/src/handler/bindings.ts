@@ -199,7 +199,7 @@ export type ResolveBindings<TBindings> = TBindings extends (...args: any[]) => i
 /**
  * Infer resolved bindings from handler options.
  */
-export type HandlerBindings<TOptions extends HandlerOptions<any, any>> = TOptions["bindings"] extends undefined
+export type HandlerBindings<TOptions extends HandlerOptions<any, any, any>> = TOptions["bindings"] extends undefined
   ? {}
   : ResolveBindings<ReturnType<Exclude<TOptions["bindings"], undefined>>>;
 

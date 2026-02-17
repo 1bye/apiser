@@ -494,17 +494,7 @@ import { createHandler, createController } from "@apiser/controller"
 // Only `this` is not available.
 const handle = createHandler({
   // More options:
-  
-  // @apiser/logger
-  // logger?: Logger;
   // 
-  // I: Logger base class, can be used from pre-defined integrations on `@apiser/logger`
-  
-  // @apiser/response
-  // errorHandler?: ErrorHandler;
-  // 
-  // I: Receives error and maps into response format for server
-   
   // @apiser/response
   // responseHandler?: ResponseHandler | ({ handler, payload, request: RawRequest }) => PromiseOr<ResponseHandler>;
   // 
@@ -572,5 +562,36 @@ export const hello = handle(async ({ payload, fail }) => {
     image: z.file(),
     name: z.string()
   })
+})
+```
+
+### 6.4
+Cache
+
+```ts
+const handle = createHandler({
+  // Same settings as in handle, without key callback
+  cache: {...}
+})
+
+export const main = handle(async ({ cache }) => {
+  // cache(
+  //   key: string[] | string,
+  //   callback: () => any
+  //   options: { ttl, ...etc }
+  // ): any
+  const res = cache("user")
+}, {
+  cache: {
+    wrapHandler?: boolean;
+    // Allowed stores
+    // - MemoryCache
+    // - FileCache
+    // - Kv (from @apiser/kv)
+    // - maybe some lib specific (not sure yet), ex: keyv
+    store: {},
+    // Used as prefix for cache, or if wrapHandler is set to true will be used as main key for cached function
+    key: string[] | string | ((data: { payload }) => string[] | string)
+  }
 })
 ```

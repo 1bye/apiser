@@ -2,6 +2,11 @@
   "name": "@apiser/controller",
   "version": "0.0.0",
   "module": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./cache": "./src/cache.ts",
+    "./cache/keyv": "./src/cache/keyv.ts"
+  },
   "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
@@ -13,6 +18,7 @@
     "drizzle-kit": "^1.0.0-beta.2-86f844e",
     "drizzle-orm": "^1.0.0-beta.2-86f844e",
     "eslint": "^9.39.1",
+    "keyv": "^5.6.0",
     "pg": "^8.17.2",
     "typescript": "5.9.2"
   },
@@ -24,6 +30,7 @@
   },
   "type": "module",
   "peerDependencies": {
+    "keyv": "^5.6.0",
     "elysia": "^1.4.25"
   },
   "dependencies": {
