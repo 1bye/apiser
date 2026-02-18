@@ -595,3 +595,27 @@ export const main = handle(async ({ cache }) => {
   }
 })
 ```
+
+#### 6.5
+Compact
+
+```ts
+
+new Elysia()
+  .get("/hello", (ctx) => {
+    const { data, error, response } = elysia.compact(main, ctx); 
+  });
+
+```
+
+#### 6.6
+Framework specific context in handler (not recommended)
+
+```ts
+const handle = createHandler({
+  
+});
+
+export const main = handle(async ({  }) => {
+});
+```

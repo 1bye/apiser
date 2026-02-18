@@ -1,6 +1,6 @@
 {
   "name": "@apisr/controller",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "module": "src/index.ts",
   "exports": {
     ".": {
@@ -12,8 +12,8 @@
       "default": "./dist/elysia/index.mjs"
     },
     "./cache/keyv": {
-      "types": "./dist/cache/keyv/index.d.mts",
-      "default": "./dist/cache/keyv/index.mjs"
+      "types": "./dist/cache/keyv.d.mts",
+      "default": "./dist/cache/keyv.mjs"
     }
   },
   "devDependencies": {

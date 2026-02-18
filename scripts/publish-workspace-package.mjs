@@ -11,10 +11,45 @@ const manifestSections = [
 ];
 
 const workspacePrefix = "workspace:";
-const alreadyPublishedErrorMarkers = [
-	"You cannot publish over the previously published versions",
-	"cannot publish over previously published version",
-];
+
+const isVersionPublished = (packageName, version) => {
+	const lookupResult = spawnSync(
+		"npm",
+		["view", `${packageName}@${version}`, "version", "--json"],
+		{
+			cwd: rootDir,
+			stdio: "pipe",
+			encoding: "utf8",
+			env: process.env,
+		}
+	);
+
+	if (lookupResult.status !== 0) {
+		return false;
+	}
+
+	const output = lookupResult.stdout?.trim();
+
+	if (!output) {
+		return false;
+	}
+
+	try {
+		const parsed = JSON.parse(output);
+
+		if (typeof parsed === "string") {
+			return parsed === version;
+		}
+
+		if (Array.isArray(parsed)) {
+			return parsed.includes(version);
+		}
+	} catch {
+		return output === version;
+	}
+
+	return false;
+};
 
 const rootDir = path.resolve(import.meta.dirname, "..");
 const packagesDir = path.join(rootDir, "packages");
@@ -229,6 +264,20 @@ const publishWorkspacePackage = (workspacePackageName) => {
 		workspacePackage.packageJsonPath,
 		"utf8"
 	);
+
+	if (
+		!isDryRun &&
+		isVersionPublished(
+			workspacePackage.manifest.name,
+			workspacePackage.manifest.version
+		)
+	) {
+		console.warn(
+			`Skipping ${workspacePackageName}: version ${workspacePackage.manifest.version} is already published.`
+		);
+		return;
+	}
+
 	const rewrittenManifest = rewriteManifest(workspacePackage.manifest);
 
 	try {
@@ -250,32 +299,11 @@ const publishWorkspacePackage = (workspacePackageName) => {
 
 		const publishResult = spawnSync("bun", publishArguments, {
 			cwd: workspacePackage.dir,
-			stdio: "pipe",
-			encoding: "utf8",
+			stdio: "inherit",
 			env: process.env,
 		});
 
-		if (publishResult.stdout) {
-			process.stdout.write(publishResult.stdout);
-		}
-
-		if (publishResult.stderr) {
-			process.stderr.write(publishResult.stderr);
-		}
-
 		if (publishResult.status !== 0) {
-			const publishOutput = `${publishResult.stdout ?? ""}\n${publishResult.stderr ?? ""}`;
-			const isAlreadyPublishedError = alreadyPublishedErrorMarkers.some(
-				(marker) => publishOutput.toLowerCase().includes(marker.toLowerCase())
-			);
-
-			if (isAlreadyPublishedError) {
-				console.warn(
-					`Skipping ${workspacePackageName}: version ${workspacePackage.manifest.version} is already published.`
-				);
-				return;
-			}
-
 			throw new Error(`Failed publishing ${workspacePackageName}`);
 		}
 	} finally {
