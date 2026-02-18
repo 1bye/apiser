@@ -41,10 +41,12 @@ const responseHandler = createResponseHandler({
       details: z.string(),
     }),
   },
-}).defineError("USER_NOT_FOUND", ({ input }) => ({
-  name: "USER_NOT_FOUND",
-  details: `User ${input.id} was not found`,
-}), {
+}).defineError("user not found", ({ input }) => {
+  return {
+    name: "USER_NOT_FOUND",
+    details: `User ${input.id} was not found`,
+  }
+}, {
   input: z.object({ id: z.number() }),
 });
 
@@ -65,7 +67,7 @@ const handle = createHandler(options);
 const getUser = handle(
   async ({ payload, auth, version, fail }) => {
     if (payload.id !== auth.userId) {
-      throw fail("USER_NOT_FOUND", { id: payload.id });
+      throw fail("user not found", { id: payload.id });
     }
 
     return { id: payload.id, version };
@@ -101,20 +103,17 @@ const options = createOptions({
 
 const handle = createHandler(options);
 
-export const getUser = handle(
-  async ({ payload, cache }) => {
-    const id = (payload as { id: number }).id;
+export const getUser = handle(async ({ payload, cache }) => {
+  const id = payload.id;
 
-    return await cache(
-      ["user", String(id)],
-      async () => ({ id, name: `user-${id}` }),
-      { ttl: 60_000 }
-    );
-  },
-  {
-    payload: z.object({ id: z.number() }),
-  }
-);
+  return await cache(["user", String(id)], async () => {
+    return { id, name: `user-${id}` };
+  }, { 
+    ttl: 60_000 
+  });
+}, {
+  payload: z.object({ id: z.number() }),
+});
 
 // Elysia integration
 app.get("/users/:id", ...elysia(getUser));
@@ -140,7 +139,7 @@ const users = await userModel.where({ name: "Alex" }).findMany();
 More operations (filters, insert, update, delete, upsert):
 
 ```ts
-import { esc } from "@apisr/drizzle-model/model/query/operations";
+import { esc } from "@apisr/drizzle-model";
 
 const userModel = model("user", {});
 const postsModel = model("userPosts", {});
@@ -165,7 +164,12 @@ const [updatedPost] = await postsModel
   .update({ title: "Updated title" })
   .return();
 
-await postsModel.where({ id: esc(createdPost.id) }).delete().return();
+await postsModel.where({ 
+  id: esc(createdPost.id),
+  name: {
+    like: "A%"
+  }
+}).delete().return();
 
 const [user] = await userModel
   .upsert({
@@ -176,7 +180,7 @@ const [user] = await userModel
       isVerified: false,
     },
     update: { name: "Alex Updated" },
-    target: schema.user.email,
+    target: schema.user.email, // optional
   })
   .return();
 ```
