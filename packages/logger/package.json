@@ -1,6 +1,6 @@
 {
   "name": "@apisr/logger",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": false,
   "scripts": {
     "lint": "eslint . --max-warnings 0",

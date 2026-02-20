@@ -63,9 +63,14 @@ export function createConsole(options?: ConsoleTransportOptions) {
 							})()
 						: "";
 
+				// beautify file path
+				const filePath = file.path.includes("node_modules")
+					? "unknown"
+					: file.path;
+
 				const header =
 					(dataAvailable ? gray("┌") : dim("[")) +
-					dim(file.path) +
+					dim(filePath) +
 					dim(":") +
 					dim(String(file.codeLine)) +
 					dim("]");
