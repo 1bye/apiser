@@ -45,6 +45,8 @@ export type MutateKind = "insert" | "update" | "delete" | "upsert";
 
 /** Accumulated state for a mutation operation. */
 export interface MutateState {
+	/** When `true`, `.return()` or `.returnFirst()` was called. */
+	hasReturn?: boolean;
 	/** The kind of mutation being performed. */
 	kind: MutateKind;
 	/** Post-query key exclusion map for `.omit()`. */
@@ -239,7 +241,7 @@ export class MutateResult<T> extends ThenableResult<T> {
 	 */
 	return(value?: AnyRecord): MutateResult<T> {
 		return new MutateResult(
-			{ ...this.state, returnSelect: value },
+			{ ...this.state, returnSelect: value, hasReturn: true },
 			this.runner
 		);
 	}
@@ -254,7 +256,12 @@ export class MutateResult<T> extends ThenableResult<T> {
 	 */
 	returnFirst(value?: AnyRecord): MutateResult<T> {
 		return new MutateResult(
-			{ ...this.state, returnSelect: value, returnFirst: true },
+			{
+				...this.state,
+				returnSelect: value,
+				returnFirst: true,
+				hasReturn: true,
+			},
 			this.runner
 		);
 	}

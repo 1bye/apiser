@@ -301,10 +301,11 @@ export class ModelRuntime {
 		const whereSql = this.buildEffectiveWhere(table);
 
 		const db = this.config.db as AnyRecord;
-		const selectFn = db.select as (m?: AnyRecord) => AnyRecord;
 		const { count: countFn } = await import("drizzle-orm");
 
-		let query = selectFn({ count: countFn() });
+		let query = (db.select as (m: AnyRecord) => AnyRecord)({
+			count: countFn(),
+		});
 		query = (query as AnyRecord & { from: (t: AnyRecord) => AnyRecord }).from(
 			table
 		);
@@ -342,7 +343,10 @@ export class ModelRuntime {
 
 			let result = await this.execReturning(withValues, mState);
 
-			if (!Array.isArray(mState.value) && Array.isArray(result)) {
+			if (
+				!(mState.hasReturn || Array.isArray(mState.value)) &&
+				Array.isArray(result)
+			) {
 				result = (result as unknown[])[0];
 			}
 

@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { logger, model } from "tests/base";
+import { eq } from "drizzle-orm";
+import { model } from "tests/base";
+import { db } from "tests/db";
+import * as schema from "tests/schema";
 import { esc } from "@/model";
 
 const userModel = model("user", {});
@@ -13,196 +16,194 @@ const userModelFormat = model("user", {
 	},
 });
 
-describe("@apisr/drizzl-model", () => {
+describe("find", () => {
+	// -----------------------------------------------------------------------
+	// findFirst
+	// -----------------------------------------------------------------------
+
 	describe("findFirst", () => {
-		test("base", async () => {
+		test("returns a single row", async () => {
 			const user = await userModel.findFirst();
 
-			logger.info("findFirst -> base", user);
-
-			expect(user.id).toBeDefined();
+			expect(user).toBeDefined();
+			expect(user.id).toBeNumber();
 		});
 
-		test("simple where", async () => {
+		test("where — equality", async () => {
+			const user = await userModel.where({ name: esc("Alex") }).findFirst();
+
+			expect(user).toBeDefined();
+			expect(user.name).toBe("Alex");
+		});
+
+		test("where — like operator", async () => {
+			const user = await userModel.where({ name: { like: "An%" } }).findFirst();
+
+			expect(user).toBeDefined();
+			expect(user.name.startsWith("An")).toBe(true);
+		});
+
+		test("where — or combinator", async () => {
 			const user = await userModel
-				.where({
-					name: esc("Alex"),
-				})
+				.where({ name: { or: [esc("Alex"), esc("Anna")] } })
 				.findFirst();
 
-			logger.info("findFirst -> simple where", user);
-
-			expect(user.id).toBeDefined();
+			expect(user).toBeDefined();
+			expect(["Alex", "Anna"]).toContain(user.name);
 		});
 
-		test("simple where -> like", async () => {
-			const user = await userModel
-				.where({
-					name: {
-						like: "An%",
-					},
-				})
-				.findFirst();
-
-			logger.info("findFirst -> simple where -> like", user);
-
-			expect(user.id).toBeDefined();
-		});
-
-		test("after query -> select", async () => {
+		test("select — picks only specified fields", async () => {
 			const user = await userModel.findFirst().select({
 				name: true,
 				age: true,
 			});
 
-			logger.info("findFirst -> after query -> select", user);
-
 			expect(user.name).toBeDefined();
+			expect(user.age).toBeDefined();
+			// @ts-expect-error
+			expect(user.email).toBeUndefined();
 		});
 
-		test("after query -> exclude", async () => {
+		test("exclude — removes specified fields", async () => {
 			const user = await userModel.findFirst().exclude({
 				name: true,
 			});
 
-			logger.info("findFirst -> after query -> exclude", user);
-
 			// @ts-expect-error
 			expect(user.name).toBeUndefined();
+			expect(user.id).toBeDefined();
 		});
 
-		test("format", async () => {
+		test("format — applies format function", async () => {
 			const user = await userModelFormat.findFirst();
 
-			logger.info("findFirst -> format", user);
-
+			expect(user.customField).toBe("Hello World");
 			// @ts-expect-error
 			expect(user.secretField).toBeUndefined();
+			expect(typeof user.isVerified).toBe("boolean");
 		});
 
-		test("format -> raw", async () => {
+		test("raw — skips format", async () => {
 			const user = await userModelFormat.findFirst().raw();
-
-			logger.info("findFirst -> format -> raw", user);
 
 			expect(user.secretField).toBeDefined();
 		});
 
-		test.skip("safe", async () => {
-			const { data: user, error } = await userModelFormat.findFirst().safe();
+		test("matches raw drizzle query", async () => {
+			const user = await userModel.where({ name: esc("Alex") }).findFirst();
 
-			if (error) {
-				throw error;
-			}
+			const [expected] = await db
+				.select()
+				.from(schema.user)
+				.where(eq(schema.user.name, "Alex"))
+				.limit(1);
 
-			logger.info("findFirst -> safe", user);
+			expect(user).toEqual(expected as any);
+		});
 
-			expect(user.name).toBeDefined();
+		test("safe — wraps result in { data, error }", async () => {
+			const result = await userModel.findFirst().safe();
+
+			expect(result.error).toBeUndefined();
+			expect(result.data).toBeDefined();
+			expect((result.data as any).id).toBeNumber();
 		});
 	});
 
-	describe("findMany", () => {
-		test("base", async () => {
-			const users = await userModel.findMany();
+	// -----------------------------------------------------------------------
+	// findMany
+	// -----------------------------------------------------------------------
 
-			logger.info("findMany -> base", users);
+	describe("findMany", () => {
+		test("returns all rows", async () => {
+			const users = await userModel.findMany();
+			const expected = await db.select().from(schema.user);
 
 			expect(users).toBeArray();
+			expect(users).toHaveLength((expected as any[]).length);
+		});
 
+		test("where — equality", async () => {
+			const users = await userModel.where({ name: esc("Alex") }).findMany();
+
+			expect(users).toBeArray();
 			for (const user of users) {
-				expect(user.id).toBeDefined();
+				expect(user.name).toBe("Alex");
 			}
 		});
 
-		test("simple where", async () => {
+		test("where — multiple filters (AND)", async () => {
 			const users = await userModel
 				.where({
 					name: esc("Alex"),
+					isVerified: esc(false),
 				})
 				.findMany();
 
-			logger.info("findMany -> simple where", users);
-
 			for (const user of users) {
-				expect(user.id).toBeDefined();
+				expect(user.name).toBe("Alex");
+				expect(user.isVerified).toBe(false);
 			}
 		});
 
-		test("simple where -> like", async () => {
-			const users = await userModel
-				.where({
-					name: {
-						like: "An%",
-					},
-				})
-				.findMany();
-
-			logger.info("findMany -> simple where -> like", users);
+		test("where — gte operator", async () => {
+			const users = await userModel.where({ age: { gte: esc(18) } }).findMany();
 
 			for (const user of users) {
-				expect(user.id).toBeDefined();
+				expect(user.age).toBeGreaterThanOrEqual(18);
 			}
 		});
 
-		test("after query -> select", async () => {
+		test("select — picks only specified fields", async () => {
 			const users = await userModel.findMany().select({
 				name: true,
 				age: true,
 			});
 
-			logger.info("findMany -> after query -> select", users);
-
 			for (const user of users) {
 				expect(user.name).toBeDefined();
+				expect(user.age).toBeDefined();
+				// @ts-expect-error
+				expect(user.email).toBeUndefined();
 			}
 		});
 
-		test("after query -> exclude", async () => {
+		test("exclude — removes specified fields", async () => {
 			const users = await userModel.findMany().exclude({
 				name: true,
 			});
 
-			logger.info("findFirst -> after query -> exclude", users);
-
 			for (const user of users) {
 				// @ts-expect-error
 				expect(user.name).toBeUndefined();
+				expect(user.id).toBeDefined();
 			}
 		});
 
-		test("format", async () => {
+		test("format — applies format function", async () => {
 			const users = await userModelFormat.findMany();
 
-			logger.info("findFirst -> format", users);
-
 			for (const user of users) {
+				expect(user.customField).toBe("Hello World");
 				// @ts-expect-error
 				expect(user.secretField).toBeUndefined();
 			}
 		});
 
-		test("format -> raw", async () => {
+		test("raw — skips format", async () => {
 			const users = await userModelFormat.findMany().raw();
-
-			logger.info("findFirst -> format -> raw", users);
 
 			for (const user of users) {
 				expect(user.secretField).toBeDefined();
 			}
 		});
 
-		test.skip("safe", async () => {
-			const { data: users, error } = await userModelFormat.findMany().safe();
+		test("safe — wraps result in { data, error }", async () => {
+			const result = await userModel.findMany().safe();
 
-			if (error) {
-				throw error;
-			}
-
-			logger.info("findFirst -> safe", users);
-
-			for (const user of users) {
-				expect(user.name).toBeDefined();
-			}
+			expect(result.error).toBeUndefined();
+			expect(result.data).toBeDefined();
+			expect(result.data).toBeArray();
 		});
 	});
 });

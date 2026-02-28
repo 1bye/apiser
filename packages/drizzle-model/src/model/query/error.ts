@@ -1,1 +1,1 @@
-export class QueryError extends Error {}
+export interface QueryError extends Error {}
