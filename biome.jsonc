@@ -55,7 +55,8 @@
         }
       },
       "performance": {
-        "noBarrelFile": "warn"
+        "noBarrelFile": "warn",
+        "noNamespaceImport": "warn"
       },
       "style": {
         "noParameterAssign": "error",

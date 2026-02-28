@@ -1,64 +1,7 @@
-- * Add all essential functions as `update`, `insert`, `delete`, `findMany`, `findFirst`
-- Make `route` function (Just duplicate):
-```ts
-const [val1, val2] = await userModel.name({
-  like: "A%"
-}).route(
-  (userModel) => userModel.isVerified(true).findMany(),
-  (userModel) => userModel.isVerified(false).age({
-    lte: 18
-  }).findMany()
-  // ...args[]
-)
-```
-- Make built in `paginate` which is pagination function, used as:
-```ts
-const userModel = model({
-  table: userTable,
-  
-  // Optional
-  pagination: {
-    max: 10
-  }
-})
+# TODO:
 
-const page = 1;
-
-userModel.name({
-  like: "A%"
-}).userId(userId).paginate(page)
-```
-* Make built in `upsert`, as:
-```ts
-userModel.id(123).upsert({
-  // create obj
-}, {
-  // update obj 
-}, /* options */)
-```
-
-* Transactions:
-```ts
-userModel.transaction(tx => ...);
-
-// With other models
-userModel.transaction(tx => {
-  postsModel.db(tx).insert({
-    userId: 123,
-    content: ...
-  })
-  
-  // or
-  
-  const txPostsModel = postsModel.db(tx);
-  
-  txPostsModel.insert({
-    userId: 123,
-    content: ...
-  })
-  
-  txPostsModel.userId(123).delete()
-});
-```
-- / Soft delete?
-- * Dialect based configuration `mysql`, `pgsql` and etc... like `returning()` on pgsql and `$returningId()` on mysql
+- `count()` function to count rows
+- Fix types. On insert, and add Simplify<> = for more readable queries.
+- add `returnFirst()` to return first of `return()`
+- add `omit()` as progammic `exclude()`. The main difference is `omit()` is applied after query. `exclude()` is applied on the query.
+- JUST remake a entire core. Manually write code with a few AI changes.

@@ -28,6 +28,22 @@ export type DefaultError = {
 	stack?: string[];
 };
 
+type InferErrorHandlerInput<
+	THandlerOptions extends ErrorHandlerOptions | undefined,
+> = THandlerOptions extends {
+	input: infer TSchema;
+}
+	? TSchema extends Schema
+		? Infer<TSchema>
+		: never
+	: THandlerOptions extends {
+				input?: infer TSchema;
+			}
+		? TSchema extends Schema
+			? Infer<TSchema> | undefined
+			: undefined
+		: never;
+
 export type ErrorHandler<
 	TOptions extends Options,
 	THandlerOptions extends ErrorHandlerOptions | undefined,
@@ -35,9 +51,7 @@ export type ErrorHandler<
 	meta: TOptions["meta"] extends undefined
 		? never
 		: Infer<ExtractSchema<TOptions["meta"]>>;
-	input: THandlerOptions extends undefined
-		? never
-		: Infer<Exclude<THandlerOptions, undefined>["input"]>;
+	input: InferErrorHandlerInput<THandlerOptions>;
 }) => ErrorOptions.InferedSchema<TOptions>;
 
 export interface ErrorHandlerOptions<TSchema extends Schema = Schema> {

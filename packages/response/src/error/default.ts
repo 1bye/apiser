@@ -6,6 +6,13 @@ export function generateDefaultErrors<TOptions extends Options>(
 	_mapDefaultError: ErrorOptions.Base["mapDefaultError"]
 ): ErrorRegistry<TOptions> {
 	const mapDefaultError = _mapDefaultError ?? ((err) => err);
+	const resolveCause = (input: unknown): unknown => {
+		if (typeof input !== "object" || input === null || !("cause" in input)) {
+			return undefined;
+		}
+
+		return (input as { cause?: unknown }).cause;
+	};
 
 	const inputSchema = z
 		.object({
@@ -20,7 +27,7 @@ export function generateDefaultErrors<TOptions extends Options>(
 					message: "Unauthorized",
 					code: "UNAUTHORIZED",
 					name: "UnauthorizedError",
-					cause: input.cause,
+					cause: resolveCause(input),
 				}),
 			options: {
 				input: inputSchema,
@@ -35,7 +42,7 @@ export function generateDefaultErrors<TOptions extends Options>(
 					message: "Forbidden",
 					code: "FORBIDDEN",
 					name: "ForbiddenError",
-					cause: input.cause,
+					cause: resolveCause(input),
 				}),
 			options: {
 				input: inputSchema,
@@ -50,7 +57,7 @@ export function generateDefaultErrors<TOptions extends Options>(
 					message: "Not Found",
 					code: "NOT_FOUND",
 					name: "NotFoundError",
-					cause: input.cause,
+					cause: resolveCause(input),
 				}),
 			options: {
 				input: inputSchema,
@@ -65,7 +72,7 @@ export function generateDefaultErrors<TOptions extends Options>(
 					message: "Bad Request",
 					code: "BAD_REQUEST",
 					name: "BadRequestError",
-					cause: input.cause,
+					cause: resolveCause(input),
 				}),
 			options: {
 				input: inputSchema,
@@ -80,7 +87,7 @@ export function generateDefaultErrors<TOptions extends Options>(
 					message: "Conflict",
 					code: "CONFLICT",
 					name: "ConflictError",
-					cause: input.cause,
+					cause: resolveCause(input),
 				}),
 			options: {
 				input: inputSchema,
@@ -95,7 +102,7 @@ export function generateDefaultErrors<TOptions extends Options>(
 					message: "Too Many Requests",
 					code: "TOO_MANY_REQUESTS",
 					name: "TooManyRequestsError",
-					cause: input.cause,
+					cause: resolveCause(input),
 				}),
 			options: {
 				input: inputSchema,
@@ -110,7 +117,7 @@ export function generateDefaultErrors<TOptions extends Options>(
 					message: "Internal Server Error",
 					code: "INTERNAL_SERVER_ERROR",
 					name: "InternalServerError",
-					cause: input.cause,
+					cause: resolveCause(input),
 				}),
 			options: {
 				input: inputSchema,

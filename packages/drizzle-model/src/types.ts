@@ -14,3 +14,4 @@ export type AddUnionToValues<T extends Record<PropertyKey, any>, A> = {
 export interface RecursiveBooleanRecord {
 	[key: string]: boolean | RecursiveBooleanRecord;
 }
+export type Simplify<T> = { [KeyType in keyof T]: T[KeyType] } & {};

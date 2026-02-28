@@ -1,6 +1,6 @@
 {
   "name": "@apisr/drizzle-model",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": false,
   "scripts": {
     "lint": "eslint . --max-warnings 0",
@@ -13,6 +13,7 @@
   "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
+    "@apisr/logger": "workspace:",
     "@types/bun": "latest",
     "@types/node": "^22.15.3",
     "@types/pg": "^8.15.6",

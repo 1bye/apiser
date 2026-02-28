@@ -238,7 +238,11 @@ export function makeModelRuntime(config: {
 			const runner = async (mState: MutateState) => {
 				const table = (config.schema as any)[config.tableName];
 				const q = (config.db as any).insert(table).values(mState.value);
-				return await execReturn(q, mState, config.dialect);
+				const result = await execReturn(q, mState, config.dialect);
+				if (!Array.isArray(mState.value) && Array.isArray(result)) {
+					return result[0];
+				}
+				return result;
 			};
 
 			return new MutateResult(

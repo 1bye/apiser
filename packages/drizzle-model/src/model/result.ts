@@ -2,6 +2,7 @@ import type {
 	TableRelationalConfig,
 	TablesRelationalConfig,
 } from "drizzle-orm/relations";
+import type { Simplify } from "@/types.ts";
 import type { ModelConfig } from "./config.ts";
 import type { ReturningIdDialects } from "./dialect.ts";
 import type { ModelFormatValue } from "./format.ts";
@@ -46,7 +47,7 @@ export interface ModelQueryResult<
 	>(
 		value: TValue
 	): ModelQueryResult<
-		MethodExcludeResult<TValue, TResult>,
+		Simplify<MethodExcludeResult<TValue, TResult>>,
 		TConfig,
 		TExcludeKeys
 	>;
@@ -66,7 +67,7 @@ export interface ModelQueryResult<
 	>(
 		value: TValue
 	): ModelQueryResult<
-		MethodSelectResult<TValue, TResult>,
+		Simplify<MethodSelectResult<TValue, TResult>>,
 		TConfig,
 		TExcludeKeys
 	>;
