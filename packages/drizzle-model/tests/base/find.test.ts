@@ -3,6 +3,15 @@ import { logger, model } from "tests/base";
 import { esc } from "@/model";
 
 const userModel = model("user", {});
+const userModelFormat = model("user", {
+	format({ secretField, isVerified, ...rest }) {
+		return {
+			...rest,
+			isVerified: !!isVerified,
+			customField: "Hello World" as const,
+		};
+	},
+});
 
 describe("@apisr/drizzl-model", () => {
 	describe("findFirst", () => {
@@ -60,6 +69,35 @@ describe("@apisr/drizzl-model", () => {
 
 			// @ts-expect-error
 			expect(user.name).toBeUndefined();
+		});
+
+		test("format", async () => {
+			const user = await userModelFormat.findFirst();
+
+			logger.info("findFirst -> format", user);
+
+			// @ts-expect-error
+			expect(user.secretField).toBeUndefined();
+		});
+
+		test("format -> raw", async () => {
+			const user = await userModelFormat.findFirst().raw();
+
+			logger.info("findFirst -> format -> raw", user);
+
+			expect(user.secretField).toBeDefined();
+		});
+
+		test.skip("safe", async () => {
+			const { data: user, error } = await userModelFormat.findFirst().safe();
+
+			if (error) {
+				throw error;
+			}
+
+			logger.info("findFirst -> safe", user);
+
+			expect(user.name).toBeDefined();
 		});
 	});
 
@@ -120,14 +158,51 @@ describe("@apisr/drizzl-model", () => {
 		});
 
 		test("after query -> exclude", async () => {
-			const user = await userModel.findFirst().exclude({
+			const users = await userModel.findMany().exclude({
 				name: true,
 			});
 
-			logger.info("findFirst -> after query -> exclude", user);
+			logger.info("findFirst -> after query -> exclude", users);
 
-			// @ts-expect-error
-			expect(user.name).toBeUndefined();
+			for (const user of users) {
+				// @ts-expect-error
+				expect(user.name).toBeUndefined();
+			}
+		});
+
+		test("format", async () => {
+			const users = await userModelFormat.findMany();
+
+			logger.info("findFirst -> format", users);
+
+			for (const user of users) {
+				// @ts-expect-error
+				expect(user.secretField).toBeUndefined();
+			}
+		});
+
+		test("format -> raw", async () => {
+			const users = await userModelFormat.findMany().raw();
+
+			logger.info("findFirst -> format -> raw", users);
+
+			for (const user of users) {
+				expect(user.secretField).toBeDefined();
+			}
+		});
+
+		test.skip("safe", async () => {
+			const { data: users, error } = await userModelFormat.findMany().safe();
+
+			if (error) {
+				throw error;
+			}
+
+			logger.info("findFirst -> safe", users);
+
+			for (const user of users) {
+				expect(user.name).toBeDefined();
+			}
 		});
 	});
 });

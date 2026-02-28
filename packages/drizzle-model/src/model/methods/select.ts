@@ -17,14 +17,8 @@ export type ResolveMethodSelectValue<
 
 export type MethodSelectResult<
 	TValue extends Record<string, any>,
-	TResult extends Record<string, any> | any[],
-> = TResult extends any[]
-	? TResult extends (infer RItem)[]
-		? RItem extends Record<string, any>
-			? ResolveMethodSelectValue<TValue, RItem>[]
-			: ResolveMethodSelectValue<TValue, TResult>[]
-		: ResolveMethodSelectValue<TValue, TResult>
-	: ResolveMethodSelectValue<TValue, TResult>;
+	TResult extends Record<string, any>,
+> = ResolveMethodSelectValue<TValue, TResult>;
 
 export type MethodSelectValue<TResult extends object> =
 	TResult extends readonly (infer U)[]

@@ -2,7 +2,7 @@ import type { Column } from "drizzle-orm";
 import type { InferModelFromColumns } from "drizzle-orm/table";
 import type { ModelConfig } from "../config.ts";
 import type { ReturningIdDialects } from "../dialect.ts";
-import type { ModelFormatValue } from "../format.ts";
+import type { ModelFormatResult } from "../format.ts";
 
 // export type GetPrimarySerialOrDefaultKeys<TTable extends TableRelationalConfig, T extends IsDrizzleTable<TTable["table"]>["_"]["columns"] = IsDrizzleTable<TTable["table"]>["_"]["columns"]> = {
 //   [K in keyof T]: T[K]['_']['isPrimaryKey'] extends true
@@ -28,13 +28,13 @@ export type GetPrimarySerialOrDefaultKeys<T extends Record<string, Column>> = {
 	[K in PrimaryKeyKeys<T>]: T[K];
 };
 
-export type MethodReturnResult<
-	TResultType extends string,
-	TConfig extends ModelConfig,
-> = TConfig["dialect"] extends ReturningIdDialects
-	? InferModelFromColumns<
-			GetPrimarySerialOrDefaultKeys<TConfig["tableColumns"]>
-		>
-	: TResultType extends "many"
-		? ModelFormatValue<TConfig["tableOutput"], TConfig["optionsFormat"]>[]
-		: ModelFormatValue<TConfig["tableOutput"], TConfig["optionsFormat"]>;
+export type MethodReturnResult<TConfig extends ModelConfig> =
+	TConfig["dialect"] extends ReturningIdDialects
+		? InferModelFromColumns<
+				GetPrimarySerialOrDefaultKeys<TConfig["tableColumns"]>
+			>
+		: ModelFormatResult<
+				TConfig["tableOutput"],
+				TConfig["optionsFormat"],
+				TConfig["table"]
+			>;

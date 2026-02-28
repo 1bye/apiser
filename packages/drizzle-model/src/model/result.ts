@@ -2,10 +2,15 @@ import type {
 	TableRelationalConfig,
 	TablesRelationalConfig,
 } from "drizzle-orm/relations";
-import type { Simplify } from "@/types.ts";
+import type {
+	ApplyArrayIfArray,
+	InferArrayItem,
+	MergeExclusive,
+	Simplify,
+} from "@/types.ts";
 import type { ModelConfig } from "./config.ts";
 import type { ReturningIdDialects } from "./dialect.ts";
-import type { ModelFormatValue } from "./format.ts";
+import type { ModelFormatResult } from "./format.ts";
 import type {
 	MethodExcludeResult,
 	MethodExcludeValue,
@@ -17,7 +22,7 @@ import type {
 } from "./methods/select.ts";
 import type { MethodWithResult, MethodWithValue } from "./methods/with.ts";
 import type { ResolveOptionsFormat } from "./options.ts";
-import type { TableOutput } from "./table.ts";
+import type { QueryError } from "./query/error.ts";
 
 /**
  * Represents the result of a model operation (like findMany or findFirst).
@@ -30,7 +35,7 @@ import type { TableOutput } from "./table.ts";
  * @typeParam TTable - Relational configuration for the current table
  */
 export interface ModelQueryResult<
-	TResult extends Record<string, any>,
+	TResult extends Record<string, any> | any[],
 	TConfig extends ModelConfig,
 	TExcludedKeys extends string = string,
 	TSchema extends TablesRelationalConfig = TConfig["schema"],
@@ -38,7 +43,17 @@ export interface ModelQueryResult<
 	TFormat extends Record<string, any> | undefined = ResolveOptionsFormat<
 		TConfig["options"]["format"]
 	>,
-> extends Promise<ModelFormatValue<TResult, TFormat>> {
+	TWithSafe extends true | false = false,
+> extends Promise<
+		ApplySafeResultIf<
+			TWithSafe,
+			ApplyArrayIfArray<
+				TResult,
+				Simplify<ModelFormatResult<InferArrayItem<TResult>, TFormat, TTable>>
+			>
+		>
+	> {
+	$format: TFormat;
 	debug(): any;
 
 	exclude<
@@ -47,9 +62,16 @@ export interface ModelQueryResult<
 	>(
 		value: TValue
 	): ModelQueryResult<
-		Simplify<MethodExcludeResult<TValue, TResult>>,
+		ApplyArrayIfArray<
+			TResult,
+			MethodExcludeResult<TValue, InferArrayItem<TResult>>
+		>,
 		TConfig,
-		TExcludeKeys
+		TExcludeKeys,
+		TSchema,
+		TTable,
+		TFormat,
+		TWithSafe
 	>;
 
 	raw<TExcludeKeys extends string = TExcludedKeys | "raw">(): ModelQueryResult<
@@ -58,7 +80,18 @@ export interface ModelQueryResult<
 		TExcludeKeys,
 		TSchema,
 		TTable,
-		undefined
+		undefined,
+		TWithSafe
+	>;
+
+	safe(): ModelQueryResult<
+		TResult,
+		TConfig,
+		TExcludedKeys | "safe",
+		TSchema,
+		TTable,
+		TFormat,
+		true
 	>;
 
 	select<
@@ -67,10 +100,18 @@ export interface ModelQueryResult<
 	>(
 		value: TValue
 	): ModelQueryResult<
-		Simplify<MethodSelectResult<TValue, TResult>>,
+		ApplyArrayIfArray<
+			TResult,
+			MethodSelectResult<TValue, InferArrayItem<TResult>>
+		>,
 		TConfig,
-		TExcludeKeys
+		TExcludeKeys,
+		TSchema,
+		TTable,
+		TFormat,
+		TWithSafe
 	>;
+
 	with<
 		TValue extends MethodWithValue<TSchema, TTable["relations"]>,
 		TExcludeKeys extends string = TExcludedKeys | "with",
@@ -79,30 +120,101 @@ export interface ModelQueryResult<
 	): ModelQueryResult<
 		MethodWithResult<TValue, TResult, TSchema, TTable>,
 		TConfig,
-		TExcludeKeys
+		TExcludeKeys,
+		TSchema,
+		TTable,
+		TFormat,
+		TWithSafe
 	>;
 }
 
-export interface ModelMutateResult<
-	TBaseResult extends Record<string, any> | void,
+export interface ModelInMutableResult<
+	TBaseResult extends Record<string, any> | any[] | never,
 	TConfig extends ModelConfig,
-	TResultType extends string = "one",
-> extends Promise<TBaseResult> {
+> extends Promise<Simplify<TBaseResult>> {
 	// TODO: Planned for future
 	// with<TValue extends MethodWithInsertValue<TSchema, TTable["relations"]>>(
 	//   value: TValue,
 	// ): void;
+	// return<
+	// 	TValue extends MethodSelectValue<TableOutput<TConfig["table"]>> | undefined,
+	// 	TReturnResult extends MethodReturnResult<
+	// 		TResultType,
+	// 		TConfig
+	// 	> = MethodReturnResult<TResultType, TConfig>,
+	// 	TResult extends Record<string, any> = TValue extends undefined
+	// 		? TReturnResult
+	// 		: MethodSelectResult<Exclude<TValue, undefined>, TReturnResult>,
+	// >(
+	// 	value?: TConfig["dialect"] extends ReturningIdDialects ? never : TValue
+	// ): Omit<ModelMutateResult<TResult, TConfig, TResultType>, "with">;
+	$return: MethodReturnResult<TConfig>;
 
+	omit<TValue extends MethodExcludeValue<TConfig["tableOutput"]>>(
+		value: TValue
+	): ModelInMutableResult<
+		ApplyArrayIfArray<
+			TConfig["tableOutput"],
+			MethodExcludeResult<TValue, InferArrayItem<TConfig["tableOutput"]>>
+		>,
+		TConfig
+	>;
 	return<
-		TValue extends MethodSelectValue<TableOutput<TConfig["table"]>> | undefined,
-		TReturnResult extends MethodReturnResult<
-			TResultType,
-			TConfig
-		> = MethodReturnResult<TResultType, TConfig>,
-		TResult extends Record<string, any> = TValue extends undefined
+		TValue extends MethodSelectValue<TConfig["tableOutput"]> | undefined,
+		TReturnResult extends
+			MethodReturnResult<TConfig> = MethodReturnResult<TConfig>,
+		TResult extends Record<string, any> = undefined extends TValue
 			? TReturnResult
 			: MethodSelectResult<Exclude<TValue, undefined>, TReturnResult>,
 	>(
 		value?: TConfig["dialect"] extends ReturningIdDialects ? never : TValue
-	): Omit<ModelMutateResult<TResult, TConfig, TResultType>, "with">;
+	): ModelMutateResult<Simplify<TResult>[], TConfig>;
+
+	returnFirst<
+		TValue extends MethodSelectValue<TConfig["tableOutput"]> | undefined,
+		TReturnResult extends
+			MethodReturnResult<TConfig> = MethodReturnResult<TConfig>,
+		TResult extends Record<string, any> = undefined extends TValue
+			? TReturnResult
+			: MethodSelectResult<Exclude<TValue, undefined>, TReturnResult>,
+	>(
+		value?: TConfig["dialect"] extends ReturningIdDialects ? never : TValue
+	): ModelMutateResult<Simplify<TResult>, TConfig>;
 }
+
+export interface ModelMutateResult<
+	TResult extends Record<string, any> | any[] | never,
+	TConfig extends ModelConfig,
+	TExcludedKeys extends string = string,
+	TWithSafe extends true | false = false,
+> extends Promise<ApplySafeResultIf<TWithSafe, TResult>> {
+	omit<
+		TValue extends MethodExcludeValue<TResult>,
+		TExcludeKeys extends string = TExcludedKeys | "omit",
+	>(
+		value: TValue
+	): ModelMutateResult<
+		ApplyArrayIfArray<
+			TResult,
+			Simplify<MethodExcludeResult<TValue, InferArrayItem<TResult>>>
+		>,
+		TConfig,
+		TExcludeKeys
+	>;
+
+	safe(): ModelMutateResult<TResult, TConfig, TExcludedKeys, true>;
+}
+
+export type SafeResult<TResult> = MergeExclusive<
+	{
+		error: QueryError;
+	},
+	{
+		data: TResult;
+	}
+>;
+
+export type ApplySafeResultIf<
+	TCondition extends true | false,
+	TResult,
+> = TCondition extends true ? SafeResult<TResult> : TResult;

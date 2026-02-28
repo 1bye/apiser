@@ -20,13 +20,7 @@ export type ResolveMethodExcludeValue<
 export type MethodExcludeResult<
 	TValue extends Record<string, any>,
 	TResult extends Record<string, any>,
-> = TResult extends any[]
-	? TResult extends (infer RItem)[]
-		? RItem extends Record<string, any>
-			? ResolveMethodExcludeValue<TValue, RItem>[]
-			: ResolveMethodExcludeValue<TValue, TResult>[]
-		: ResolveMethodExcludeValue<TValue, TResult>
-	: ResolveMethodExcludeValue<TValue, TResult>;
+> = ResolveMethodExcludeValue<TValue, TResult>;
 
 export type MethodExcludeValue<TResult extends Record<string, any>> =
 	MethodSelectValue<TResult>;

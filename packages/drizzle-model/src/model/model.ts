@@ -4,7 +4,6 @@ import type {
 } from "drizzle-orm/relations";
 import type { Replace } from "../types.ts";
 import type { ModelConfig } from "./config.ts";
-import type { ModelDialect } from "./dialect.ts";
 import type { MethodInsertValue } from "./methods/insert.ts";
 import type { MethodWhereValue } from "./methods/query/where.ts";
 import type { MethodUpdateValue } from "./methods/update.ts";
@@ -13,10 +12,9 @@ import type { MethodWithValue } from "./methods/with.ts";
 import type {
 	ComposeModelOptions,
 	ModelOptions,
-	ResolveOptionsFormat,
 	ResolveOptionsMethods,
 } from "./options.ts";
-import type { ModelMutateResult, ModelQueryResult } from "./result.ts";
+import type { ModelInMutableResult, ModelQueryResult } from "./result.ts";
 
 /**
  * Interface defining standard query methods available on a model.
@@ -28,12 +26,12 @@ export interface ModelMethods<
 	TConfig extends ModelConfig,
 	TSchema extends TablesRelationalConfig = TConfig["schema"],
 	TTable extends TableRelationalConfig = TConfig["table"],
-	TDialect extends ModelDialect = TConfig["dialect"],
 > {
+	count(): Promise<number>;
 	/**
 	 * Deletes rows that match the current model query.
 	 */
-	delete(): ModelMutateResult<void, TConfig, "many">;
+	delete(): ModelInMutableResult<never, TConfig>;
 	/**
 	 * Fetches the first matching row for the current model query.
 	 */
@@ -59,7 +57,7 @@ export interface ModelMethods<
 	 */
 	insert<TValue extends MethodInsertValue<TTable>>(
 		value: TValue
-	): ModelMutateResult<void, TConfig, TValue extends any[] ? "many" : "one">;
+	): ModelInMutableResult<never, TConfig>;
 	/**
 	 * Updates rows that match the current model query.
 	 *
@@ -67,7 +65,7 @@ export interface ModelMethods<
 	 */
 	update<TValue extends MethodUpdateValue<TTable>>(
 		value: TValue
-	): ModelMutateResult<void, TConfig, "many">;
+	): ModelInMutableResult<never, TConfig>;
 
 	/**
 	 * Inserts or updates rows based on conflict criteria.
@@ -76,11 +74,7 @@ export interface ModelMethods<
 	 */
 	upsert<TValue extends MethodUpsertValue<TConfig>>(
 		value: TValue
-	): ModelMutateResult<
-		void,
-		TConfig,
-		TValue["insert"] extends any[] ? "many" : "one"
-	>;
+	): ModelInMutableResult<never, TConfig>;
 
 	/**
 	 * Adds a where clause to the current model query.
@@ -144,13 +138,13 @@ export type Model<TConfig extends ModelConfig> = ModelIdentifier<
 > &
 	ModelBase<TConfig> &
 	ResolveOptionsMethods<TConfig["options"]["methods"]> & {
-		$format: TConfig["options"]["format"];
-		$formatValue: ResolveOptionsFormat<TConfig["options"]["format"]>;
+		// $format: TConfig["options"]["format"];
+		// $formatValue: ResolveOptionsFormat<TConfig["options"]["format"]>;
 
 		$$config: TConfig;
 	};
 
-export type ModelIdentifier<ModelName> = {
+export interface ModelIdentifier<ModelName> {
 	$model: "model";
 	$modelName: ModelName;
-};
+}

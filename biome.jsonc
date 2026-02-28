@@ -54,6 +54,9 @@
           }
         }
       },
+      "suspicious": {
+        "noExplicitAny": "info"
+      },
       "performance": {
         "noBarrelFile": "warn",
         "noNamespaceImport": "warn"
