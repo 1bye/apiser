@@ -9,20 +9,14 @@ import type { ModelOptions, ResolveOptionsFormat } from "./options.ts";
 import type { DrizzleColumnDataType } from "./query/operations.ts";
 import type { IsTable, TableOutput } from "./table.ts";
 
-export type ModelConfig<
+export interface ModelConfig<
 	TSchema extends TablesRelationalConfig = TablesRelationalConfig,
 	TTable extends TableRelationalConfig = TableRelationalConfig,
 	TDialect extends ModelDialect = ModelDialect,
 	TOptions extends ModelOptions<any> = ModelOptions<any>,
-> = {
-	schema: TSchema;
-	table: TTable;
+> {
 	dialect: TDialect;
 	options: TOptions;
-
-	// Aliases:
-	tableOutput: TableOutput<TTable>;
-	tableColumns: IsTable<TTable["table"]>["_"]["columns"];
 
 	optionsFormat: ResolveOptionsFormat<TOptions["format"]>;
 
@@ -34,5 +28,11 @@ export type ModelConfig<
 			IsTable<TTable["table"]>["_"]["columns"]
 		>]: DrizzleColumnDataType<IsTable<TTable["table"]>["_"]["columns"][TKey]>;
 	};
+	schema: TSchema;
+	table: TTable;
+	tableColumns: IsTable<TTable["table"]>["_"]["columns"];
+
+	// Aliases:
+	tableOutput: TableOutput<TTable>;
 	whereValue: MethodWhereValue<TSchema, TTable>;
-};
+}
