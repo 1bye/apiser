@@ -11,8 +11,8 @@ Build reusable models for tables and relations with a progressive flow:
 
 1. **Intent Stage** — declare what you want (`where`, `insert`, `update`, ...)
 2. **Execution Stage** — choose execution (`findMany`, `findFirst`, `return`, `returnFirst`)
-3. **Refinement Stage** — shape result (`select`, `exclude`, `with`, `raw`)
-4. **Programmatic Polishing** — post-process safely (`omit`, `safe`)
+3. **Refinement Stage** — shape the SQL query (`select`, `exclude`, `with`)
+4. **Programmatic Polishing** — post-process the result (`omit`, `raw`, `safe`)
 
 ---
 
@@ -181,21 +181,48 @@ const users = await userModel.findMany().with({
 });
 ```
 
-#### Combining refiners
+#### SQL column selection with `.select()` and `.exclude()`
+
+`.select()` and `.exclude()` control which columns appear in the SQL `SELECT` clause — they affect the query itself, not just the result.
+
+```ts
+// Only fetch id and name columns
+const users = await userModel
+  .findMany()
+  .select({ id: true, name: true });
+
+// Fetch all columns except email
+const users = await userModel
+  .findMany()
+  .exclude({ email: true });
+
+// Combine: start with a whitelist, then drop a field
+const users = await userModel
+  .findMany()
+  .select({ id: true, name: true, email: true })
+  .exclude({ email: true });
+```
+
+This is equivalent to:
+
+```ts
+db.select({ id: schema.user.id, name: schema.user.name }).from(schema.user);
+```
+
+#### Combining query refiners
 
 ```ts
 const users = await userModel
   .findMany()
   .with({ posts: true })
-  .select({ id: true, name: true, email: true })
-  .exclude({ email: true });
+  .select({ id: true, name: true });
 ```
 
 Available query refiners:
 
-- `.with(relations)` — load related entities
-- `.select(fields)` — pick specific fields
-- `.exclude(fields)` — omit specific fields
+- `.select(fields)` — SQL SELECT whitelist
+- `.exclude(fields)` — SQL SELECT blacklist
+- `.with(relations)` — load related entities via JOINs
 - `.raw()` — skip format function
 - `.safe()` — wrap in `{ data, error }`
 - `.debug()` — inspect query state
@@ -211,6 +238,7 @@ const first = await userModel
   .insert({ email: "b@b.com", name: "Anna", age: 21 })
   .returnFirst();
 
+// .omit() removes fields from the result AFTER the query runs (programmatic, not SQL)
 const sanitized = await userModel
   .where({ id: esc(1) })
   .update({ secretField: 999 })
@@ -220,10 +248,10 @@ const sanitized = await userModel
 
 Available mutation refiners:
 
-- `.return(fields?)`
-- `.returnFirst(fields?)`
-- `.omit(fields)`
-- `.safe()`
+- `.return(fields?)` — return all rows
+- `.returnFirst(fields?)` — return first row
+- `.omit(fields)` — remove fields from result after query (programmatic, not SQL)
+- `.safe()` — wrap in `{ data, error }`
 
 ---
 
@@ -354,7 +382,8 @@ Note: when method names conflict during `extend`, existing runtime methods take 
 ## Type safety notes
 
 - Prefer `esc(...)` for explicit where value/operator expressions.
-- `.select()` and `.exclude()` refine result types.
+- `.select()` and `.exclude()` control SQL SELECT columns and refine result types.
+- `.omit()` removes fields from the result programmatically after the query.
 - `.safe()` wraps result types into `{ data, error }`.
 - `.return()` returns array shape; `.returnFirst()` returns single-row shape.
 

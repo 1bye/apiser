@@ -22,13 +22,13 @@ export type SafeResult<T> =
 
 /** Accumulated state for a query operation (findMany / findFirst). */
 export interface QueryState {
-	/** Column blacklist for `.exclude()`. */
+	/** SQL SELECT blacklist — columns to omit from the query. */
 	exclude?: AnyRecord;
 	/** When `true`, formatting is skipped. */
 	raw?: boolean;
 	/** When `true`, result is wrapped in `{ data, error }`. */
 	safe?: boolean;
-	/** Column whitelist for `.select()`. */
+	/** SQL SELECT whitelist — columns to include in the query. */
 	select?: AnyRecord;
 	/** Compiled where clause. */
 	where?: unknown;
@@ -154,9 +154,12 @@ export class QueryResult<T> extends ThenableResult<T> {
 	}
 
 	/**
-	 * Whitelists specific fields in the result.
+	 * Controls which columns appear in the SQL SELECT clause (whitelist).
 	 *
-	 * @param value - A map of `{ fieldName: true }`.
+	 * This affects the query itself, not just the result.
+	 * Equivalent to `db.select({ col: table.col }).from(table)`.
+	 *
+	 * @param value - A map of `{ columnName: true }`.
 	 * @returns A new `QueryResult` with the `.select()` state applied.
 	 */
 	select(value: AnyRecord): QueryResult<T> {
@@ -164,9 +167,12 @@ export class QueryResult<T> extends ThenableResult<T> {
 	}
 
 	/**
-	 * Blacklists specific fields from the result.
+	 * Controls which columns are excluded from the SQL SELECT clause (blacklist).
 	 *
-	 * @param value - A map of `{ fieldName: true }`.
+	 * This affects the query itself, not just the result.
+	 * All columns except the listed ones will be fetched.
+	 *
+	 * @param value - A map of `{ columnName: true }`.
 	 * @returns A new `QueryResult` with the `.exclude()` state applied.
 	 */
 	exclude(value: AnyRecord): QueryResult<T> {

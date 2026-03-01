@@ -59,12 +59,16 @@ export interface JoinExecutorConfig {
 	baseTableName: string;
 	/** The Drizzle database instance. */
 	db: unknown;
+	/** SQL SELECT blacklist for base table columns. */
+	exclude?: AnyRecord;
 	/** When `true`, only the first result is returned. */
 	limitOne?: boolean;
 	/** The relations metadata map from Drizzle. */
 	relations: Record<string, AnyRecord>;
 	/** The full schema map (`{ tableName: drizzleTable }`). */
 	schema: Record<string, AnyRecord>;
+	/** SQL SELECT whitelist for base table columns. */
+	select?: AnyRecord;
 	/** An optional compiled SQL where clause. */
 	whereSql?: unknown;
 	/** The user-supplied `.with()` value describing which relations to load. */
@@ -258,8 +262,14 @@ export class JoinExecutor {
 		root: JoinNode,
 		nodes: JoinNode[]
 	): Promise<AnyRecord[]> {
+		const baseColumns = this.projection.build(
+			root.targetAliasTable,
+			config.select,
+			config.exclude
+		).selectMap;
+
 		const selectMap: AnyRecord = {
-			base: this.projection.extractColumns(root.targetAliasTable),
+			base: baseColumns,
 		};
 
 		for (const node of nodes) {

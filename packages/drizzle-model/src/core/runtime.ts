@@ -182,7 +182,8 @@ export class ModelRuntime {
 	/**
 	 * Returns a thenable that resolves to an array of matching rows.
 	 *
-	 * Supports chaining: `.select()`, `.exclude()`, `.with()`, `.raw()`.
+	 * Supports chaining: `.select()`, `.exclude()` (SQL SELECT),
+	 * `.with()` (relations), `.raw()`, `.safe()`.
 	 *
 	 * @returns A {@link QueryResult} that can be awaited or further chained.
 	 */
@@ -202,6 +203,8 @@ export class ModelRuntime {
 					baseTable: table,
 					whereSql,
 					withValue: qState.with as AnyRecord,
+					select: qState.select,
+					exclude: qState.exclude,
 					limitOne: false,
 				});
 			} else {
@@ -234,7 +237,8 @@ export class ModelRuntime {
 	/**
 	 * Returns a thenable that resolves to the first matching row (or `undefined`).
 	 *
-	 * Supports chaining: `.select()`, `.exclude()`, `.with()`, `.raw()`.
+	 * Supports chaining: `.select()`, `.exclude()` (SQL SELECT),
+	 * `.with()` (relations), `.raw()`, `.safe()`.
 	 *
 	 * @returns A {@link QueryResult} that can be awaited or further chained.
 	 */
@@ -254,6 +258,8 @@ export class ModelRuntime {
 					baseTable: table,
 					whereSql,
 					withValue: qState.with as AnyRecord,
+					select: qState.select,
+					exclude: qState.exclude,
 					limitOne: true,
 				});
 			} else {
@@ -529,7 +535,11 @@ export class ModelRuntime {
 	}
 
 	/**
-	 * Applies select, exclude, and format transforms to the query result.
+	 * Applies post-query transforms to the query result.
+	 *
+	 * Note: `.select()` and `.exclude()` are handled at the SQL level
+	 * (via {@link ProjectionBuilder}) and are NOT applied here.
+	 * Only format transforms are applied post-query.
 	 */
 	private applyPostQueryTransforms(
 		result: unknown,
@@ -537,12 +547,6 @@ export class ModelRuntime {
 	): unknown {
 		let out = result;
 
-		if (qState.select) {
-			out = this.transformer.applySelect(out, qState.select);
-		}
-		if (qState.exclude) {
-			out = this.transformer.applyExclude(out, qState.exclude);
-		}
 		if (!qState.raw) {
 			out = this.transformer.applyFormat(
 				out,

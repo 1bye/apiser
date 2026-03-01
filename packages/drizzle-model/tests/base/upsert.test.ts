@@ -88,14 +88,14 @@ describe("upsert", () => {
 	test("return > omit — removes specified fields", async () => {
 		const email = `upsert-omit-${uid()}@test.com`;
 
-		const [row] = (await userModel
+		const [row] = await userModel
 			.upsert({
 				insert: { name: "Omit upsert", email, age: 40, secretField: 99 },
 				update: { name: "Omit updated" },
 				target: schema.user.email as any,
 			})
 			.return()
-			.omit({ age: true, secretField: true })) as any[];
+			.omit({ age: true, secretField: true });
 
 		expect(row.age).toBeUndefined();
 		expect(row.secretField).toBeUndefined();
