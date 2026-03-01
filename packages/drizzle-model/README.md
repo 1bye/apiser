@@ -1,5 +1,7 @@
 # @apisr/drizzle-model
 
+> **⚠️ This package is on high development stage! May have bugs**  
+
 > **⚠️ Requires `drizzle-orm@beta`**  
 > This package is built for Drizzle ORM beta versions (`^1.0.0-beta.2-86f844e`).  
 

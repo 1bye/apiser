@@ -18,7 +18,7 @@ describe("upsert", () => {
 			.upsert({
 				insert: { name: "Upsert new", email, age: 25 },
 				update: { name: "Should not apply" },
-				target: schema.user.email as any,
+				target: schema.user.email,
 			})
 			.return()) as any[];
 

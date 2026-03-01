@@ -148,7 +148,7 @@ export interface ModelInMutableResult<
 	// >(
 	// 	value?: TConfig["dialect"] extends ReturningIdDialects ? never : TValue
 	// ): Omit<ModelMutateResult<TResult, TConfig, TResultType>, "with">;
-	$return: MethodReturnResult<TConfig>;
+	// $return: MethodReturnResult<TConfig>;
 
 	omit<TValue extends MethodExcludeValue<TConfig["tableOutput"]>>(
 		value: TValue
