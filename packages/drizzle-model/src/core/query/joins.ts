@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import type { DialectHelper } from "../dialect.ts";
 import { ProjectionBuilder } from "./projection.ts";
+import { WhereCompiler } from "./where.ts";
 
 /** Generic record type used throughout the join executor. */
 type AnyRecord = Record<string, unknown>;
@@ -45,6 +46,8 @@ export interface JoinNode {
 	targetTable: AnyRecord;
 	/** Name of the target (child) table. */
 	targetTableName: string;
+	/** Optional compiled WHERE filter for this relation (added to JOIN ON). */
+	whereFilter?: unknown;
 }
 
 // ---------------------------------------------------------------------------
@@ -95,10 +98,12 @@ export interface JoinExecutorConfig {
 export class JoinExecutor {
 	private readonly dialect: DialectHelper;
 	private readonly projection: ProjectionBuilder;
+	private readonly whereCompiler: WhereCompiler;
 
 	constructor(dialect: DialectHelper) {
 		this.dialect = dialect;
 		this.projection = new ProjectionBuilder();
+		this.whereCompiler = new WhereCompiler();
 	}
 
 	/**
@@ -130,6 +135,7 @@ export class JoinExecutor {
 	 */
 	private async buildJoinTree(config: JoinExecutorConfig): Promise<JoinNode> {
 		const usedAliasKeys = new Set<string>();
+		usedAliasKeys.add(`table:${config.baseTableName}`);
 
 		const root: JoinNode = {
 			path: [],
@@ -184,6 +190,9 @@ export class JoinExecutor {
 		value: unknown,
 		path: string[]
 	): Promise<JoinNode> {
+		const { whereValue, nestedWith } =
+			this.extractRelationDescriptor(value);
+
 		const relMeta = this.getRelationMeta(
 			config.relations,
 			currentTableName,
@@ -204,6 +213,13 @@ export class JoinExecutor {
 			? await this.dialect.createTableAlias(targetTable, aliasKey)
 			: targetTable;
 
+		const whereFilter = whereValue
+			? this.whereCompiler.compile(
+					targetAliasTable as AnyRecord,
+					whereValue
+			  )
+			: undefined;
+
 		const node: JoinNode = {
 			path: [...path, key],
 			key,
@@ -219,10 +235,13 @@ export class JoinExecutor {
 			pkField: this.getPrimaryKeyField(targetAliasTable),
 			parent,
 			children: [],
+			whereFilter,
 		};
 
-		if (value && typeof value === "object" && value !== (true as unknown)) {
-			for (const [childKey, childVal] of Object.entries(value as AnyRecord)) {
+		if (nestedWith && typeof nestedWith === "object") {
+			for (const [childKey, childVal] of Object.entries(
+				nestedWith as AnyRecord
+			)) {
 				if (
 					childVal !== true &&
 					(typeof childVal !== "object" || childVal == null)
@@ -397,6 +416,10 @@ export class JoinExecutor {
 			return eq(tgtCol as never, src as never);
 		});
 
+		if (node.whereFilter) {
+			parts.push(node.whereFilter as never);
+		}
+
 		return parts.length === 1 ? parts[0] : and(...parts);
 	}
 
@@ -504,6 +527,40 @@ export class JoinExecutor {
 			typeof value === "object" &&
 			typeof (value as AnyRecord).getSQL === "function"
 		);
+	}
+
+	/**
+	 * Extracts relation where clause and nested relations from a `.with()` value.
+	 *
+	 * Handles three cases:
+	 * - `true` → no filter, no nested relations.
+	 * - A ModelRuntime (has `$model === "model"`) → extract `$where`, no nested.
+	 * - A model descriptor (`__modelRelation: true`) → extract `whereValue` and `with`.
+	 * - A plain object → treat as nested relation map.
+	 */
+	private extractRelationDescriptor(value: unknown): {
+		whereValue: unknown;
+		nestedWith: unknown;
+	} {
+		if (value === true || value == null) {
+			return { whereValue: undefined, nestedWith: undefined };
+		}
+
+		if (typeof value !== "object") {
+			return { whereValue: undefined, nestedWith: undefined };
+		}
+
+		const rec = value as AnyRecord;
+
+		if (rec.$model === "model") {
+			return { whereValue: rec.$where, nestedWith: undefined };
+		}
+
+		if (rec.__modelRelation === true) {
+			return { whereValue: rec.whereValue, nestedWith: rec.with };
+		}
+
+		return { whereValue: undefined, nestedWith: value };
 	}
 
 	// ---------------------------------------------------------------------------

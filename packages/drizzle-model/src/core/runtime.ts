@@ -105,6 +105,16 @@ export class ModelRuntime {
 		return this.config.options.format;
 	}
 
+	/** The current where clause, exposed for relation descriptors. */
+	get $where(): unknown {
+		return this.currentWhere;
+	}
+
+	/** The table name this model is bound to, exposed for relation descriptors. */
+	get $tableName(): string {
+		return this.config.tableName;
+	}
+
 	// ---------------------------------------------------------------------------
 	// Public: filtering
 	// ---------------------------------------------------------------------------
@@ -127,16 +137,26 @@ export class ModelRuntime {
 	// ---------------------------------------------------------------------------
 
 	/**
-	 * Returns the `.with()` value as-is.
+	 * Returns a relation descriptor carrying the model's where clause
+	 * and the nested relation includes.
 	 *
-	 * This is a pass-through used at the type level to allow
-	 * `model.include({ posts: true })` syntax.
+	 * Used in `.with()` to filter a relation and load nested relations:
+	 * ```ts
+	 * userModel.findMany().with({
+	 *   posts: postModel.where({ ... }).include({ comments: true }),
+	 * });
+	 * ```
 	 *
-	 * @param value - The relation include descriptor.
-	 * @returns The same value, unchanged.
+	 * @param value - The nested relation include descriptor.
+	 * @returns A model relation descriptor consumed by the join executor.
 	 */
 	include(value: unknown): unknown {
-		return value;
+		return {
+			__modelRelation: true,
+			whereValue: this.currentWhere,
+			tableName: this.config.tableName,
+			with: value,
+		};
 	}
 
 	/**

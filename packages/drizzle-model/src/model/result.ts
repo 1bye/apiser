@@ -2,6 +2,7 @@ import type {
 	TableRelationalConfig,
 	TablesRelationalConfig,
 } from "drizzle-orm/relations";
+import type { SimplifyDeep } from "type-fest";
 import type {
 	ApplyArrayIfArray,
 	InferArrayItem,
@@ -49,7 +50,9 @@ export interface ModelQueryResult<
 			TWithSafe,
 			ApplyArrayIfArray<
 				TResult,
-				Simplify<ModelFormatResult<InferArrayItem<TResult>, TFormat, TTable>>
+				SimplifyDeep<
+					ModelFormatResult<InferArrayItem<TResult>, TFormat, TTable>
+				>
 			>
 		>
 	> {

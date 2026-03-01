@@ -1,6 +1,6 @@
 {
   "name": "@apisr/drizzle-model",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": false,
   "scripts": {
     "lint": "eslint . --max-warnings 0",
@@ -8,7 +8,8 @@
     "check-types": "tsc --noEmit"
   },
   "peerDependencies": {
-    "drizzle-orm": "^1.0.0-beta.2-86f844e"
+    "drizzle-orm": "^1.0.0-beta.2-86f844e",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
@@ -31,6 +32,6 @@
   },
   "type": "module",
   "dependencies": {
-    "pg": "^8.16.3"
+    "type-fest": "^5.4.4"
   }
 }

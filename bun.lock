@@ -71,7 +71,7 @@
     },
     "packages/controller": {
       "name": "@apisr/controller",
-      "version": "0.0.1",
+      "version": "0.0.3",
       "dependencies": {
         "@apisr/response": "workspace:",
         "@apisr/schema": "workspace:",
@@ -102,11 +102,12 @@
     },
     "packages/drizzle-model": {
       "name": "@apisr/drizzle-model",
-      "version": "0.0.0",
+      "version": "2.0.0",
       "dependencies": {
-        "pg": "^8.16.3",
+        "type-fest": "^5.4.4",
       },
       "devDependencies": {
+        "@apisr/logger": "workspace:",
         "@repo/eslint-config": "*",
         "@repo/typescript-config": "*",
         "@types/bun": "latest",
@@ -120,6 +121,7 @@
       },
       "peerDependencies": {
         "drizzle-orm": "^1.0.0-beta.2-86f844e",
+        "pg": "^8.16.3",
       },
     },
     "packages/eslint-config": {
@@ -141,7 +143,7 @@
     },
     "packages/logger": {
       "name": "@apisr/logger",
-      "version": "0.0.0",
+      "version": "0.0.3",
       "dependencies": {
         "colorette": "^2.0.20",
         "json-colorizer": "^3.0.1",
@@ -160,7 +162,7 @@
     },
     "packages/response": {
       "name": "@apisr/response",
-      "version": "0.0.0",
+      "version": "0.0.3",
       "dependencies": {
         "@apisr/schema": "workspace:",
         "@apisr/zod": "workspace:",
@@ -177,7 +179,7 @@
     },
     "packages/schema": {
       "name": "@apisr/schema",
-      "version": "0.0.0",
+      "version": "0.0.2",
       "dependencies": {
         "@apisr/zod": "workspace:",
       },
@@ -251,7 +253,7 @@
     },
     "packages/zod": {
       "name": "@apisr/zod",
-      "version": "0.0.0",
+      "version": "0.0.2",
       "dependencies": {
         "zod": "catalog:",
       },
@@ -1386,7 +1388,9 @@
 
     "@apisr/drizzle-model/@types/bun": ["@types/bun@1.3.9", "", { "dependencies": { "bun-types": "1.3.9" } }, "sha512-KQ571yULOdWJiMH+RIWIOZ7B2RXQGpL1YQrBtLIV3FqDcCu6FsbFUBwhdKUlCKUpS3PJDsHlJ1QKlpxoVR+xtw=="],
 
-    "@apisr/logger/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
+    "@apisr/drizzle-model/type-fest": ["type-fest@5.4.4", "", { "dependencies": { "tagged-tag": "^1.0.0" } }, "sha512-JnTrzGu+zPV3aXIUhnyWJj4z/wigMsdYajGLIYakqyOW1nPllzXEJee0QQbHj+CTIQtXGlAjuK0UY+2xTyjVAw=="],
+
+    "@apisr/logger/@types/bun": ["@types/bun@1.3.9", "", { "dependencies": { "bun-types": "1.3.9" } }, "sha512-KQ571yULOdWJiMH+RIWIOZ7B2RXQGpL1YQrBtLIV3FqDcCu6FsbFUBwhdKUlCKUpS3PJDsHlJ1QKlpxoVR+xtw=="],
 
     "@apisr/response/@types/bun": ["@types/bun@1.3.9", "", { "dependencies": { "bun-types": "1.3.9" } }, "sha512-KQ571yULOdWJiMH+RIWIOZ7B2RXQGpL1YQrBtLIV3FqDcCu6FsbFUBwhdKUlCKUpS3PJDsHlJ1QKlpxoVR+xtw=="],
 
@@ -1426,7 +1430,7 @@
 
     "@apisr/drizzle-model/@types/bun/bun-types": ["bun-types@1.3.9", "", { "dependencies": { "@types/node": "*" } }, "sha512-+UBWWOakIP4Tswh0Bt0QD0alpTY8cb5hvgiYeWCMet9YukHbzuruIEeXC2D7nMJPB12kbh8C7XJykSexEqGKJg=="],
 
-    "@apisr/logger/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
+    "@apisr/logger/@types/bun/bun-types": ["bun-types@1.3.9", "", { "dependencies": { "@types/node": "*" } }, "sha512-+UBWWOakIP4Tswh0Bt0QD0alpTY8cb5hvgiYeWCMet9YukHbzuruIEeXC2D7nMJPB12kbh8C7XJykSexEqGKJg=="],
 
     "@apisr/response/@types/bun/bun-types": ["bun-types@1.3.9", "", { "dependencies": { "@types/node": "*" } }, "sha512-+UBWWOakIP4Tswh0Bt0QD0alpTY8cb5hvgiYeWCMet9YukHbzuruIEeXC2D7nMJPB12kbh8C7XJykSexEqGKJg=="],
 

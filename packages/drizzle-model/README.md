@@ -400,6 +400,7 @@ Comprehensive tests are available in `tests/base`:
 - `upsert.test.ts`
 - `count.test.ts`
 - `safe.test.ts`
+- `relations.test.ts`
 
 Run all base tests:
 
