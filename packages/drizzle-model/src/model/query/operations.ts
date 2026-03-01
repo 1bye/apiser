@@ -17,59 +17,59 @@ export type EscapedValue<T> =
 
 type OpValue<T> = T | SQL | EscapedValue<T>;
 
-export type ColumnOpsBase<T> = {
+export interface ColumnOpsBase<T> {
 	eq?: OpValue<T>;
 	equal?: OpValue<T>;
-	not?: OpValue<T>;
 	in?: OpValue<T>[];
-	nin?: OpValue<T>[];
 	isNull?: boolean;
-};
+	nin?: OpValue<T>[];
+	not?: OpValue<T>;
+}
 
-export type NumberOps = {
+export interface NumberOps {
+	between?: [OpValue<number>, OpValue<number>];
 	gt?: OpValue<number>;
 	gte?: OpValue<number>;
 	lt?: OpValue<number>;
 	lte?: OpValue<number>;
-	between?: [OpValue<number>, OpValue<number>];
 	notBetween?: [OpValue<number>, OpValue<number>];
-};
+}
 
-export type StringOps = {
-	like?: OpValue<string>;
-	ilike?: OpValue<string>;
-	startsWith?: OpValue<string>;
-	endsWith?: OpValue<string>;
+export interface StringOps {
 	contains?: OpValue<string>;
-	regex?: OpValue<string>;
-	notRegex?: OpValue<string>;
+	endsWith?: OpValue<string>;
+	ilike?: OpValue<string>;
 	length?: NumberOps;
-};
+	like?: OpValue<string>;
+	notRegex?: OpValue<string>;
+	regex?: OpValue<string>;
+	startsWith?: OpValue<string>;
+}
 
-export type BoolOps = {
-	isTrue?: boolean;
+export interface BoolOps {
 	isFalse?: boolean;
-};
+	isTrue?: boolean;
+}
 
-export type DateOps = {
-	before?: OpValue<Date | string>;
+export interface DateOps {
 	after?: OpValue<Date | string>;
-	on?: OpValue<Date | string>;
-	notOn?: OpValue<Date | string>;
+	before?: OpValue<Date | string>;
 	between?: [OpValue<Date | string>, OpValue<Date | string>];
-};
+	notOn?: OpValue<Date | string>;
+	on?: OpValue<Date | string>;
+}
 
-export type JsonOps<T> = {
+export interface JsonOps<T> {
 	has?: T;
-	hasAny?: T[];
 	hasAll?: T[];
+	hasAny?: T[];
 	len?: NumberOps;
-};
+}
 
-export type LogicalOps<TColumn extends Column> = {
-	or?: ColumnValue<TColumn>[];
+export interface LogicalOps<TColumn extends Column> {
 	and?: ColumnValue<TColumn>[];
-};
+	or?: ColumnValue<TColumn>[];
+}
 
 export type TypeOps<T> = T extends number
 	? NumberOps
@@ -103,28 +103,39 @@ export type ColumnValue<
  * - Drizzle ORM operators should be used directly
  * - complex types (e.g. Date, objects, custom classes) need safe handling
  *
- * There are two supported forms:
+ * There are three supported forms:
  *
  * 1) Implicit equality (default behavior):
  * ```ts
  * where({ name: esc("Alex") })
- * ```
- * Compiles to:
- * ```ts
- * {
- *  eq: "Alex"
- * }
- * // In drizzle: eq(column, "Alex")
  * ```
  *
  * 2) Explicit operator (Drizzle-style):
  * ```ts
  * where({ age: esc(gte, 18) })
  * ```
- * Compiles to:
+ *
+ * 3) Chainable operator methods (recommended):
  * ```ts
- * gte(column, 18)
+ * where({ name: esc.like("%Alex%") })
+ * where({ age: esc.gte(18) })
+ * where({ status: esc.in(["active", "pending"]) })
+ * where({ price: esc.between(10, 100) })
  * ```
+ *
+ * Available chainable methods:
+ * - `esc.eq(value)` — equality
+ * - `esc.not(value)` — inequality
+ * - `esc.gt(value)` — greater than
+ * - `esc.gte(value)` — greater than or equal
+ * - `esc.lt(value)` — less than
+ * - `esc.lte(value)` — less than or equal
+ * - `esc.like(pattern)` — SQL LIKE pattern matching
+ * - `esc.ilike(pattern)` — case-insensitive LIKE
+ * - `esc.in(values)` — value in array
+ * - `esc.nin(values)` — value not in array
+ * - `esc.between(min, max)` — value between range
+ * - `esc.notBetween(min, max)` — value not between range
  *
  * The column is injected later during query compilation.
  * `esc` does NOT execute the operator immediately.
@@ -169,3 +180,30 @@ export function esc<T>(arg1: any, arg2?: any): EscapedValue<T> {
 		equal: arg1,
 	};
 }
+
+// Chainable operator methods - return DSL objects
+esc.eq = <T>(value: T) => ({ eq: value });
+
+esc.not = <T>(value: T) => ({ not: value });
+
+esc.gt = <T>(value: T) => ({ gt: value });
+
+esc.gte = <T>(value: T) => ({ gte: value });
+
+esc.lt = <T>(value: T) => ({ lt: value });
+
+esc.lte = <T>(value: T) => ({ lte: value });
+
+esc.like = (pattern: string) => ({ like: pattern });
+
+esc.ilike = (pattern: string) => ({ ilike: pattern });
+
+esc.in = <T>(values: T[]) => ({ in: values });
+
+esc.nin = <T>(values: T[]) => ({ nin: values });
+
+esc.between = <T>(min: T, max: T) => ({ between: [min, max] as [T, T] });
+
+esc.notBetween = <T>(min: T, max: T) => ({
+	notBetween: [min, max] as [T, T],
+});

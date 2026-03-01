@@ -1,5 +1,9 @@
 # Change log
 
+## 2.0.2 | 01-0-2026
+- add `esc.*()` operations
+- update README.md with new `esc.*()`
+
 ## 2.0.1 | 01-03-2026
 - mark `pg` as peerDep
 - add `CHANGELOG.md`

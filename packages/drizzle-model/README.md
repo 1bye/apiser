@@ -381,7 +381,45 @@ Note: when method names conflict during `extend`, existing runtime methods take 
 
 ## Type safety notes
 
-- Prefer `esc(...)` for explicit where value/operator expressions.
+### Using `esc()` for explicit where expressions
+
+The `esc()` function provides three ways to specify comparison operators:
+
+**1. Implicit equality (simplest):**
+```ts
+where({ name: esc("Alex") })
+```
+
+**2. Explicit operator (Drizzle-style):**
+```ts
+import { gte } from "drizzle-orm";
+where({ age: esc(gte, 18) })
+```
+
+**3. Chainable methods (recommended):**
+```ts
+where({ name: esc.like("%Alex%") })
+where({ age: esc.gte(18) })
+where({ status: esc.in(["active", "pending"]) })
+where({ price: esc.between(10, 100) })
+```
+
+**Available chainable methods:**
+- `esc.eq(value)` — equality
+- `esc.not(value)` — inequality
+- `esc.gt(value)` — greater than
+- `esc.gte(value)` — greater than or equal
+- `esc.lt(value)` — less than
+- `esc.lte(value)` — less than or equal
+- `esc.like(pattern)` — SQL LIKE pattern matching
+- `esc.ilike(pattern)` — case-insensitive LIKE
+- `esc.in(values)` — value in array
+- `esc.nin(values)` — value not in array
+- `esc.between(min, max)` — value between range
+- `esc.notBetween(min, max)` — value not between range
+
+### Other type safety features
+
 - `.select()` and `.exclude()` control SQL SELECT columns and refine result types.
 - `.omit()` removes fields from the result programmatically after the query.
 - `.safe()` wraps result types into `{ data, error }`.
