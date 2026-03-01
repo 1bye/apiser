@@ -13,6 +13,7 @@ const model = modelBuilder({
 // create model
 const userModel = model("user", {});
 
+// #1 syntax
 await userModel
 	.where({
 		name: {
@@ -21,6 +22,7 @@ await userModel
 	})
 	.findFirst();
 
+// #2 syntax
 await userModel
 	.where({
 		name: esc.like("A%"),
