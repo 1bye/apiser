@@ -45,6 +45,7 @@ const db = drizzle(process.env.DATABASE_URL!, { schema, relations });
 const model = modelBuilder({
   db,
   schema,
+  // requires DrizzleORM relations v2. See: https://orm.drizzle.team/docs/relations-v1-v2
   relations,
   dialect: "PostgreSQL",
 });
