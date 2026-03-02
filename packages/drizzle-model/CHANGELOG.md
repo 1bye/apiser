@@ -1,5 +1,9 @@
 # Change log
 
+## 2.0.4 | 02-03-2026
+- Fix custom methods execution error
+- Add custom methods tests
+
 ## 2.0.3 | 02-03-2026
 - I forgot to rebuild package in `2.0.2 to 2.0.0`, damn
 

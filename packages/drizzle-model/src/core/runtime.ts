@@ -177,8 +177,8 @@ export class ModelRuntime {
 				...this.config.options,
 				...nextOptions,
 				methods: {
-					...(nextOptions.methods ?? {}),
 					...(this.config.options.methods ?? {}),
+					...(nextOptions.methods ?? {}),
 				},
 				format: nextOptions.format ?? this.config.options.format,
 			} as ModelOptions<never, never, never, never>,
