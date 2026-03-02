@@ -1,6 +1,9 @@
 # Change log
 
-## 2.0.2 | 01-0-2026
+## 2.0.3 | 02-03-2026
+- I forgot to rebuild package in `2.0.2 to 2.0.0`, damn
+
+## 2.0.2 | 01-03-2026
 - add `esc.*()` operations
 - update README.md with new `esc.*()`
 
