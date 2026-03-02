@@ -1,10 +1,10 @@
-import type { RawHeaders } from "@/headers";
+import type { HeadersInput } from "@/headers";
 
 export type ResponseTypes = "json" | "binary" | "text" | "error";
 
 export namespace BaseResponse {
 	export interface Options {
-		headers?: RawHeaders;
+		headers?: HeadersInput;
 		status?: number;
 		statusText?: string;
 	}

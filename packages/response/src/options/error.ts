@@ -6,13 +6,13 @@ import type {
 	ValidationType,
 } from "@apisr/schema";
 import type { DefaultError } from "@/error";
-import type { Headers } from "@/headers";
+import type { HeadersConfig } from "@/headers";
 import type { Options } from "@/options/base";
 import type { PromiseOr } from "@/types";
 
 export namespace ErrorOptions {
 	export interface Base<TSchema extends Schema = Schema> {
-		headers?: Headers<Infer<TSchema>>;
+		headers?: HeadersConfig<Infer<TSchema>>;
 
 		mapDefaultError?: (
 			error: DefaultError

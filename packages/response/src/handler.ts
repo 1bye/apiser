@@ -7,7 +7,7 @@ import type {
 	ErrorRegistry,
 } from "./error";
 import { generateDefaultErrors } from "./error/default";
-import { resolveHeaders } from "./headers";
+import { mergeHeaders, resolveHeaders } from "./headers";
 import type {
 	BinaryOptions,
 	ErrorOptions,
@@ -189,13 +189,11 @@ export class ResponseHandler<
 		//   : _output;
 
 		const str = JSON.stringify(_output, null, 2);
-		const headers: Record<string, string> = {
-			"Content-Type": "application/json",
-			...(options?.headers ?? {}),
-			...(resolveHeaders(jsonOptions?.headers, {
-				output: _output,
-			}) ?? {}),
-		};
+		const headers = mergeHeaders(
+			{ "Content-Type": "application/json" },
+			options?.headers,
+			resolveHeaders(jsonOptions?.headers, { output: _output })
+		);
 
 		return new JsonResponse.Base(str, {
 			headers,
@@ -234,10 +232,10 @@ export class ResponseHandler<
 			? binaryOptions.mapData(binary)
 			: binary;
 
-		const headers: Record<string, string> = {
-			...(options?.headers ?? {}),
-			...(resolveHeaders(binaryOptions?.headers, data) ?? {}),
-		};
+		const headers = mergeHeaders(
+			options?.headers,
+			resolveHeaders(binaryOptions?.headers, data)
+		);
 
 		return new BinaryResponse.Base(data as any, {
 			headers,
@@ -399,14 +397,11 @@ export class ResponseHandler<
 				metadata: meta,
 			} as DefaultResponse;
 
-			const headers: Record<string, string> = {
-				"Content-Type": "application/json",
-				...(resolveHeaders(options.headers, {
-					type: "error",
-					data: error,
-				}) ?? {}),
-				...(resolveHeaders(options.error?.headers, error) ?? {}),
-			};
+			const headers = mergeHeaders(
+				{ "Content-Type": "application/json" },
+				resolveHeaders(options.headers, { type: "error", data: error }),
+				resolveHeaders(options.error?.headers, error)
+			);
 
 			return new BaseResponse.Base<DefaultResponse>(JSON.stringify(payload), {
 				status,
@@ -417,13 +412,10 @@ export class ResponseHandler<
 		}
 
 		if (this.isBinaryData(raw.data)) {
-			const headers: Record<string, string> = {
-				...(resolveHeaders(options.headers, {
-					type: "binary",
-					data: raw.data,
-				}) ?? {}),
-				...(resolveHeaders(options.binary?.headers, raw.data) ?? {}),
-			};
+			const headers = mergeHeaders(
+				resolveHeaders(options.headers, { type: "binary", data: raw.data }),
+				resolveHeaders(options.binary?.headers, raw.data)
+			);
 
 			return new BaseResponse.Base<Binary>(raw.data as Binary, {
 				status: 200,
@@ -439,16 +431,11 @@ export class ResponseHandler<
 			metadata: meta,
 		} as DefaultResponse;
 
-		const headers: Record<string, string> = {
-			"Content-Type": "application/json",
-			...(resolveHeaders(options.headers, {
-				type: "json",
-				data: raw.data,
-			}) ?? {}),
-			...(resolveHeaders(options.json?.headers, {
-				output: raw.data,
-			}) ?? {}),
-		};
+		const headers = mergeHeaders(
+			{ "Content-Type": "application/json" },
+			resolveHeaders(options.headers, { type: "json", data: raw.data }),
+			resolveHeaders(options.json?.headers, { output: raw.data })
+		);
 
 		return new BaseResponse.Base<DefaultResponse>(JSON.stringify(payload), {
 			status: 200,

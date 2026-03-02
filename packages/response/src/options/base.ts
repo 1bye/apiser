@@ -1,4 +1,4 @@
-import type { Headers } from "@/headers";
+import type { HeadersConfig } from "@/headers";
 import type { BinaryOptions } from "@/options/binary";
 import type { ErrorOptions } from "@/options/error";
 import type { JsonOptions } from "@/options/json";
@@ -16,7 +16,7 @@ export interface Options<
 > {
 	binary?: TBinary;
 	error?: TError;
-	headers?: Headers<{
+	headers?: HeadersConfig<{
 		type: ResponseTypes;
 		data: any;
 	}>;

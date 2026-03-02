@@ -5,14 +5,14 @@ import type {
 	Schema,
 	ValidationType,
 } from "@apisr/schema";
-import type { Headers } from "@/headers";
+import type { HeadersConfig } from "@/headers";
 import type { JsonResponse } from "@/response/json";
 import type { PromiseOr } from "@/types";
 import type { Options } from "./base";
 
 export namespace JsonOptions {
 	export interface Base<TSchema extends Schema = Schema> {
-		headers?: Headers<Infer<TSchema>>;
+		headers?: HeadersConfig<Infer<TSchema>>;
 
 		mapData?: (data: Infer<TSchema>) => PromiseOr<Infer<TSchema>>;
 

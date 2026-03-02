@@ -1,9 +1,9 @@
-import type { Headers } from "@/headers";
+import type { HeadersConfig } from "@/headers";
 import type { Binary } from "@/response/binary";
 
 export namespace BinaryOptions {
 	export interface Base {
-		headers?: Headers<Binary>;
+		headers?: HeadersConfig<Binary>;
 
 		mapData?: (data: Binary) => Binary;
 	}
