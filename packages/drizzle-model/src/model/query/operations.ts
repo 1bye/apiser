@@ -169,11 +169,19 @@ export function esc<T>(
 
 export function esc<T>(arg1: any, arg2?: any): EscapedValue<T> {
 	if (typeof arg1 === "function") {
+		if (arg2 === undefined) {
+			return undefined;
+		}
+
 		return {
 			__kind: "esc-op",
 			op: arg1 as (column: any, value: T) => any,
 			value: arg2 as T,
 		};
+	}
+
+	if (arg1 === undefined) {
+		return undefined;
 	}
 
 	return {

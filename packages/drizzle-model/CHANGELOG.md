@@ -1,5 +1,8 @@
 # Change log
 
+## 2.0.5 | 03-03-2026
+- bypass undefined values in `esc()`
+
 ## 2.0.4 | 02-03-2026
 - Fix custom methods execution error
 - Add custom methods tests
