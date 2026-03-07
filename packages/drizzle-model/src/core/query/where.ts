@@ -119,6 +119,7 @@ export class WhereCompiler {
 				continue;
 			}
 
+			// TODO:
 			if (value && typeof value === "object") {
 				throw new Error(
 					`Relation where is not implemented yet for key '${key}'.`

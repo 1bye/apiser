@@ -9,3 +9,7 @@
 ```ts
 const { data: user, error } = userModel.findFirst().safe();
 ```
+- on `findFirst()` types return value with undefined as `{} | undefined`
+- add `orderBy()` function
+- add `select()` before the `findMany()` and `findFirst()`
+- add `limit()` function
