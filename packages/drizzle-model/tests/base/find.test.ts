@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { model } from "tests/base";
 import { db } from "tests/db";
 import * as schema from "tests/schema";
@@ -204,6 +204,110 @@ describe("find", () => {
 			expect(result.error).toBeUndefined();
 			expect(result.data).toBeDefined();
 			expect(result.data).toBeArray();
+		});
+	});
+
+	// -----------------------------------------------------------------------
+	// Model-level methods: orderBy, limit, select, exclude
+	// -----------------------------------------------------------------------
+
+	describe("model-level methods", () => {
+		test("orderBy — sorts results ascending with object syntax", async () => {
+			const users = await userModel.orderBy({ age: "asc" }).findMany();
+			expect(users).toBeArray();
+			if (users.length >= 2) {
+				expect(users[0].age).toBeLessThanOrEqual(users[1].age);
+			}
+		});
+
+		test("orderBy — sorts results descending with object syntax", async () => {
+			const users = await userModel.orderBy({ age: "desc" }).findMany();
+			expect(users).toBeArray();
+			if (users.length >= 2) {
+				expect(users[0].age).toBeGreaterThanOrEqual(users[1].age);
+			}
+		});
+
+		test("orderBy — works with Drizzle asc()", async () => {
+			const users = await userModel.orderBy(asc(schema.user.age)).findMany();
+			expect(users).toBeArray();
+			if (users.length >= 2) {
+				expect(users[0].age).toBeLessThanOrEqual(users[1].age);
+			}
+		});
+
+		test("orderBy — works with Drizzle desc()", async () => {
+			const users = await userModel.orderBy(desc(schema.user.age)).findMany();
+			expect(users).toBeArray();
+			if (users.length >= 2) {
+				expect(users[0].age).toBeGreaterThanOrEqual(users[1].age);
+			}
+		});
+
+		test("orderBy — chains with where()", async () => {
+			const users = await userModel
+				.where({ age: { gte: 18 } })
+				.orderBy({ age: "desc" })
+				.findMany();
+			expect(users).toBeArray();
+			if (users.length >= 2) {
+				expect(users[0].age).toBeGreaterThanOrEqual(users[1].age);
+				expect(users[0].age).toBeGreaterThanOrEqual(18);
+			}
+		});
+
+		test("limit — restricts number of results", async () => {
+			const users = await userModel.limit(2).findMany();
+			expect(users).toBeArray();
+			expect(users.length).toBeLessThanOrEqual(2);
+		});
+
+		test("limit — chains with where()", async () => {
+			const users = await userModel
+				.where({ age: { gte: 0 } })
+				.limit(1)
+				.findMany();
+			expect(users).toBeArray();
+			expect(users.length).toBeLessThanOrEqual(1);
+		});
+
+		test("select — works at model level with object syntax", async () => {
+			const users = await userModel.select({ id: true, name: true }).findMany();
+			for (const user of users) {
+				expect(user.id).toBeDefined();
+				expect(user.name).toBeDefined();
+				expect(user.age).toBeUndefined();
+			}
+		});
+
+		test("select — works at model level with array syntax", async () => {
+			const users = await userModel.select(["id", "name"]).findMany();
+			for (const user of users) {
+				expect(user.id).toBeDefined();
+				expect(user.name).toBeDefined();
+				expect(user.age).toBeUndefined();
+			}
+		});
+
+		test("exclude — works at model level", async () => {
+			const users = await userModel.exclude({ secretField: true }).findMany();
+			for (const user of users) {
+				expect(user.secretField).toBeUndefined();
+				expect(user.name).toBeDefined();
+			}
+		});
+
+		test("combined — orderBy + limit + select", async () => {
+			const users = await userModel
+				.orderBy({ age: "desc" })
+				.limit(2)
+				.select({ id: true, age: true })
+				.findMany();
+			expect(users).toBeArray();
+			expect(users.length).toBeLessThanOrEqual(2);
+			if (users.length >= 2) {
+				expect(users[0].age).toBeGreaterThanOrEqual(users[1].age);
+			}
 		});
 	});
 });

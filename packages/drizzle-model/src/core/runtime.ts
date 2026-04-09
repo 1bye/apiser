@@ -2,6 +2,7 @@ import type { ModelDialect } from "../model/dialect.ts";
 import type { ModelOptions } from "../model/options.ts";
 import { DialectHelper } from "./dialect.ts";
 import { JoinExecutor } from "./query/joins.ts";
+import { OrderByCompiler } from "./query/orderby.ts";
 import { ProjectionBuilder } from "./query/projection.ts";
 import { WhereCompiler } from "./query/where.ts";
 import {
@@ -68,19 +69,44 @@ export class ModelRuntime {
 	/** The current where filter applied via `.where()`. */
 	private readonly currentWhere: unknown;
 
+	/** The current order by clause applied via `.orderBy()`. */
+	private readonly currentOrderBy: unknown;
+
+	/** The current limit value applied via `.limit()`. */
+	private readonly currentLimit: number | undefined;
+
+	/** The current select projection applied via `.select()`. */
+	private readonly currentSelect: AnyRecord | undefined;
+
+	/** The current exclude projection applied via `.exclude()`. */
+	private readonly currentExclude: AnyRecord | undefined;
+
 	// Shared helpers (stateless, safe to reuse)
 	private readonly whereCompiler: WhereCompiler;
 	private readonly projection: ProjectionBuilder;
 	private readonly joinExecutor: JoinExecutor;
 	private readonly transformer: ResultTransformer;
 	private readonly dialectHelper: DialectHelper;
+	private readonly orderByCompiler: OrderByCompiler;
 
-	constructor(config: ModelRuntimeConfig, currentWhere?: unknown) {
+	constructor(
+		config: ModelRuntimeConfig,
+		currentWhere?: unknown,
+		currentOrderBy?: unknown,
+		currentLimit?: number,
+		currentSelect?: AnyRecord,
+		currentExclude?: AnyRecord
+	) {
 		this.config = config;
 		this.currentWhere = currentWhere;
+		this.currentOrderBy = currentOrderBy;
+		this.currentLimit = currentLimit;
+		this.currentSelect = currentSelect;
+		this.currentExclude = currentExclude;
 
 		this.dialectHelper = new DialectHelper(config.dialect);
 		this.whereCompiler = new WhereCompiler();
+		this.orderByCompiler = new OrderByCompiler();
 		this.projection = new ProjectionBuilder();
 		this.joinExecutor = new JoinExecutor(this.dialectHelper);
 		this.transformer = new ResultTransformer();
@@ -129,7 +155,14 @@ export class ModelRuntime {
 	 * @returns A new {@link ModelRuntime} with the filter applied.
 	 */
 	where(value: unknown): ModelRuntime {
-		return new ModelRuntime(this.config, value);
+		return new ModelRuntime(
+			this.config,
+			value,
+			this.currentOrderBy,
+			this.currentLimit,
+			this.currentSelect,
+			this.currentExclude
+		);
 	}
 
 	// ---------------------------------------------------------------------------
@@ -171,18 +204,25 @@ export class ModelRuntime {
 	extend(
 		nextOptions: Partial<ModelOptions<never, never, never, never>>
 	): ModelRuntime {
-		return new ModelRuntime({
-			...this.config,
-			options: {
-				...this.config.options,
-				...nextOptions,
-				methods: {
-					...(this.config.options.methods ?? {}),
-					...(nextOptions.methods ?? {}),
-				},
-				format: nextOptions.format ?? this.config.options.format,
-			} as ModelOptions<never, never, never, never>,
-		});
+		return new ModelRuntime(
+			{
+				...this.config,
+				options: {
+					...this.config.options,
+					...nextOptions,
+					methods: {
+						...(this.config.options.methods ?? {}),
+						...(nextOptions.methods ?? {}),
+					},
+					format: nextOptions.format ?? this.config.options.format,
+				} as ModelOptions<never, never, never, never>,
+			},
+			this.currentWhere,
+			this.currentOrderBy,
+			this.currentLimit,
+			this.currentSelect,
+			this.currentExclude
+		);
 	}
 
 	/**
@@ -192,7 +232,98 @@ export class ModelRuntime {
 	 * @returns A new {@link ModelRuntime} using the given database.
 	 */
 	db(db: unknown): ModelRuntime {
-		return new ModelRuntime({ ...this.config, db });
+		return new ModelRuntime(
+			{ ...this.config, db },
+			this.currentWhere,
+			this.currentOrderBy,
+			this.currentLimit,
+			this.currentSelect,
+			this.currentExclude
+		);
+	}
+
+	// ---------------------------------------------------------------------------
+	// Public: query modifiers (model-level)
+	// ---------------------------------------------------------------------------
+
+	/**
+	 * Returns a new runtime with an order-by clause for sorting results.
+	 *
+	 * Supports two syntaxes:
+	 * - Object: `{ age: 'desc', name: 'asc' }`
+	 * - Drizzle: `asc(table.age)`, `desc(table.age)`, or array `[desc(table.age), asc(table.name)]`
+	 *
+	 * @param value - The order specification.
+	 * @returns A new {@link ModelRuntime} with the order applied.
+	 */
+	orderBy(value: unknown): ModelRuntime {
+		return new ModelRuntime(
+			this.config,
+			this.currentWhere,
+			value,
+			this.currentLimit,
+			this.currentSelect,
+			this.currentExclude
+		);
+	}
+
+	/**
+	 * Returns a new runtime with a limit on the number of rows returned.
+	 *
+	 * @param n - The maximum number of rows to return.
+	 * @returns A new {@link ModelRuntime} with the limit applied.
+	 */
+	limit(n: number): ModelRuntime {
+		return new ModelRuntime(
+			this.config,
+			this.currentWhere,
+			this.currentOrderBy,
+			n,
+			this.currentSelect,
+			this.currentExclude
+		);
+	}
+
+	/**
+	 * Returns a new runtime with a column selection (SQL SELECT whitelist).
+	 *
+	 * Supports two syntaxes:
+	 * - Object: `{ name: true, email: true }`
+	 * - Array: `['name', 'email']`
+	 *
+	 * @param value - The columns to select.
+	 * @returns A new {@link ModelRuntime} with the selection applied.
+	 */
+	select(value: AnyRecord | string[]): ModelRuntime {
+		// Convert array syntax to object syntax
+		const selectValue: AnyRecord = Array.isArray(value)
+			? Object.fromEntries(value.map((key) => [key, true]))
+			: value;
+		return new ModelRuntime(
+			this.config,
+			this.currentWhere,
+			this.currentOrderBy,
+			this.currentLimit,
+			selectValue,
+			this.currentExclude
+		);
+	}
+
+	/**
+	 * Returns a new runtime with column exclusions (SQL SELECT blacklist).
+	 *
+	 * @param value - A map of `{ columnName: true }` for columns to exclude.
+	 * @returns A new {@link ModelRuntime} with the exclusions applied.
+	 */
+	exclude(value: AnyRecord): ModelRuntime {
+		return new ModelRuntime(
+			this.config,
+			this.currentWhere,
+			this.currentOrderBy,
+			this.currentLimit,
+			this.currentSelect,
+			value
+		);
 	}
 
 	// ---------------------------------------------------------------------------
@@ -212,6 +343,12 @@ export class ModelRuntime {
 			const table = this.getTable();
 			const whereSql = this.buildEffectiveWhere(table);
 
+			// Merge model-level state with query-level state
+			const effectiveSelect = qState.select ?? this.currentSelect;
+			const effectiveExclude = qState.exclude ?? this.currentExclude;
+			const effectiveOrderBy = qState.orderBy ?? this.currentOrderBy;
+			const effectiveLimit = qState.limit ?? this.currentLimit;
+
 			let result: unknown;
 
 			if (qState.with) {
@@ -223,15 +360,17 @@ export class ModelRuntime {
 					baseTable: table,
 					whereSql,
 					withValue: qState.with as AnyRecord,
-					select: qState.select,
-					exclude: qState.exclude,
+					select: effectiveSelect,
+					exclude: effectiveExclude,
+					orderBy: effectiveOrderBy,
+					limit: effectiveLimit,
 					limitOne: false,
 				});
 			} else {
 				const { selectMap } = this.projection.build(
 					table,
-					qState.select,
-					qState.exclude
+					effectiveSelect,
+					effectiveExclude
 				);
 				const db = this.config.db as AnyRecord;
 				let query = (db.select as (m: AnyRecord) => AnyRecord)(selectMap);
@@ -243,6 +382,28 @@ export class ModelRuntime {
 					query = (
 						query as AnyRecord & { where: (w: unknown) => AnyRecord }
 					).where(whereSql);
+				}
+
+				// Apply orderBy if present
+				if (effectiveOrderBy) {
+					const orderClauses = this.orderByCompiler.compile(
+						table,
+						effectiveOrderBy as import("./query/orderby.ts").OrderByValue
+					);
+					if (orderClauses && orderClauses.length > 0) {
+						query = (
+							query as AnyRecord & {
+								orderBy: (...args: unknown[]) => AnyRecord;
+							}
+						).orderBy(...orderClauses);
+					}
+				}
+
+				// Apply limit if present
+				if (effectiveLimit !== undefined && effectiveLimit > 0) {
+					query = (
+						query as AnyRecord & { limit: (n: number) => AnyRecord }
+					).limit(effectiveLimit);
 				}
 
 				result = await (query as unknown as PromiseLike<unknown>);
@@ -267,6 +428,13 @@ export class ModelRuntime {
 			const table = this.getTable();
 			const whereSql = this.buildEffectiveWhere(table);
 
+			// Merge model-level state with query-level state
+			const effectiveSelect = qState.select ?? this.currentSelect;
+			const effectiveExclude = qState.exclude ?? this.currentExclude;
+			const effectiveOrderBy = qState.orderBy ?? this.currentOrderBy;
+			// findFirst always limits to 1, but model-level limit is respected if specified
+			const effectiveLimit = qState.limit ?? this.currentLimit;
+
 			let result: unknown;
 
 			if (qState.with) {
@@ -278,15 +446,17 @@ export class ModelRuntime {
 					baseTable: table,
 					whereSql,
 					withValue: qState.with as AnyRecord,
-					select: qState.select,
-					exclude: qState.exclude,
+					select: effectiveSelect,
+					exclude: effectiveExclude,
+					orderBy: effectiveOrderBy,
+					limit: effectiveLimit,
 					limitOne: true,
 				});
 			} else {
 				const { selectMap } = this.projection.build(
 					table,
-					qState.select,
-					qState.exclude
+					effectiveSelect,
+					effectiveExclude
 				);
 				const db = this.config.db as AnyRecord;
 				let query = (db.select as (m: AnyRecord) => AnyRecord)(selectMap);
@@ -298,6 +468,21 @@ export class ModelRuntime {
 					query = (
 						query as AnyRecord & { where: (w: unknown) => AnyRecord }
 					).where(whereSql);
+				}
+
+				// Apply orderBy if present
+				if (effectiveOrderBy) {
+					const orderClauses = this.orderByCompiler.compile(
+						table,
+						effectiveOrderBy as import("./query/orderby.ts").OrderByValue
+					);
+					if (orderClauses && orderClauses.length > 0) {
+						query = (
+							query as AnyRecord & {
+								orderBy: (...args: unknown[]) => AnyRecord;
+							}
+						).orderBy(...orderClauses);
+					}
 				}
 
 				query = (

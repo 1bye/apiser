@@ -34,8 +34,9 @@ export interface ModelMethods<
 	delete(): ModelInMutableResult<never, TConfig>;
 	/**
 	 * Fetches the first matching row for the current model query.
+	 * Returns undefined if no rows match.
 	 */
-	findFirst(): ModelQueryResult<TConfig["tableOutput"], TConfig>;
+	findFirst(): ModelQueryResult<TConfig["tableOutput"] | undefined, TConfig>;
 	/**
 	 * Fetches all rows for the current model query.
 	 */
@@ -93,6 +94,13 @@ export interface ModelQueryMethods<TConfig extends ModelConfig> {
 	 * @param db - Database client instance
 	 */
 	db(db: any): Model<TConfig>;
+
+	/**
+	 * Excludes specific columns from the result (SQL SELECT blacklist).
+	 *
+	 * @param value - Columns to exclude
+	 */
+	exclude(value: Record<string, boolean>): Model<TConfig>;
 	/**
 	 * Extends the current model with additional options.
 	 *
@@ -114,6 +122,33 @@ export interface ModelQueryMethods<TConfig extends ModelConfig> {
 			}
 		>
 	>;
+
+	/**
+	 * Sets a limit on the number of rows returned.
+	 *
+	 * @param n - Maximum number of rows to return
+	 */
+	limit(n: number): Model<TConfig>;
+
+	/**
+	 * Sets the order by clause for sorting results.
+	 *
+	 * Supports object syntax: `{ age: 'desc', name: 'asc' }`
+	 * And Drizzle syntax: `asc(table.age)`, `desc(table.age)`, `[desc(table.age), asc(table.name)]`
+	 *
+	 * @param value - Order specification
+	 */
+	orderBy(value: unknown): Model<TConfig>;
+
+	/**
+	 * Selects specific columns to return (SQL SELECT whitelist).
+	 *
+	 * Supports object syntax: `{ name: true, email: true }`
+	 * And array syntax: `['name', 'email']`
+	 *
+	 * @param value - Columns to select
+	 */
+	select(value: Record<string, boolean> | string[]): Model<TConfig>;
 }
 
 /**

@@ -51,3 +51,11 @@ const Invoice = collection({
   }
 })
 ```
+
+```ts
+import { registry } from "@apisr/transform"
+
+const tags = registry(tag => ({
+  
+}))
+```

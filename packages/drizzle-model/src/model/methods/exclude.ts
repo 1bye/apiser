@@ -22,5 +22,6 @@ export type MethodExcludeResult<
 	TResult extends Record<string, any>,
 > = ResolveMethodExcludeValue<TValue, TResult>;
 
-export type MethodExcludeValue<TResult extends Record<string, any>> =
-	MethodSelectValue<TResult>;
+export type MethodExcludeValue<TResult> = TResult extends undefined
+	? never
+	: MethodSelectValue<Exclude<TResult, undefined>>;

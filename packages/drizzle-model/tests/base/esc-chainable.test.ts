@@ -43,9 +43,7 @@ describe("esc chainable methods", () => {
 	});
 
 	test("esc.not() - inequality", async () => {
-		const users = await userModel
-			.where({ id: esc.not(testUserId) })
-			.findMany();
+		const users = await userModel.where({ id: esc.not(testUserId) }).findMany();
 
 		expect(users).toBeArray();
 		for (const user of users) {

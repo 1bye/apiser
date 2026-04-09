@@ -20,13 +20,16 @@ export type MethodSelectResult<
 	TResult extends Record<string, any>,
 > = ResolveMethodSelectValue<TValue, TResult>;
 
-export type MethodSelectValue<TResult extends object> =
-	TResult extends readonly (infer U)[]
+export type MethodSelectValue<TResult> = TResult extends undefined
+	? never
+	: TResult extends readonly (infer U)[]
 		? U extends object
 			? MethodSelectValue<U>
 			: never
-		: {
-				[Key in keyof TResult]?: UnwrapArray<TResult[Key]> extends object
-					? MethodSelectValue<UnwrapArray<TResult[Key]>> | boolean
-					: boolean;
-			};
+		: TResult extends object
+			? {
+					[Key in keyof TResult]?: UnwrapArray<TResult[Key]> extends object
+						? MethodSelectValue<UnwrapArray<TResult[Key]>> | boolean
+						: boolean;
+				}
+			: never;

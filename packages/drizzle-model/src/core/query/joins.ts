@@ -64,8 +64,12 @@ export interface JoinExecutorConfig {
 	db: unknown;
 	/** SQL SELECT blacklist for base table columns. */
 	exclude?: AnyRecord;
+	/** Maximum number of rows to return. */
+	limit?: number;
 	/** When `true`, only the first result is returned. */
 	limitOne?: boolean;
+	/** Order by clause for sorting results. */
+	orderBy?: unknown;
 	/** The relations metadata map from Drizzle. */
 	relations: Record<string, AnyRecord>;
 	/** The full schema map (`{ tableName: drizzleTable }`). */
@@ -190,8 +194,7 @@ export class JoinExecutor {
 		value: unknown,
 		path: string[]
 	): Promise<JoinNode> {
-		const { whereValue, nestedWith } =
-			this.extractRelationDescriptor(value);
+		const { whereValue, nestedWith } = this.extractRelationDescriptor(value);
 
 		const relMeta = this.getRelationMeta(
 			config.relations,
@@ -214,10 +217,7 @@ export class JoinExecutor {
 			: targetTable;
 
 		const whereFilter = whereValue
-			? this.whereCompiler.compile(
-					targetAliasTable as AnyRecord,
-					whereValue
-			  )
+			? this.whereCompiler.compile(targetAliasTable as AnyRecord, whereValue)
 			: undefined;
 
 		const node: JoinNode = {
@@ -274,7 +274,7 @@ export class JoinExecutor {
 	 * Builds and executes the multi-join SELECT query.
 	 *
 	 * Constructs a select map namespaced by alias key (base + each join),
-	 * applies LEFT JOINs in preorder, and optionally limits to one row.
+	 * applies LEFT JOINs in preorder, and optionally applies orderBy and limit.
 	 */
 	private async executeQuery(
 		config: JoinExecutorConfig,
@@ -318,9 +318,27 @@ export class JoinExecutor {
 			).leftJoin(node.targetAliasTable, onCondition);
 		}
 
-		if (config.limitOne) {
+		// Apply orderBy if present
+		if (config.orderBy) {
+			const orderByCompiler = new (
+				await import("./orderby.ts")
+			).OrderByCompiler();
+			const orderClauses = orderByCompiler.compile(
+				config.baseTable,
+				config.orderBy as any
+			);
+			if (orderClauses && orderClauses.length > 0) {
+				query = (
+					query as AnyRecord & { orderBy: (...args: unknown[]) => AnyRecord }
+				).orderBy(...orderClauses);
+			}
+		}
+
+		// Apply limit if present (limitOne takes precedence)
+		const effectiveLimit = config.limitOne ? 1 : config.limit;
+		if (effectiveLimit !== undefined && effectiveLimit > 0) {
 			query = (query as AnyRecord & { limit: (n: number) => AnyRecord }).limit(
-				1
+				effectiveLimit
 			);
 		}
 

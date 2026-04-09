@@ -36,7 +36,7 @@ import type { QueryError } from "./query/error.ts";
  * @typeParam TTable - Relational configuration for the current table
  */
 export interface ModelQueryResult<
-	TResult extends Record<string, any> | any[],
+	TResult extends Record<string, any> | any[] | undefined,
 	TConfig extends ModelConfig,
 	TExcludedKeys extends string = string,
 	TSchema extends TablesRelationalConfig = TConfig["schema"],
@@ -60,14 +60,14 @@ export interface ModelQueryResult<
 	debug(): any;
 
 	exclude<
-		TValue extends MethodExcludeValue<TResult>,
+		TValue extends MethodExcludeValue<Exclude<TResult, undefined>>,
 		TExcludeKeys extends string = TExcludedKeys | "exclude",
 	>(
 		value: TValue
 	): ModelQueryResult<
 		ApplyArrayIfArray<
 			TResult,
-			MethodExcludeResult<TValue, InferArrayItem<TResult>>
+			MethodExcludeResult<TValue, InferArrayItem<Exclude<TResult, undefined>>>
 		>,
 		TConfig,
 		TExcludeKeys,
@@ -98,14 +98,14 @@ export interface ModelQueryResult<
 	>;
 
 	select<
-		TValue extends MethodSelectValue<TResult>,
+		TValue extends MethodSelectValue<Exclude<TResult, undefined>>,
 		TExcludeKeys extends string = TExcludedKeys | "select",
 	>(
 		value: TValue
 	): ModelQueryResult<
 		ApplyArrayIfArray<
 			TResult,
-			MethodSelectResult<TValue, InferArrayItem<TResult>>
+			MethodSelectResult<TValue, InferArrayItem<Exclude<TResult, undefined>>>
 		>,
 		TConfig,
 		TExcludeKeys,
@@ -153,12 +153,19 @@ export interface ModelInMutableResult<
 	// ): Omit<ModelMutateResult<TResult, TConfig, TResultType>, "with">;
 	// $return: MethodReturnResult<TConfig>;
 
-	omit<TValue extends MethodExcludeValue<TConfig["tableOutput"]>>(
+	omit<
+		TValue extends MethodExcludeValue<
+			Exclude<TConfig["tableOutput"], undefined>
+		>,
+	>(
 		value: TValue
 	): ModelInMutableResult<
 		ApplyArrayIfArray<
 			TConfig["tableOutput"],
-			MethodExcludeResult<TValue, InferArrayItem<TConfig["tableOutput"]>>
+			MethodExcludeResult<
+				TValue,
+				InferArrayItem<Exclude<TConfig["tableOutput"], undefined>>
+			>
 		>,
 		TConfig
 	>;
@@ -192,14 +199,16 @@ export interface ModelMutateResult<
 	TWithSafe extends true | false = false,
 > extends Promise<ApplySafeResultIf<TWithSafe, TResult>> {
 	omit<
-		TValue extends MethodExcludeValue<TResult>,
+		TValue extends MethodExcludeValue<Exclude<TResult, undefined>>,
 		TExcludeKeys extends string = TExcludedKeys | "omit",
 	>(
 		value: TValue
 	): ModelMutateResult<
 		ApplyArrayIfArray<
 			TResult,
-			Simplify<MethodExcludeResult<TValue, InferArrayItem<TResult>>>
+			Simplify<
+				MethodExcludeResult<TValue, InferArrayItem<Exclude<TResult, undefined>>>
+			>
 		>,
 		TConfig,
 		TExcludeKeys

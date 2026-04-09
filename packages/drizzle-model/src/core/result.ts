@@ -24,6 +24,10 @@ export type SafeResult<T> =
 export interface QueryState {
 	/** SQL SELECT blacklist — columns to omit from the query. */
 	exclude?: AnyRecord;
+	/** Limit the number of rows returned. */
+	limit?: number;
+	/** Order by clause for sorting results. */
+	orderBy?: unknown;
 	/** When `true`, formatting is skipped. */
 	raw?: boolean;
 	/** When `true`, result is wrapped in `{ data, error }`. */
