@@ -1,5 +1,9 @@
 # Change log
 
+## 2.0.6 | 09-04-2026
+- add `orderBy()`
+- fix a lot of bugs from production code that I've had.
+
 ## 2.0.5 | 03-03-2026
 - bypass undefined values in `esc()`
 
