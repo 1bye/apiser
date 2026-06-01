@@ -65,6 +65,14 @@ function buildTarget(runtime: ModelRuntime): AnyRecord {
 		get: () => runtime.$where,
 		enumerable: true,
 	});
+	Object.defineProperty(target, "$orderBy", {
+		get: () => runtime.$orderBy,
+		enumerable: true,
+	});
+	Object.defineProperty(target, "$limit", {
+		get: () => runtime.$limit,
+		enumerable: true,
+	});
 	Object.defineProperty(target, "$tableName", {
 		get: () => runtime.$tableName,
 		enumerable: true,

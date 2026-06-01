@@ -48,6 +48,10 @@ export interface JoinNode {
 	targetTableName: string;
 	/** Optional compiled WHERE filter for this relation (added to JOIN ON). */
 	whereFilter?: unknown;
+	/** Optional orderBy clause for this relation (not yet supported). */
+	orderBy?: unknown;
+	/** Optional limit for this relation (not yet supported). */
+	limit?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -63,7 +67,8 @@ export interface JoinExecutorConfig {
 	/** The Drizzle database instance. */
 	db: unknown;
 	/** SQL SELECT blacklist for base table columns. */
-	exclude?: AnyRecord;
+	/** SQL SELECT blacklist for base table columns. Supports `{ col: true }` or `['col1', 'col2']`. */
+	exclude?: AnyRecord | string[];
 	/** Maximum number of rows to return. */
 	limit?: number;
 	/** When `true`, only the first result is returned. */
@@ -74,9 +79,8 @@ export interface JoinExecutorConfig {
 	relations: Record<string, AnyRecord>;
 	/** The full schema map (`{ tableName: drizzleTable }`). */
 	schema: Record<string, AnyRecord>;
-	/** SQL SELECT whitelist for base table columns. */
-	select?: AnyRecord;
-	/** An optional compiled SQL where clause. */
+	/** SQL SELECT whitelist for base table columns. Supports `{ col: true }` or `['col1', 'col2']`. */
+	select?: AnyRecord | string[];
 	whereSql?: unknown;
 	/** The user-supplied `.with()` value describing which relations to load. */
 	withValue: AnyRecord;
@@ -194,7 +198,8 @@ export class JoinExecutor {
 		value: unknown,
 		path: string[]
 	): Promise<JoinNode> {
-		const { whereValue, nestedWith } = this.extractRelationDescriptor(value);
+		const { whereValue, nestedWith, orderBy, limit } =
+			this.extractRelationDescriptor(value);
 
 		const relMeta = this.getRelationMeta(
 			config.relations,
@@ -236,6 +241,8 @@ export class JoinExecutor {
 			parent,
 			children: [],
 			whereFilter,
+			orderBy,
+			limit: limit as number | undefined,
 		};
 
 		if (nestedWith && typeof nestedWith === "object") {
@@ -310,6 +317,15 @@ export class JoinExecutor {
 		}
 
 		for (const node of nodes) {
+			if (node.orderBy || node.limit !== undefined) {
+				throw new Error(
+					`Per-relation orderBy / limit on "${node.key}" is not supported yet. ` +
+					"Apply ordering and limiting at the top-level query instead."
+				);
+			}
+		}
+
+		for (const node of nodes) {
 			const onCondition = this.buildJoinOn(node);
 			query = (
 				query as AnyRecord & {
@@ -317,7 +333,6 @@ export class JoinExecutor {
 				}
 			).leftJoin(node.targetAliasTable, onCondition);
 		}
-
 		// Apply orderBy if present
 		if (config.orderBy) {
 			const orderByCompiler = new (
@@ -552,35 +567,36 @@ export class JoinExecutor {
 	 *
 	 * Handles three cases:
 	 * - `true` → no filter, no nested relations.
-	 * - A ModelRuntime (has `$model === "model"`) → extract `$where`, no nested.
-	 * - A model descriptor (`__modelRelation: true`) → extract `whereValue` and `with`.
+	 * - A ModelRuntime (has `$model === "model"`) → extract `$where`, `$orderBy`, `$limit`.
+	 * - A model descriptor (`__modelRelation: true`) → extract all fields.
 	 * - A plain object → treat as nested relation map.
 	 */
 	private extractRelationDescriptor(value: unknown): {
 		whereValue: unknown;
 		nestedWith: unknown;
+		orderBy: unknown;
+		limit: number | undefined;
 	} {
 		if (value === true || value == null) {
-			return { whereValue: undefined, nestedWith: undefined };
+			return { whereValue: undefined, nestedWith: undefined, orderBy: undefined, limit: undefined };
 		}
 
 		if (typeof value !== "object") {
-			return { whereValue: undefined, nestedWith: undefined };
+			return { whereValue: undefined, nestedWith: undefined, orderBy: undefined, limit: undefined };
 		}
 
 		const rec = value as AnyRecord;
 
 		if (rec.$model === "model") {
-			return { whereValue: rec.$where, nestedWith: undefined };
+			return { whereValue: rec.$where, nestedWith: undefined, orderBy: rec.$orderBy, limit: rec.$limit as number | undefined };
 		}
 
 		if (rec.__modelRelation === true) {
-			return { whereValue: rec.whereValue, nestedWith: rec.with };
+			return { whereValue: rec.whereValue, nestedWith: rec.with, orderBy: rec.orderBy, limit: rec.limit as number | undefined };
 		}
 
-		return { whereValue: undefined, nestedWith: value };
+		return { whereValue: undefined, nestedWith: value, orderBy: undefined, limit: undefined };
 	}
-
 	// ---------------------------------------------------------------------------
 	// Helpers: result grouping internals
 	// ---------------------------------------------------------------------------

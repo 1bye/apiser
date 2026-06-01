@@ -136,6 +136,16 @@ export class ModelRuntime {
 		return this.currentWhere;
 	}
 
+	/** The current order by clause, exposed for relation descriptors. */
+	get $orderBy(): unknown {
+		return this.currentOrderBy;
+	}
+
+	/** The current limit, exposed for relation descriptors. */
+	get $limit(): number | undefined {
+		return this.currentLimit;
+	}
+
 	/** The table name this model is bound to, exposed for relation descriptors. */
 	get $tableName(): string {
 		return this.config.tableName;
@@ -170,13 +180,13 @@ export class ModelRuntime {
 	// ---------------------------------------------------------------------------
 
 	/**
-	 * Returns a relation descriptor carrying the model's where clause
-	 * and the nested relation includes.
+	 * Returns a relation descriptor carrying the model's where clause,
+	 * orderBy, limit, and nested relation includes.
 	 *
 	 * Used in `.with()` to filter a relation and load nested relations:
 	 * ```ts
 	 * userModel.findMany().with({
-	 *   posts: postModel.where({ ... }).include({ comments: true }),
+	 *   posts: postModel.where({ ... }).orderBy({ createdAt: "desc" }).limit(5).include({ comments: true }),
 	 * });
 	 * ```
 	 *
@@ -187,10 +197,13 @@ export class ModelRuntime {
 		return {
 			__modelRelation: true,
 			whereValue: this.currentWhere,
+			orderBy: this.currentOrderBy,
+			limit: this.currentLimit,
 			tableName: this.config.tableName,
 			with: value,
 		};
 	}
+
 
 	/**
 	 * Creates a new runtime with merged options.

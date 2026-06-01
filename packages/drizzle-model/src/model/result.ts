@@ -3,6 +3,7 @@ import type {
 	TablesRelationalConfig,
 } from "drizzle-orm/relations";
 import type { SimplifyDeep } from "type-fest";
+import type { QueryState } from "@/core/result.ts";
 import type {
 	ApplyArrayIfArray,
 	InferArrayItem,
@@ -57,8 +58,7 @@ export interface ModelQueryResult<
 		>
 	> {
 	$format: TFormat;
-	debug(): any;
-
+	debug(): QueryState;
 	exclude<
 		TValue extends MethodExcludeValue<Exclude<TResult, undefined>>,
 		TExcludeKeys extends string = TExcludedKeys | "exclude",

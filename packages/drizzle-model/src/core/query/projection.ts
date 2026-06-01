@@ -32,17 +32,25 @@ export class ProjectionBuilder {
 	 */
 	build(
 		table: AnyRecord,
-		select?: AnyRecord,
-		exclude?: AnyRecord
+		select?: AnyRecord | string[],
+		exclude?: AnyRecord | string[]
 	): ProjectionResult {
 		const allColumns = this.extractColumns(table);
 
-		if (select && typeof select === "object") {
-			return this.buildFromSelect(allColumns, select);
+		const selectObj = Array.isArray(select)
+			? Object.fromEntries(select.map((k) => [k, true]))
+			: select;
+
+		const excludeObj = Array.isArray(exclude)
+			? Object.fromEntries(exclude.map((k) => [k, true]))
+			: exclude;
+
+		if (selectObj && typeof selectObj === "object") {
+			return this.buildFromSelect(allColumns, selectObj);
 		}
 
-		if (exclude && typeof exclude === "object") {
-			return this.buildFromExclude(allColumns, exclude);
+		if (excludeObj && typeof excludeObj === "object") {
+			return this.buildFromExclude(allColumns, excludeObj);
 		}
 
 		return { selectMap: allColumns };

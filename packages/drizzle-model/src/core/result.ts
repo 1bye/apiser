@@ -22,8 +22,8 @@ export type SafeResult<T> =
 
 /** Accumulated state for a query operation (findMany / findFirst). */
 export interface QueryState {
-	/** SQL SELECT blacklist — columns to omit from the query. */
-	exclude?: AnyRecord;
+	/** SQL SELECT blacklist — columns to omit from the query. Supports `{ col: true }` or `['col1', 'col2']`. */
+	exclude?: AnyRecord | string[];
 	/** Limit the number of rows returned. */
 	limit?: number;
 	/** Order by clause for sorting results. */
@@ -32,9 +32,8 @@ export interface QueryState {
 	raw?: boolean;
 	/** When `true`, result is wrapped in `{ data, error }`. */
 	safe?: boolean;
-	/** SQL SELECT whitelist — columns to include in the query. */
-	select?: AnyRecord;
-	/** Compiled where clause. */
+	/** SQL SELECT whitelist — columns to include in the query. Supports `{ col: true }` or `['col1', 'col2']`. */
+	select?: AnyRecord | string[];
 	where?: unknown;
 	/** Relation inclusions (`.with()` value). */
 	with?: unknown;
@@ -162,11 +161,10 @@ export class QueryResult<T> extends ThenableResult<T> {
 	 *
 	 * This affects the query itself, not just the result.
 	 * Equivalent to `db.select({ col: table.col }).from(table)`.
-	 *
-	 * @param value - A map of `{ columnName: true }`.
+	 * @param value - A map of `{ columnName: true }` or an array of column names `['col1', 'col2']`.
 	 * @returns A new `QueryResult` with the `.select()` state applied.
 	 */
-	select(value: AnyRecord): QueryResult<T> {
+	select(value: AnyRecord | string[]): QueryResult<T> {
 		return new QueryResult({ ...this.state, select: value }, this.runner);
 	}
 
@@ -176,10 +174,10 @@ export class QueryResult<T> extends ThenableResult<T> {
 	 * This affects the query itself, not just the result.
 	 * All columns except the listed ones will be fetched.
 	 *
-	 * @param value - A map of `{ columnName: true }`.
+	 * @param value - A map of `{ columnName: true }` or an array of column names `['col1', 'col2']`.
 	 * @returns A new `QueryResult` with the `.exclude()` state applied.
 	 */
-	exclude(value: AnyRecord): QueryResult<T> {
+	exclude(value: AnyRecord | string[]): QueryResult<T> {
 		return new QueryResult({ ...this.state, exclude: value }, this.runner);
 	}
 
