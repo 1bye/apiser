@@ -12,6 +12,7 @@ import {
 	lt,
 	lte,
 	ne,
+	not,
 	notBetween,
 	notInArray,
 	or,
@@ -103,6 +104,21 @@ export class WhereCompiler {
 	 * @returns The combined `SQL` condition, or `undefined`.
 	 */
 	compileObject(fields: AnyRecord, where: AnyRecord): SQL | undefined {
+		// Handle top-level logical combinators
+		if (Array.isArray(where.and)) {
+			const sub = (where.and as unknown[])
+				.map((item) => this.compile(fields, item))
+				.filter(Boolean) as SQL[];
+			return sub.length > 0 ? and(...sub) : undefined;
+		}
+
+		if (Array.isArray(where.or)) {
+			const sub = (where.or as unknown[])
+				.map((item) => this.compile(fields, item))
+				.filter(Boolean) as SQL[];
+			return sub.length > 0 ? or(...sub) : undefined;
+		}
+
 		const parts: SQL[] = [];
 
 		for (const [key, value] of Object.entries(where)) {
@@ -119,7 +135,7 @@ export class WhereCompiler {
 				continue;
 			}
 
-			// TODO:
+			// Unrecognized key — likely a relation filter (not yet implemented)
 			if (value && typeof value === "object") {
 				throw new Error(
 					`Relation where is not implemented yet for key '${key}'.`
@@ -292,11 +308,14 @@ export class WhereCompiler {
 			);
 		}
 	}
-
-	/** Handles `isNull` operator. */
+	/** Handles `isNull` and `isNotNull` operators. */
 	private compileNull(column: unknown, value: AnyRecord, parts: SQL[]): void {
-		if ("isNull" in value && value.isNull) {
-			this.pushIfDefined(parts, isNull(column as SQL));
+		if ("isNull" in value) {
+			if (value.isNull) {
+				this.pushIfDefined(parts, isNull(column as SQL));
+			} else {
+				this.pushIfDefined(parts, not(isNull(column as SQL)));
+			}
 		}
 	}
 

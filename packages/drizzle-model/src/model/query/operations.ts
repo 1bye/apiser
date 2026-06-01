@@ -215,3 +215,13 @@ esc.between = <T>(min: T, max: T) => ({ between: [min, max] as [T, T] });
 esc.notBetween = <T>(min: T, max: T) => ({
 	notBetween: [min, max] as [T, T],
 });
+
+esc.isNull = () => ({ isNull: true });
+
+esc.isNotNull = () => ({ isNull: false });
+
+esc.and = (...values: unknown[]) => ({ and: values });
+
+esc.or = (...values: unknown[]) => ({ or: values });
+
+esc.sql = <T>(sql: T): T => sql;
